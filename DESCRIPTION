@@ -1,0 +1,27 @@
+Package: transfer.pipeline
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.1
+Authors@R: 
+    person(given = "First",
+           family = "Last",
+           role = c("aut", "cre"),
+           email = "first.last@example.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+License: use_gpl3_license()
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports:
+   dplyr,
+   foreign,
+   gsubfn,
+   readstata13,
+   spatstat,
+   tidyverse
+Suggests:
+    testthat,
+    styler,
+    lintr,
+    languageserver
