@@ -19,9 +19,11 @@ Imports:
    gsubfn,
    readstata13,
    spatstat,
-   tidyverse
+   tidyverse,
+   rjson
 Suggests:
-    testthat,
+    testthat (>= 3.0.0),
     styler,
     lintr,
     languageserver
+Config/testthat/edition: 3

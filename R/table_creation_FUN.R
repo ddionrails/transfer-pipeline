@@ -1,46 +1,37 @@
-library(roxygen2)
-library(renv)
-library(devtools)
-
-setwd("C:/git/gitHub/transfer-pipeline/")
-getwd()
-
-devtools::install()
-renv::install()
 
 ################################################################################
 # Funktionen #
 ################################################################################
 
-#' Funktion get_data
+#' @title get_data erzeugt Teilmenge eines Datensatzes
 #'
-#' get_data soll Ausgangs-Datensatz auf bestimmte Variablen beschränken
+#' @description get_data soll Ausgangs-Datensatz im long Format 
+#' auf bestimmte Variablen beschraenken (variable, year, weight, diffvars) und
+#' ausschliesslich valide Werte enthalten.
 #'
 #' @param datasetnum data.frame mit numeric Variablen (z.B. plattform_data)
 #' @param datasetfac data.frame mit factor Variablen (z.B. plattform_data)
 #' @param variable Name Analysevariable als string (z.B. "pglabnet" )
 #' @param year Name Erhebungsjahrvariable als string (z.B. "syear")
-#' @param weight Name Gewichtsvariable als string (z.B. "syear")
-#' @param diffcount Anzahl gewünschter Differenzierungen (z.B. 2) (range 0-3)
+#' @param weight Name Gewichtsvariable als string (z.B. "phrf")
+#' @param diffcount Anzahl gewuenschter Differenzierungen (z.B. 2) (range 0-3)
 #' @param diffvars Vector mit Differenzierungsvariablen (z.B. c("alter_gr", "sex", "Bildungsniveau")) (maximal 3 Variablen)
 #' @param vallabel Valuelabel sollen verwendet werden (z.B: vallabel = TRUE) (TRUE/FALSE)
 #' 
-#' @return variable.values.valid 
+#' @return variable.values.valid ist ein Datensatz mit validen Werten der 
+#' Variablen (variable, year, weight, diffvars)
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords get_data
 #'  
 #' @examples
-#'       data <- get_data(dataset = data.file.num, 
-#'       variable = variable, year = year, weight = weight, 
-#'       diffcount = diffcount,diffvars = diffvars)
 #'       get_data(datasetnum =  data.file.num, 
 #'       datasetfac = data.file.fac,
-#'       variable = variable, 
-#'       year = year, 
-#'       weight = weight,
+#'       variable = "pglabnet", 
+#'       year = "syear", 
+#'       weight = "phrf",
 #'       diffcount = diffcount,
-#'       diffvars = diffvars,
+#'       diffvars = c("alter_gr", "sex", "Bildungsniveau"),
 #'       vallabel = TRUE)
 
 get_data <- function(datasetnum, datasetfac, variable, year, weight, diffcount, diffvars, vallabel){
@@ -92,11 +83,11 @@ get_data <- function(datasetnum, datasetfac, variable, year, weight, diffcount, 
 
 ################################################################################
 
-#' Funktion loadpackage
+#' @title loadpackage laedt benoetigte R-Pakete
 #'
-#' loadpackage soll benötigte Pakete, wenn nötig installieren und in library laden
+#' @description loadpackage soll benoetigte Pakete, wenn noetig installieren und in library laden
 #'
-#' @param x Namen der benötigten R-Packages als vector (z.B. c("foreign", "dplyr", "tidyverse", "readstata13"))
+#' @param x Namen der benoetigten R-Packages als Vector (z.B. c("foreign", "dplyr", "tidyverse", "readstata13"))
 #' 
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords loadpackage
@@ -118,21 +109,22 @@ loadpackage <- function(x){
 }
 
 ################################################################################
-#' Funktion get_mean_values
-#'
-#' get_mean_values soll gewichtete Mittelwert/Mediantabellen mit Mittelwert-Konfidenzinterval erstellen
-#' erzeugen mit den Informationen n = größe der Subgruppe, weighted_mean = gewichteter
-#' Mittelwert, weighted_median = gewichteter Median, lower_ci = unteres Konfidenzintervall 95%,
+
+#' @title get_mean_values erstellt Mittelwert/Mediantabellen mit Mittelwert-Konfidenzinterval
+#' 
+#' @description get_mean_values soll gewichtete Mittelwert/Mediantabellen mit Mittelwert-Konfidenzinterval 
+#' erzeugen mit den Informationen n = Groesse der Subgruppe, mean = gewichteter
+#' Mittelwert, median = gewichteter Median, lower_ci = unteres Konfidenzintervall 95%,
 #' upper_ci = oberes Konfidenzintervall 95%
 #'
 #' @param dataset data.frame aus get_data (z.B. plattform_data)
 #' @param year Jahresvariable als string (z.B. "year")
-#' @param diffcount Anzahl gewünschter Differenzierungen (z.B. 2) (range 0-3)
-#' @param diffvar1 Name Differenzierungsvariable 1 als string 
-#' @param diffvar2 Name Differenzierungsvariable 2 als string
-#' @param diffvar3 Anzahl Differenzierungsvariable 3 als string
+#' @param diffcount Anzahl gewuenschter Differenzierungen (z.B. 2) (range 0-3)
+#' @param diffvar1 Name Differenzierungsvariable 1 als string ("" moeglich)
+#' @param diffvar2 Name Differenzierungsvariable 2 als string ("" moeglich)
+#' @param diffvar3 Anzahl Differenzierungsvariable 3 als string ("" moeglich)
 #' 
-#' @return mean.values = Datensatz mit n, weighted_mean, weighted_median, Konfidenzintervalle
+#' @return mean.values = Datensatz mit n, mean, median, Konfidenzintervalle
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords get_mean_values
@@ -140,10 +132,10 @@ loadpackage <- function(x){
 #' @examples
 #'       get_mean_values(dataset = data, 
 #'                       year = "year", 
-#'                       diffcount = diffcount,
-#'                       diffvar1 = diffvar1,
-#'                       diffvar2 = diffvar2,
-#'                       diffvar3 = diffvar3)
+#'                       diffcount = 2,
+#'                       diffvar1 = "sex",
+#'                       diffvar2 = "alter_gr",
+#'                       diffvar3 = "")
 
 get_mean_values <- function(dataset, year, diffcount,
                             diffvar1, diffvar2, diffvar3) {
@@ -165,18 +157,18 @@ get_mean_values <- function(dataset, year, diffcount,
   }
   mean.values <- dataset[complete.cases(dataset), ] %>%
     group_by_at(vars(one_of(columns))) %>%
-    mutate(weighted_mean = round(weighted.mean(usedvariable, weight),2))  %>%
-    mutate(weighted_median = round(weighted.median(usedvariable, weight),2))  %>%
+    mutate(mean = round(weighted.mean(usedvariable, weight),2))  %>%
+    mutate(median = round(weighted.median(usedvariable, weight),2))  %>%
     add_count(year, wt = NULL)  %>%
     mutate(sd = sd(usedvariable/sqrt(n))) %>%
-    mutate(lower = weighted_mean - qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd,
-           upper = weighted_mean + qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd) %>%
+    mutate(lower = mean - qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd,
+           upper = mean + qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd) %>%
     mutate(lower_ci = round((lower),2))  %>%
     mutate(upper_ci = round((upper),2))  %>%
-    distinct(weighted_mean, .keep_all = TRUE)
+    distinct(mean, .keep_all = TRUE)
   
-  selected.values <- c(columns, "weighted_mean", "lower_ci", 
-                       "upper_ci", "weighted_median", "n")
+  selected.values <- c(columns, "mean", "lower_ci", 
+                       "upper_ci", "median", "n")
   
   mean.values <- mean.values[,(names(mean.values) %in% selected.values)]
   mean.values <-  mean.values %>% 
@@ -186,23 +178,25 @@ get_mean_values <- function(dataset, year, diffcount,
 }
 
 ################################################################################
-#' Funktion get_prop_values
+#' @title Funktion get_prop_values soll gewichtete Anteilswert-Tabellen mit Konfidenzintervallen erstellen
 #'
-#' get_mean_values soll gewichtete Anteilswert-Tabellen mit Konfidenzintervallen erstellen
-#' erzeugen mit den Informationen n = größe der Subgruppe, weighted_percent = gewichteter
+#' @description get_mean_values soll gewichtete Anteilswert-Tabellen mit Konfidenzintervallen erstellen
+#' erzeugen mit den Informationen n = Groesse der Subgruppe, percent = gewichteter
 #' Anteilswert, lower_ci = unteres Konfidenzintervall, upper_ci = oberes Konfidenzintervall 95%
 #' 
 #' @param dataset data.frame aus get_data (z.B. plattform_data)
 #' @param groupvars Vector mit allen Variablen im Datensatz (z.B. c("usedvariable", "year", "sex"))
-#' @param alpha Alpha für die Festlegung der Konfidenzintervalles (z.B. 0.05)
+#' @param alpha Alpha fuer die Festlegung der Konfidenzintervalles (z.B. 0.05)
 #' 
-#' @return data_prop_complete_ci = Datensatz mit n, weighted_percent, Konfidenzintervalle
+#' @return data_prop_complete_ci = Datensatz mit n, percent, lower_ci, upper_ci
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords get_prop_values
 #'  
 #' @examples
-#'       get_prop_values(dataset = data, groupvars = columns, alpha = 0.05)
+#'       get_prop_values(dataset = data, 
+#'                       groupvars = c("usedvariable", "year", "sex"), 
+#'                       alpha = 0.05)
 
 
 get_prop_values <- function(dataset, groupvars, alpha) {
@@ -213,7 +207,7 @@ get_prop_values <- function(dataset, groupvars, alpha) {
     #   mutate(percent_groups = round((count_w/sum(count_w)),3) )  %>%
     group_by(year) %>%
     mutate(sum_count_w = sum(count_w)) %>%
-    mutate(weighted_percent = count_w/sum_count_w,)
+    mutate(percent = count_w/sum_count_w,)
   
   data_prop2 <- dataset[complete.cases(dataset), ] %>%   
     group_by_at(vars(one_of(groupvars))) %>%
@@ -230,7 +224,7 @@ get_prop_values <- function(dataset, groupvars, alpha) {
   
   n_total <- data_prop_complete$year_total
   n_total2 <- data_prop_complete$sum_count_w
-  p_hat <- data_prop_complete$weighted_percent
+  p_hat <- data_prop_complete$percent
   alpha <- alpha
   
   margin1 <- qnorm(1-alpha/2)*sqrt(p_hat*(1-p_hat)/n_total)
@@ -249,49 +243,49 @@ get_prop_values <- function(dataset, groupvars, alpha) {
                                  upper_ci=upper_ci1
   )
   
-  data_prop_complete_ci <- subset(data_prop_complete_ci, select=c(groupvars, "n", "weighted_percent", 
+  data_prop_complete_ci <- subset(data_prop_complete_ci, select=c(groupvars, "n", "percent", 
                                                                   "lower_ci", "upper_ci")) 
   
   return(data_prop_complete_ci)
 }
 
 ################################################################################
-#' Funktion get_protected_values
+#' @title get_protected_values soll bestimmte Zelleninhalte entfernen
 #'
-#' get_protected_values soll Zelleninhalte von gewichteten Anteilswert-Tabellen oder Mittelwert-Tabelle 
-#' löschen wenn eine Minimalbesetzung unterschritten wird.
+#' @description get_protected_values soll Zelleninhalte von gewichteten Anteilswert-Tabellen oder Mittelwert-Tabelle 
+#' loeschen wenn eine Minimalbesetzung unterschritten wird.
 #' 
 #' @param dataset data.frame aus get_prop_values oder get_mean_table 
-#' @param cell.size maximal zulässige Zellengröße (z.B. 30)
+#' @param cell.size maximal zulaessige Zellengroesse (z.B. 30)
 #' 
-#' @return protected.data = Datensatz mit n, weighted_mean/weighted_percent, weighted_median, n, Konfidenzintervalle ausschließlich mit Zellen >= cell.size
+#' @return protected.data (Datensatz mit n, mean/percent, median, n, Konfidenzintervalle ausschlie?lich mit Zellen >= cell.size)
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords get_prop_values
 #'  
 #' @examples
-#'       get_prop_values(dataset = data, groupvars = columns, alpha = 0.05)
+#'       get_prop_values(dataset = data, alpha = 0.05)
 
 get_protected_values <- function(dataset, cell.size) {
   
-  if(("weighted_mean" %in% colnames(dataset))==TRUE){
+  if(("mean" %in% colnames(dataset))==TRUE){
     
-    save.data <- as.data.frame(apply(dataset[c("weighted_mean", "weighted_median", "n",
+    save.data <- as.data.frame(apply(dataset[c("mean", "median", "n",
                                                "lower_ci", "upper_ci")], 2, 
                                      function(x) ifelse(dataset["n"] < 30, NA, x)))
     data <- dataset
-    dataset[c("weighted_mean", "weighted_median", "n",
+    dataset[c("mean", "median", "n",
               "lower_ci", "upper_ci")] <- NULL
     
   }
   
-  if(("weighted_percent" %in% colnames(dataset))==TRUE){
+  if(("percent" %in% colnames(dataset))==TRUE){
     
-    save.data <- as.data.frame(apply(dataset[c("n","weighted_percent", 
+    save.data <- as.data.frame(apply(dataset[c("n","percent", 
                                                "lower_ci", "upper_ci")], 2, 
                                      function(x) ifelse(dataset["n"] < 30, NA, x)))
     data <- dataset
-    dataset[c("n","weighted_percent", 
+    dataset[c("n","percent", 
               "lower_ci", "upper_ci")] <- NULL
     
   }
@@ -300,9 +294,9 @@ get_protected_values <- function(dataset, cell.size) {
 }
 
 ################################################################################
-#' Funktion create_table_lables
+#' @title create_table_lables Datensatzes mit Vauluelabel ausstatten
 #'
-#' create_table_lables soll spezifische Variablen eines Datensatzes mit Vauluelabel ausstatten
+#' @description create_table_lables soll spezifische Variablen eines Datensatzes mit Vauluelabel ausstatten
 #' 
 #' @param table data.frame aus get_mean_data 
 #' 
@@ -318,7 +312,7 @@ create_table_lables <- function(table) {
   data_with_label <- table
   
   if("sex" %in% colnames(data_with_label)){
-    data_with_label$sex <- gsubfn(".", list("1" = "Männlich", "2" = "Weiblich"), as.character(data_with_label$sex))
+    data_with_label$sex <- gsubfn(".", list("1" = "MÃ¤nnlich", "2" = "Weiblich"), as.character(data_with_label$sex))
   }
   
   if("bula" %in% colnames(data_with_label)){
@@ -356,7 +350,7 @@ create_table_lables <- function(table) {
   
   if("alter_gr" %in% colnames(data_with_label)){
     data_with_label$alter_gr <- gsubfn(".", list("1"  = "16-34 Jahre alt", 
-                                                 "2" = "35-65 Jahre alt", "3"  = "66 und älter"), as.character(data_with_label$alter_gr))
+                                                 "2" = "35-65 Jahre alt", "3"  = "66 und ?lter"), as.character(data_with_label$alter_gr))
   }
   
   if("Bildungsniveau" %in% colnames(data_with_label)){
@@ -369,9 +363,9 @@ create_table_lables <- function(table) {
 }
 
 ################################################################################
-#' Funktion get_table_export
+#' @title get_table_export Export von Mittelwert-oder Anteilswertswert-Tabellen
 #'
-#' get_table_export soll erzeugte Mittelwert-oder Anteilswertswert-Tabellen als csv Exportieren
+#' @description get_table_export soll erzeugte Mittelwert-oder Anteilswertswert-Tabellen als csv Exportieren
 #' 
 #' @param table produzierter data.frame aus get_protected_values (z.B. plattform_data)
 #' @param variable Name Analysevariable aus den Rohdaten als string ("pglabnet")
@@ -386,9 +380,9 @@ create_table_lables <- function(table) {
 #' @keywords data.csv
 #'  
 #' @examples
-#'        get_table_export(table = protected.table, variable = variable, 
+#'        get_table_export(table = protected.table, variable = "usedvariable", 
 #'                         metadatapath = paste0(metapath, "varnames.csv"),
-#'                         exportpath = exportpath, diffcount = diffcount, 
+#'                         exportpath = exportpath, diffcount = 2, 
 #'                         tabletype = "mean")
 
 get_table_export <- function(table, variable, metadatapath, exportpath, diffcount, tabletype) {
@@ -444,12 +438,9 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
   data.csv[is.na(data.csv)] <- ""
   data.csv <- as.data.frame(data.csv)
   
-  write.csv(data.csv, export, row.names = FALSE, quote = FALSE, fileEncoding = "UTF-8")
+  write.csv(data.csv, export, row.names = FALSE, quote = TRUE, fileEncoding = "UTF-8")
   return(data.csv)
 }
-
-setwd("C:/git/gitHub/transfer-pipeline/")
-roxygen2::roxygenise()
 
 
 
