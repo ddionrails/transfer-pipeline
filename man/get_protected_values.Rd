@@ -12,7 +12,7 @@ get_protected_values(dataset, cell.size)
 \item{cell.size}{maximal zulaessige Zellengroesse (z.B. 30)}
 }
 \value{
-protected.data (Datensatz mit n, weighted_mean/weighted_percent, weighted_median, n, Konfidenzintervalle ausschlie?lich mit Zellen >= cell.size)
+protected.data (Datensatz mit n, mean/percent, median, n, Konfidenzintervalle ausschlie?lich mit Zellen >= cell.size)
 }
 \description{
 get_protected_values soll Zelleninhalte von gewichteten Anteilswert-Tabellen oder Mittelwert-Tabelle

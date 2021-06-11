@@ -26,7 +26,7 @@ get_data(
 
 \item{weight}{Name Gewichtsvariable als string (z.B. "phrf")}
 
-\item{diffcount}{Anzahl gewünschter Differenzierungen (z.B. 2) (range 0-3)}
+\item{diffcount}{Anzahl gewuenschter Differenzierungen (z.B. 2) (range 0-3)}
 
 \item{diffvars}{Vector mit Differenzierungsvariablen (z.B. c("alter_gr", "sex", "Bildungsniveau")) (maximal 3 Variablen)}
 

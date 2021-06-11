@@ -201,47 +201,45 @@ get_mean_values <- function(dataset, year, diffcount,
 
 get_prop_values <- function(dataset, groupvars, alpha) {
   
-  data_prop <-  dataset[complete.cases(dataset), ] %>%
+  # gewichtete Häufigkeit count_w einzelner elemente
+  data_prop1 <-  dataset[complete.cases(dataset), ] %>%
     group_by_at(vars(one_of(groupvars))) %>%
-    summarise(count_w = sum(weight), .groups="drop_last") %>%
-    #   mutate(percent_groups = round((count_w/sum(count_w)),3) )  %>%
-    group_by(year) %>%
-    mutate(sum_count_w = sum(count_w)) %>%
-    mutate(percent = count_w/sum_count_w,)
+    summarise(count_w = sum(weight), .groups="drop_last")
   
-  data_prop2 <- dataset[complete.cases(dataset), ] %>%   
+  # gewichtiete Hüfigkeit aller einzelner Elemente einer Gruppe
+  data_prop2 <-  data_prop1[complete.cases(data_prop1), ] %>% 
+    group_by(eval(parse(text = groupvars[2])), eval(parse(text = groupvars[3])),
+             eval(parse(text = groupvars[4]))) %>%
+    mutate(sum_count_w = sum(count_w)) 
+  
+  data_prop3 <- dataset[complete.cases(dataset), ] %>% 
     group_by_at(vars(one_of(groupvars))) %>%
     summarise(n = n(), .groups="drop_last") 
   
+  data_prop4 <- data_prop3[complete.cases(data_prop3), ] %>% 
+    group_by(eval(parse(text = groupvars[2])), eval(parse(text = groupvars[3])),
+             eval(parse(text = groupvars[4]))) %>%
+    mutate(n_total = sum(n)) 
+  
+  data_prop <- cbind(data_prop1, data_prop2["sum_count_w"], data_prop3["n"], data_prop4["n_total"])
   data_prop <- data_prop[order(data_prop$year),]
-  data_prop <- cbind(data_prop, data_prop2["n"])
   
-  data_prop_year_total <- setNames(aggregate(data_prop$n, 
-                                             by=list(year=data_prop$year), 
-                                             FUN=sum), c("year", "year_total"))
+  data_prop_complete <-  data_prop[complete.cases(data_prop1), ] %>% 
+    mutate(percent = count_w/sum_count_w,)
   
-  data_prop_complete <- left_join(data_prop, data_prop_year_total, by="year")
-  
-  n_total <- data_prop_complete$year_total
-  n_total2 <- data_prop_complete$sum_count_w
+  n_total <- data_prop_complete$n_total
   p_hat <- data_prop_complete$percent
   alpha <- alpha
   
   margin1 <- qnorm(1-alpha/2)*sqrt(p_hat*(1-p_hat)/n_total)
-  margin2 <- qnorm(1-alpha/2)*sqrt(p_hat*(1-p_hat)/n_total2)
   
   # Compute the CI
   lower_ci1 <- p_hat - margin1
   upper_ci1 <- p_hat + margin1
   
-  # Compute the CI
-  lower_ci2 <- p_hat - margin2
-  upper_ci2 <- p_hat + margin2
-  
   data_prop_complete_ci <- cbind(data_prop_complete, 
                                  lower_ci=lower_ci1, 
-                                 upper_ci=upper_ci1
-  )
+                                 upper_ci=upper_ci1)
   
   data_prop_complete_ci <- subset(data_prop_complete_ci, select=c(groupvars, "n", "percent", 
                                                                   "lower_ci", "upper_ci")) 
@@ -350,7 +348,7 @@ create_table_lables <- function(table) {
   
   if("alter_gr" %in% colnames(data_with_label)){
     data_with_label$alter_gr <- gsubfn(".", list("1"  = "16-34 Jahre alt", 
-                                                 "2" = "35-65 Jahre alt", "3"  = "66 und ?lter"), as.character(data_with_label$alter_gr))
+                                                 "2" = "35-65 Jahre alt", "3"  = "66 und älter"), as.character(data_with_label$alter_gr))
   }
   
   if("Bildungsniveau" %in% colnames(data_with_label)){
@@ -437,6 +435,14 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
   data.csv <- sapply(table, as.character)
   data.csv[is.na(data.csv)] <- ""
   data.csv <- as.data.frame(data.csv)
+  
+  data.csv <- as.data.frame(apply(data.csv,2,
+                                  function(x)gsub('^\\[[0-9]*]', '',x)))
+  
+  data.csv <- as.data.frame(apply(data.csv,2,
+                                  function(x)gsub('^\\s+', '',x)))
+  
+  colnames(data.csv)[1] <- variable
   
   write.csv(data.csv, export, row.names = FALSE, quote = TRUE, fileEncoding = "UTF-8")
   return(data.csv)

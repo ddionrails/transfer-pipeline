@@ -19,7 +19,7 @@ weight <- "phrf" # Gewicht muss definiert sein
 
 ## load packages
 loadpackage(c("foreign", "dplyr", "tidyverse", "readstata13", "spatstat",
-              "gsubfn")) 
+              "gsubfn", "rjson")) 
 
 ## load dataset
 data.file.num <- read.dta13(paste0(datapath,dataset,".dta"), 
@@ -133,7 +133,7 @@ for (var in 1:length(meta$variable)){
       )
       
       file_handler <- file("meta.json")
-      writeLines(json_output, paste0(exportpath, variable, "/",variable, ".json"))
+      writeLines(json_output, paste0(exportpath, variable, "/","meta.json"))
       close(file_handler)
       
       
@@ -168,7 +168,7 @@ for (var in 1:length(meta$variable)){
         json_output <- rjson::toJSON(
           x = list(
             "title" = meta$label_de[var],
-            "usedvariable" = meta$variable[var],
+            "variable" = meta$variable[var],
             "statistics" = c("percent", "n", "upper_ci", "lower_ci"),
             "dimensions" = list(
               list("variable" = "year", "label" = "Erhebungsjahr"),
@@ -186,7 +186,7 @@ for (var in 1:length(meta$variable)){
         )
         
         file_handler <- file("meta.json")
-        writeLines(json_output, paste0(exportpath, variable, "/",variable, ".json"))
+        writeLines(json_output, paste0(exportpath, variable, "/", "meta.json"))
         close(file_handler)
         
         
@@ -195,9 +195,4 @@ for (var in 1:length(meta$variable)){
     } 
   }
 }  
-
-
-
-
-
 

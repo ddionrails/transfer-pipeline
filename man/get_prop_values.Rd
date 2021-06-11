@@ -14,11 +14,11 @@ get_prop_values(dataset, groupvars, alpha)
 \item{alpha}{Alpha fuer die Festlegung der Konfidenzintervalles (z.B. 0.05)}
 }
 \value{
-data_prop_complete_ci = Datensatz mit n, weighted_percent, lower_ci, upper_ci
+data_prop_complete_ci = Datensatz mit n, percent, lower_ci, upper_ci
 }
 \description{
 get_mean_values soll gewichtete Anteilswert-Tabellen mit Konfidenzintervallen erstellen
-erzeugen mit den Informationen n = Groesse der Subgruppe, weighted_percent = gewichteter
+erzeugen mit den Informationen n = Groesse der Subgruppe, percent = gewichteter
 Anteilswert, lower_ci = unteres Konfidenzintervall, upper_ci = oberes Konfidenzintervall 95\%
 }
 \examples{
