@@ -6,12 +6,12 @@
 # Persönlicher Pfad
 if (Sys.info()[["user"]] == "Stefan") {
   datapath <- "C:/Users/Stefan/DIW/transfer/generierung/"
-  metapath <- "C:/git/platform-datasets/scripts/"
+  metapath <- "C:/git/platform-datasets/metadaten_example/"
   exportpath <- "C:/git/platform-datasets/testdaten/"
 }
 
 # Definition von Objekten
-dataset <- "plattform_data"  # Aus welchem Datensatz sollen Werte genommen werden
+dataset <- "p_plattform"  # Aus welchem Datensatz sollen Werte genommen werden
 cell.min <- "30" # Maximal erlaubte Zellgröße
 year <- "syear" # Erhebungsjahr muss definiert sein
 weight <- "phrf" # Gewicht muss definiert sein
@@ -48,8 +48,8 @@ meta_demo <- meta %>%
 meta_demo <- subset(data.file.num,
                     select=meta_demo$variable)
 
-difflist <- c("",combn(names(meta_demo),1,simplify=FALSE), 
-  combn(names(meta_demo),2,simplify=FALSE))
+difflist <- c("",combn(sort(names(meta_demo)),1,simplify=FALSE, FUN = sort), 
+  combn(sort(names(meta_demo)),2,simplify=FALSE))
 
 diffcountlist <- difflist
 diffcountlist[[1]] <- 0
@@ -116,9 +116,8 @@ for (var in 1:length(meta$variable)){
         x = list(
           "title" = meta$label_de[var],
           "variable" = meta$variable[var],
-          "statistics" = c("mean", "median", "n", "upper_ci", "lower_ci"),
+          "statistics" = c("mean", "median", "n", "upper_confidence", "lower_confidence"),
           "dimensions" = list(
-            list("variable" = "year", "label" = "Erhebungsjahr"),
             list("variable" = meta$variable[meta$variable == "alter_gr"], "label" = meta$label_de[meta$variable == "alter_gr"]),
             list("variable" = meta$variable[meta$variable == "sex"], "label" = meta$label_de[meta$variable == "sex"]),
             list("variable" = meta$variable[meta$variable == "bula"], "label" = meta$label_de[meta$variable == "bula"]),
@@ -137,7 +136,8 @@ for (var in 1:length(meta$variable)){
       close(file_handler)
       
       
-      print(paste("Die Variable", variable, "wird verarbeitet mit Differenzierung", paste(difflist[[i]],collapse=","), "als Mittelwert-Tabelle"))
+      print(paste("Die Variable", variable, "wird verarbeitet mit Differenzierung", 
+                  paste(difflist[[i]],collapse=","), "als Mittelwert-Tabelle"))
       }
       
       if (meta$proptable[var] == "Yes") {
@@ -169,9 +169,8 @@ for (var in 1:length(meta$variable)){
           x = list(
             "title" = meta$label_de[var],
             "variable" = meta$variable[var],
-            "statistics" = c("percent", "n", "upper_ci", "lower_ci"),
+            "statistics" = c("percent", "n", "upper_confidence", "lower_confidence"),
             "dimensions" = list(
-              list("variable" = "year", "label" = "Erhebungsjahr"),
               list("variable" = meta$variable[meta$variable == "alter_gr"], "label" = meta$label_de[meta$variable == "alter_gr"]),
               list("variable" = meta$variable[meta$variable == "sex"], "label" = meta$label_de[meta$variable == "sex"]),
               list("variable" = meta$variable[meta$variable == "bula"], "label" = meta$label_de[meta$variable == "bula"]),
@@ -189,8 +188,8 @@ for (var in 1:length(meta$variable)){
         writeLines(json_output, paste0(exportpath, variable, "/", "meta.json"))
         close(file_handler)
         
-        
-        print(paste("Die Variable", variable, "wird verarbeitet mit Differenzierung", paste(difflist[[i]],collapse=","), "als Prozentwert-Tabelle"))
+        print(paste("Die Variable", variable, "wird verarbeitet mit Differenzierung", 
+                    paste(difflist[[i]],collapse=","), "als Prozentwert-Tabelle"))
         }
     } 
   }

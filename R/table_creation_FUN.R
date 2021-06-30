@@ -114,8 +114,8 @@ loadpackage <- function(x){
 #' 
 #' @description get_mean_values soll gewichtete Mittelwert/Mediantabellen mit Mittelwert-Konfidenzinterval 
 #' erzeugen mit den Informationen n = Groesse der Subgruppe, mean = gewichteter
-#' Mittelwert, median = gewichteter Median, lower_ci = unteres Konfidenzintervall 95%,
-#' upper_ci = oberes Konfidenzintervall 95%
+#' Mittelwert, median = gewichteter Median, lower_confidence = unteres Konfidenzintervall 95%,
+#' upper_confidence = oberes Konfidenzintervall 95%
 #'
 #' @param dataset data.frame aus get_data (z.B. plattform_data)
 #' @param year Jahresvariable als string (z.B. "year")
@@ -163,12 +163,12 @@ get_mean_values <- function(dataset, year, diffcount,
     mutate(sd = sd(usedvariable/sqrt(n))) %>%
     mutate(lower = mean - qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd,
            upper = mean + qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd) %>%
-    mutate(lower_ci = round((lower),2))  %>%
-    mutate(upper_ci = round((upper),2))  %>%
+    mutate(lower_confidence = round((lower),2))  %>%
+    mutate(upper_confidence = round((upper),2))  %>%
     distinct(mean, .keep_all = TRUE)
   
-  selected.values <- c(columns, "mean", "lower_ci", 
-                       "upper_ci", "median", "n")
+  selected.values <- c(columns, "mean", "lower_confidence", 
+                       "upper_confidence", "median", "n")
   
   mean.values <- mean.values[,(names(mean.values) %in% selected.values)]
   mean.values <-  mean.values %>% 
@@ -182,13 +182,13 @@ get_mean_values <- function(dataset, year, diffcount,
 #'
 #' @description get_mean_values soll gewichtete Anteilswert-Tabellen mit Konfidenzintervallen erstellen
 #' erzeugen mit den Informationen n = Groesse der Subgruppe, percent = gewichteter
-#' Anteilswert, lower_ci = unteres Konfidenzintervall, upper_ci = oberes Konfidenzintervall 95%
+#' Anteilswert, lower_confidence = unteres Konfidenzintervall, upper_confidence = oberes Konfidenzintervall 95%
 #' 
 #' @param dataset data.frame aus get_data (z.B. plattform_data)
 #' @param groupvars Vector mit allen Variablen im Datensatz (z.B. c("usedvariable", "year", "sex"))
 #' @param alpha Alpha fuer die Festlegung der Konfidenzintervalles (z.B. 0.05)
 #' 
-#' @return data_prop_complete_ci = Datensatz mit n, percent, lower_ci, upper_ci
+#' @return data_prop_complete_ci = Datensatz mit n, percent, lower_confidence, upper_confidence
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords get_prop_values
@@ -234,15 +234,15 @@ get_prop_values <- function(dataset, groupvars, alpha) {
   margin1 <- qnorm(1-alpha/2)*sqrt(p_hat*(1-p_hat)/n_total)
   
   # Compute the CI
-  lower_ci1 <- p_hat - margin1
-  upper_ci1 <- p_hat + margin1
+  lower_confidence1 <- p_hat - margin1
+  upper_confidence1 <- p_hat + margin1
   
   data_prop_complete_ci <- cbind(data_prop_complete, 
-                                 lower_ci=lower_ci1, 
-                                 upper_ci=upper_ci1)
+                                 lower_confidence=lower_confidence1, 
+                                 upper_confidence=upper_confidence1)
   
   data_prop_complete_ci <- subset(data_prop_complete_ci, select=c(groupvars, "n", "percent", 
-                                                                  "lower_ci", "upper_ci")) 
+                                                                  "lower_confidence", "upper_confidence")) 
   
   return(data_prop_complete_ci)
 }
@@ -269,22 +269,22 @@ get_protected_values <- function(dataset, cell.size) {
   if(("mean" %in% colnames(dataset))==TRUE){
     
     save.data <- as.data.frame(apply(dataset[c("mean", "median", "n",
-                                               "lower_ci", "upper_ci")], 2, 
-                                     function(x) ifelse(dataset["n"] < 30, NA, x)))
+                                               "lower_confidence", "upper_confidence")], 2, 
+                                     function(x) ifelse(dataset["n"] < cell.size, NA, x)))
     data <- dataset
     dataset[c("mean", "median", "n",
-              "lower_ci", "upper_ci")] <- NULL
+              "lower_confidence", "upper_confidence")] <- NULL
     
   }
   
   if(("percent" %in% colnames(dataset))==TRUE){
     
     save.data <- as.data.frame(apply(dataset[c("n","percent", 
-                                               "lower_ci", "upper_ci")], 2, 
-                                     function(x) ifelse(dataset["n"] < 30, NA, x)))
+                                               "lower_confidence", "upper_confidence")], 2, 
+                                     function(x) ifelse(dataset["n"] < cell.size, NA, x)))
     data <- dataset
     dataset[c("n","percent", 
-              "lower_ci", "upper_ci")] <- NULL
+              "lower_confidence", "upper_confidence")] <- NULL
     
   }
   protected.data <- cbind(dataset, save.data)
@@ -424,14 +424,6 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
     filename <- paste0(variable, "_", "year")
   }
   
-  if(tabletype=="mean"){
-    export <- paste0(exportpath, folder, "mean_", filename, ".csv")
-  }
-  
-  if(tabletype=="prop"){
-    export <- paste0(exportpath, folder, "prop_", filename, ".csv")
-  }
-  
   data.csv <- sapply(table, as.character)
   data.csv[is.na(data.csv)] <- ""
   data.csv <- as.data.frame(data.csv)
@@ -442,7 +434,14 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
   data.csv <- as.data.frame(apply(data.csv,2,
                                   function(x)gsub('^\\s+', '',x)))
   
-  colnames(data.csv)[1] <- variable
+  if(tabletype=="mean"){
+    export <- paste0(exportpath, folder, filename, ".csv")
+  }
+  
+  if(tabletype=="prop"){
+    export <- paste0(exportpath, folder, filename, ".csv")
+    colnames(data.csv)[1] <- variable
+  }
   
   write.csv(data.csv, export, row.names = FALSE, quote = TRUE, fileEncoding = "UTF-8")
   return(data.csv)
