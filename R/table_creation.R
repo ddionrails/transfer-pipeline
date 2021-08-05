@@ -5,7 +5,7 @@
 ### Was muss definiert werden:
 # Persönlicher Pfad
 if (Sys.info()[["user"]] == "Stefan") {
-  datapath <- "C:/Users/Stefan/DIW/transfer/generierung/"
+  datapath <- "C:/Users/Stefan/ownCloud/Transfer/Plattform/dta/"
   metapath <- "C:/git/platform-datasets/metadaten_example/"
   exportpath <- "C:/git/platform-datasets/testdaten/"
 }
@@ -36,7 +36,8 @@ data.file.fac <- read.dta13(paste0(datapath,dataset,".dta"),
 data.file.fac <- data.file.fac %>%
   filter(phrf > 0) 
 
-meta <- read.csv(paste0(metapath, "variables.csv") , header = TRUE)
+meta <- read.csv(paste0(metapath, "variables.csv") , header = TRUE,
+                 colClasses = "character")
 
 ################################################################################
 ################################################################################
@@ -59,7 +60,7 @@ diffcountlist[(2+length(combn(names(meta_demo),1,simplify=FALSE))):length(diffco
 
 for (var in 1:length(meta$variable)){
   
-  if (meta$meantable[var] == "Yes" | meta$proptable[var] == "Yes") {
+  if (meta$meantable[var] == "yes" | meta$probtable[var] == "yes") {
       variable <- meta$variable[var] 
       
     for(i in seq_along(difflist)){
@@ -84,7 +85,7 @@ for (var in 1:length(meta$variable)){
         diffvar3 <- ""
       }
 
-      if (meta$meantable[var] == "Yes") {
+      if (meta$meantable[var] == "yes") {
       data <- get_data(datasetnum =  data.file.num, 
                        datasetfac = data.file.fac,
                        variable = variable, 
@@ -107,40 +108,28 @@ for (var in 1:length(meta$variable)){
       
       protected.table <- get_protected_values(dataset = table.values, cell.size = cell.min)
       
+      
+      protected.table <- expand_table(table = protected.table, diffvar1 = diffvar1, 
+                                      diffvar2 = diffvar2, diffvar3 = diffvar3,
+                                      diffcount = diffcount, tabletype = "mean")
+      
       data.csv <- get_table_export(table = protected.table, variable = variable, 
                                    metadatapath = paste0(metapath, "variables.csv"),
                                    exportpath = exportpath, diffcount = diffcount, 
                                    tabletype = "mean")
       
-      json_output <- rjson::toJSON(
-        x = list(
-          "title" = meta$label_de[var],
-          "variable" = meta$variable[var],
-          "statistics" = c("mean", "median", "n", "upper_confidence", "lower_confidence"),
-          "dimensions" = list(
-            list("variable" = meta$variable[meta$variable == "alter_gr"], "label" = meta$label_de[meta$variable == "alter_gr"]),
-            list("variable" = meta$variable[meta$variable == "sex"], "label" = meta$label_de[meta$variable == "sex"]),
-            list("variable" = meta$variable[meta$variable == "bula"], "label" = meta$label_de[meta$variable == "bula"]),
-            list("variable" = meta$variable[meta$variable == "Bildungsniveau"], "label" = meta$label_de[meta$variable == "Bildungsniveau"]),
-            list("variable" = meta$variable[meta$variable == "sampreg"], "label" = meta$label_de[meta$variable == "sampreg"]),
-            list("variable" = meta$variable[meta$variable == "pgcasmin"], "label" = meta$label_de[meta$variable == "pgcasmin"])
-          ),
-          "start_year" = unique(data.csv$year)[1],
-          "end_year" = unique(data.csv$year)[length(unique(data.csv$year))],
-          "types" = list("numeric")
-        )
-      )
-      
-      file_handler <- file("meta.json")
-      writeLines(json_output, paste0(exportpath, variable, "/","meta.json"))
-      close(file_handler)
-      
+      json_create_lite(variable = variable, 
+                       varlabel = meta$label_de[meta$variable==variable],
+                       startyear = as.numeric(unique(data.csv$year)[1]), 
+                       endyear = as.numeric(unique(data.csv$year)[length(unique(data.csv$year))]), 
+                       tabletype = "mean",
+                       exportpath = paste0(exportpath, variable, "/meta.json"))
       
       print(paste("Die Variable", variable, "wird verarbeitet mit Differenzierung", 
                   paste(difflist[[i]],collapse=","), "als Mittelwert-Tabelle"))
       }
       
-      if (meta$proptable[var] == "Yes") {
+      if (meta$probtable[var] == "yes") {
         data <- get_data(datasetnum =  data.file.num, 
                          datasetfac = data.file.fac,
                          variable = variable, 
@@ -160,37 +149,25 @@ for (var in 1:length(meta$variable)){
         
         protected.table <- get_protected_values(dataset = prop.data, cell.size = 30)
         
+        protected.table <- expand_table(table = protected.table, diffvar1 = diffvar1, 
+                                        diffvar2 = diffvar2, diffvar3 = diffvar3,
+                                        diffcount = diffcount, tabletype = "prop")
+        
         data.csv <- get_table_export(table = protected.table, variable = variable, 
                                      metadatapath = paste0(metapath, "variables.csv"),
                                      exportpath = exportpath, diffcount = diffcount,
                                      tabletype = "prop")
         
-        json_output <- rjson::toJSON(
-          x = list(
-            "title" = meta$label_de[var],
-            "variable" = meta$variable[var],
-            "statistics" = c("percent", "n", "upper_confidence", "lower_confidence"),
-            "dimensions" = list(
-              list("variable" = meta$variable[meta$variable == "alter_gr"], "label" = meta$label_de[meta$variable == "alter_gr"]),
-              list("variable" = meta$variable[meta$variable == "sex"], "label" = meta$label_de[meta$variable == "sex"]),
-              list("variable" = meta$variable[meta$variable == "bula"], "label" = meta$label_de[meta$variable == "bula"]),
-              list("variable" = meta$variable[meta$variable == "Bildungsniveau"], "label" = meta$label_de[meta$variable == "Bildungsniveau"]),
-              list("variable" = meta$variable[meta$variable == "sampreg"], "label" = meta$label_de[meta$variable == "sampreg"]),
-              list("variable" = meta$variable[meta$variable == "pgcasmin"], "label" = meta$label_de[meta$variable == "pgcasmin"])
-            ),
-            "start_year" = unique(data.csv$year)[1],
-            "end_year" = unique(data.csv$year)[length(unique(data.csv$year))],
-            "types" = list("numeric")
-          )
-        )
-        
-        file_handler <- file("meta.json")
-        writeLines(json_output, paste0(exportpath, variable, "/", "meta.json"))
-        close(file_handler)
+        json_create_lite(variable = variable, 
+                         varlabel = meta$label_de[meta$variable==variable],
+                         startyear = as.numeric(unique(data.csv$year)[1]), 
+                         endyear = as.numeric(unique(data.csv$year)[length(unique(data.csv$year))]), 
+                         tabletype = "prop",
+                         exportpath = paste0(exportpath, variable, "/meta.json"))
         
         print(paste("Die Variable", variable, "wird verarbeitet mit Differenzierung", 
                     paste(difflist[[i]],collapse=","), "als Prozentwert-Tabelle"))
-        }
+      }
     } 
   }
 }  

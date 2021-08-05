@@ -310,11 +310,11 @@ create_table_lables <- function(table) {
   data_with_label <- table
   
   if("sex" %in% colnames(data_with_label)){
-    data_with_label$sex <- gsubfn(".", list("1" = "Männlich", "2" = "Weiblich"), as.character(data_with_label$sex))
+    data_with_label$sex <- gsubfn(".", list("1" = "maennlich", "2" = "weiblich"), as.character(data_with_label$sex))
   }
   
-  if("bula" %in% colnames(data_with_label)){
-    data_with_label$bula <-data_with_label$bula %>%
+  if("bula_h" %in% colnames(data_with_label)){
+    data_with_label$bula_h <-data_with_label$bula_h %>%
       gsub("10", "Saarland", .) %>%
       gsub("11", "Berlin", .) %>%
       gsub("12", "Brandenburg", .) %>%
@@ -351,10 +351,17 @@ create_table_lables <- function(table) {
                                                  "2" = "35-65 Jahre alt", "3"  = "66 und älter"), as.character(data_with_label$alter_gr))
   }
   
-  if("Bildungsniveau" %in% colnames(data_with_label)){
-    data_with_label$Bildungsniveau <- gsubfn(".", list("1"  = "(noch) kein Abschluss", 
+  if("bildungsniveau" %in% colnames(data_with_label)){
+    data_with_label$bildungsniveau <- gsubfn(".", list("1"  = "(noch) kein Abschluss", 
                                                        "2" = "Hauptschulabschluss", "3"  = "Realschulabschluss",
-                                                       "4" = "(Fach-)Abitur", "5"  = "AkademikerInnen"), as.character(data_with_label$Bildungsniveau))
+                                                       "4" = "(Fach-)Abitur", "5"  = "AkademikerInnen"), as.character(data_with_label$bildungsniveau))
+  }
+  
+  if("migback" %in% colnames(data_with_label)){
+    data_with_label$migback <- gsubfn(".", list("1"  = "kein Migrationshintergrund ", 
+                                                       "2" = "direkter Migrationshintergrund", 
+                                                       "3"  = "indirekter Migrationshintergrund"), 
+                                                        as.character(data_with_label$migback))
   }
   
   return(data_with_label)
@@ -446,6 +453,256 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
   write.csv(data.csv, export, row.names = FALSE, quote = TRUE, fileEncoding = "UTF-8")
   return(data.csv)
 }
+
+################################################################################
+# Erzeugung von json Metadaten
+
+#' @title json_create_lite 
+#'
+#' @description json_create_lite erzeugt json Metadaten
+#'
+#' @variable variablennamen als character
+#' @varlabel variablenlabel als character
+#' @startyear Jahresbeginn der Informationen als numeric
+#' @endyear Jahresende der Informationen als numeric
+#' @tabletype Tabellentyp (z.B. "mean", "prop", "both")
+#' @exportpath Pfad wo json Datein abgelegt wird
+#'
+#' @author Andreas Franken und Stefan Zimmermann, \email{szimmermann@diw.de} \email{afranken@diw.de}
+#' @keywords column_count_check Spaltenanzahl
+#'  
+#' @examples column_count_check(data = data, columns = columns)
+
+json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, exportpath) {
+  if (tabletype == "mean") {
+    json_output <- jsonlite::toJSON(
+      x = list(
+        "title" = varlabel,
+        "variable" = variable,
+        "statistics" = c("mean", "median"),
+        "dimensions" = list(
+          list("variable" = meta$variable[meta$variable == "alter_gr"], 
+               "label" = meta$label_de[meta$variable == "alter_gr"],
+               "values" = list("16-34 Jahre alt", "35-65 Jahre alt",
+                               "66 und älter")),
+          list("variable" = meta$variable[meta$variable == "sex"], 
+               "label" = meta$label_de[meta$variable == "sex"],
+               "values" = list("maennlich", "weiblich")),
+          list("variable" = meta$variable[meta$variable == "bula_h"], 
+               "label" = meta$label_de[meta$variable == "bula_h"],
+               "values" = list("Schleswig-Holstein", "Hamburg",
+                               "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
+                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Wuerttemberg", 
+                               "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
+                               "Sachsen", "Sachsen-Anhalt", "Thueringen")),
+          list("variable" = meta$variable[meta$variable == "bildungsniveau"], 
+               "label" = meta$label_de[meta$variable == "bildungsniveau"],
+               "values" = list("(noch) kein Abschluss", "Hauptschulabschluss",
+                               "Realschulabschluss", "(Fach-)Abitur", 
+                               "AkademikerInnen")),
+          list("variable" = meta$variable[meta$variable == "sampreg"], 
+               "label" = meta$label_de[meta$variable == "sampreg"],
+               "values" = list("Westdeutschland, alte Bundeslaender", 
+                               "Ostdeutschland, neue Bundeslaender")),
+          list("variable" = meta$variable[meta$variable == "migback"], 
+               "label" = meta$label_de[meta$variable == "migback"],
+               "values" = list("kein Migrationshintergrund", 
+                               "direkter Migrationshintergrund",
+                               "indirekter Migrationshintergrund"))
+        ),
+        "description_de" = meta$description[meta$variable==variable],
+        "start_year" = startyear,
+        "end_year" = endyear,
+        "types" = list("numerical")
+      ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
+    )
+    
+    file_handler <- file("meta.json")
+    writeLines(json_output, exportpath, useBytes=TRUE)
+    close(file_handler)
+  }
+  
+  if (tabletype == "prop") {
+    json_output <- jsonlite::toJSON(
+      x = list(
+        "title" = varlabel,
+        "variable" = variable,
+        "statistics" = "percent",
+        "dimensions" = list(
+          list("variable" = meta$variable[meta$variable == "alter_gr"], 
+               "label" = meta$label_de[meta$variable == "alter_gr"],
+               "values" = list("16-34 Jahre alt", "35-65 Jahre alt",
+                               "66 und älter")),
+          list("variable" = meta$variable[meta$variable == "sex"], 
+               "label" = meta$label_de[meta$variable == "sex"],
+               "values" = list("maennlich", "weiblich")),
+          list("variable" = meta$variable[meta$variable == "bula_h"], 
+               "label" = meta$label_de[meta$variable == "bula_h"],
+               "values" = list("Schleswig-Holstein", "Hamburg",
+                               "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
+                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Wuerttemberg", 
+                               "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
+                               "Sachsen", "Sachsen-Anhalt", "Thueringen")),
+          list("variable" = meta$variable[meta$variable == "bildungsniveau"], 
+               "label" = meta$label_de[meta$variable == "bildungsniveau"],
+               "values" = list("(noch) kein Abschluss", "Hauptschulabschluss",
+                               "Realschulabschluss", "(Fach-)Abitur", 
+                               "AkademikerInnen")),
+          list("variable" = meta$variable[meta$variable == "sampreg"], 
+               "label" = meta$label_de[meta$variable == "sampreg"],
+               "values" = list("Westdeutschland, alte Bundeslaender", 
+                               "Ostdeutschland, neue Bundeslaender")),
+          list("variable" = meta$variable[meta$variable == "migback"], 
+               "label" = meta$label_de[meta$variable == "migback"],
+               "values" = list("kein Migrationshintergrund", 
+                               "direkter Migrationshintergrund",
+                               "indirekter Migrationshintergrund"))
+        ),
+        "description_de" = meta$description[meta$variable==variable],
+        "start_year" = startyear,
+        "end_year" = endyear,
+        "types" = "categorical"
+      ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
+    )
+    
+    file_handler <- file("meta.json")
+    writeLines(json_output, exportpath, useBytes=TRUE)
+    close(file_handler)
+  }
+  
+  if (tabletype == "both") {
+    json_output <- jsonlite::toJSON(
+      x = list(
+        "title" = varlabel,
+        "variable" = variable,
+        "statistics" = c("mean", "median", "percent"),
+        "dimensions" = list(
+          list("variable" = meta$variable[meta$variable == "alter_gr"], 
+               "label" = meta$label_de[meta$variable == "alter_gr"],
+               "values" = list("16-34 Jahre alt", "35-65 Jahre alt",
+                               "66 und älter")),
+          list("variable" = meta$variable[meta$variable == "sex"], 
+               "label" = meta$label_de[meta$variable == "sex"],
+               "values" = list("maennlich", "weiblich")),
+          list("variable" = meta$variable[meta$variable == "bula_h"], 
+               "label" = meta$label_de[meta$variable == "bula_h"],
+               "values" = list("Schleswig-Holstein", "Hamburg",
+                               "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
+                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Wuerttemberg", 
+                               "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
+                               "Sachsen", "Sachsen-Anhalt", "Thueringen")),
+          list("variable" = meta$variable[meta$variable == "bildungsniveau"], 
+               "label" = meta$label_de[meta$variable == "bildungsniveau"],
+               "values" = list("(noch) kein Abschluss", "Hauptschulabschluss",
+                               "Realschulabschluss", "(Fach-)Abitur", 
+                               "AkademikerInnen")),
+          list("variable" = meta$variable[meta$variable == "sampreg"], 
+               "label" = meta$label_de[meta$variable == "sampreg"],
+               "values" = list("Westdeutschland, alte Bundeslaender", 
+                               "Ostdeutschland, neue Bundeslaender")),
+          list("variable" = meta$variable[meta$variable == "migback"], 
+               "label" = meta$label_de[meta$variable == "migback"],
+               "values" = list("kein Migrationshintergrund", 
+                               "direkter Migrationshintergrund",
+                               "indirekter Migrationshintergrund"))
+        ),
+        "description_de" = meta$description[meta$variable==variable],
+        "start_year" = startyear,
+        "end_year" = endyear,
+        "types" = list("numerical", "categorical")
+      ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
+    )
+    
+    file_handler <- file("meta.json")
+    writeLines(json_output, exportpath, useBytes=TRUE)
+    close(file_handler)
+  }
+}
+
+################################################################################
+################################################################################
+# Erzeugung von json Metadaten
+
+#' @title expand_table 
+#'
+#' @description expand_table fügt leere Zeilen hinzu, falls Variable in Jahr leer ist. 
+#'
+#' @table data.frame die mit leeren Zellen aufgefüllt werden soll
+#' @diffvar1 Differenzierungsdimension als character
+#' @diffvar2 Differenzierungsdimension als character
+#' @diffvar3 Differenzierungsdimension als character
+#' @diffcount  Anzahl an Differenzierungen als numeric
+#' @tabletype Tabellentyp ("prop" oder "mean")
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#'  
+#' @examples expand_table(table = protected.table, diffvar1 = diffvar1, 
+#'                        diffvar2 = diffvar2, diffvar3 = diffvar3,
+#'                        diffcount = diffcount, tabletype = "prop")
+
+expand_table <- function(table, diffvar1, diffvar2, diffvar3, diffcount, tabletype) {
+  
+  start_year <- as.numeric(unique(table$year)[1])
+  end_year <- as.numeric(unique(table$year)[length(unique(table$year))])
+  
+  if (tabletype == "mean") {
+    if(diffcount == 0){
+      expand.table <- expand.grid(year=seq(start_year, end_year))
+    }
+    if(diffcount == 1){
+      expand.table <- expand.grid(year=seq(start_year, end_year), 
+                                  diffvar1=unique(pull(table, diffvar1)))
+      names(expand.table) <- c("year", diffvar1)
+    }
+    
+    if(diffcount == 2){
+      expand.table <- expand.grid(year=seq(start_year, end_year), 
+                                  diffvar1=unique(pull(table, diffvar1)),
+                                  diffvar2=unique(pull(protected.table, diffvar2)))
+      names(expand.table) <- c("year", diffvar1, diffvar2)
+    }
+    
+    if(diffcount == 3){
+      expand.table <- expand.grid(year=seq(start_year, end_year), 
+                                  diffvar1=unique(pull(table, diffvar1)),
+                                  diffvar2=unique(pull(table, diffvar2)),
+                                  diffvar3=unique(pull(table, diffvar3)))
+      names(expand.table) <- c("year", diffvar1, diffvar2, diffvar3)
+    }
+  }
+  if (tabletype == "prop") {
+    if(diffcount == 0){
+      expand.table <- expand.grid(year=seq(start_year, end_year),
+                                  usedvariable=unique(pull(table, usedvariable)))
+    }
+    if(diffcount == 1){
+      expand.table <- expand.grid(year=seq(start_year, end_year), 
+                                  usedvariable=unique(pull(table, usedvariable)),
+                                  diffvar1=unique(pull(table, diffvar1)))
+      names(expand.table) <- c("year", "usedvariable", diffvar1)
+    }
+    
+    if(diffcount == 2){
+      expand.table <- expand.grid(year=seq(start_year, end_year), 
+                                  usedvariable=unique(pull(table, usedvariable)),
+                                  diffvar1=unique(pull(table, diffvar1)),
+                                  diffvar2=unique(pull(protected.table, diffvar2)))
+      names(expand.table) <- c("year", "usedvariable", diffvar1, diffvar2)
+    }
+    
+    if(diffcount == 3){
+      expand.table <- expand.grid(year=seq(start_year, end_year), 
+                                  usedvariable=unique(pull(table, usedvariable)),
+                                  diffvar1=unique(pull(table, diffvar1)),
+                                  diffvar2=unique(pull(table, diffvar2)),
+                                  diffvar3=unique(pull(table, diffvar3)))
+      names(expand.table) <- c("year", "usedvariable", diffvar1, diffvar2, diffvar3)
+    }
+  }
+  final <- merge(table, expand.table, all.y = TRUE)
+  final <- final[with(final, order(year)), ]
+  return(final)
+}  
 
 
 
