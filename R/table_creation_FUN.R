@@ -394,20 +394,15 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
   
   metadata <- read.csv(metadatapath , header = TRUE)
   variable <- variable
-  path <- file.path(exportpath, variable)
-  dir.create(path, showWarnings = FALSE)
 
-  folder <- paste0(variable, "/")
-  
-  diffvars <- 1+diffcount
-  filenames  <- names(table)[2:diffvars]
-  
   if(tabletype=="mean"){
+    path <- file.path(exportpath, "numerical", variable, "/")
     diffvars <- 1+diffcount
     filenames  <- names(table)[2:diffvars]
   }
   
   if(tabletype=="prop"){
+    path <- file.path(exportpath, "categorical", variable, "/")
     diffvars <- 2+diffcount
     filenames  <- names(table)[3:diffvars]
   }
@@ -431,6 +426,7 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
     filename <- paste0(variable, "_", "year")
   }
   
+  dir.create(path, showWarnings = FALSE)
   data.csv <- sapply(table, as.character)
   data.csv[is.na(data.csv)] <- ""
   data.csv <- as.data.frame(data.csv)
@@ -442,11 +438,11 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
                                   function(x)gsub('^\\s+', '',x)))
   
   if(tabletype=="mean"){
-    export <- paste0(exportpath, folder, filename, ".csv")
+    export <- paste0(path, filename, ".csv")
   }
   
   if(tabletype=="prop"){
-    export <- paste0(exportpath, folder, filename, ".csv")
+    export <- paste0(path, filename, ".csv")
     colnames(data.csv)[1] <- variable
   }
   

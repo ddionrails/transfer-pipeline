@@ -4,15 +4,16 @@
 
 ### Was muss definiert werden:
 # Persönlicher Pfad
-if (Sys.info()[["user"]] == "Stefan") {
-  datapath <- "C:/Users/Stefan/ownCloud/Transfer/Plattform/dta/"
-  metapath <- "C:/git/platform-datasets/metadaten_example/"
-  exportpath <- "C:/git/platform-datasets/testdaten/"
+if (Sys.info()[["user"]] == "stefz") {
+  datapath <- "C:/owncloud/Transfer/Plattform/"
+  #"C:/git/platform-datasets/metadaten_example/"  
+  metapath <- "C:/git/soep-transfer/meta/p_platform/"
+  exportpath <- "C:/git/soep-transfer/"
 }
 
 # Definition von Objekten
 dataset <- "p_plattform"  # Aus welchem Datensatz sollen Werte genommen werden
-cell.min <- "30" # Maximal erlaubte Zellgröße
+cell.min <- 30 # Maximal erlaubte Zellgröße
 year <- "syear" # Erhebungsjahr muss definiert sein
 weight <- "phrf" # Gewicht muss definiert sein
 #############################################################################
@@ -42,7 +43,6 @@ meta <- read.csv(paste0(metapath, "variables.csv") , header = TRUE,
 ################################################################################
 ################################################################################
 ### Code zum Erzeugen:
-
 meta_demo <- meta %>%
   filter(meantable == "demo") 
 
@@ -106,7 +106,7 @@ for (var in 1:length(meta$variable)){
 
       table.values <- create_table_lables(table = table.values)
       
-      protected.table <- get_protected_values(dataset = table.values, cell.size = cell.min)
+      protected.table <- get_protected_values(dataset = table.values, cell.size = 30)
       
       
       protected.table <- expand_table(table = protected.table, diffvar1 = diffvar1, 
@@ -123,8 +123,8 @@ for (var in 1:length(meta$variable)){
                        startyear = as.numeric(unique(data.csv$year)[1]), 
                        endyear = as.numeric(unique(data.csv$year)[length(unique(data.csv$year))]), 
                        tabletype = "mean",
-                       exportpath = paste0(exportpath, variable, "/meta.json"))
-      
+                       exportpath = paste0(exportpath, "/numerical/", variable, "/meta.json"))
+
       print(paste("Die Variable", variable, "wird verarbeitet mit Differenzierung", 
                   paste(difflist[[i]],collapse=","), "als Mittelwert-Tabelle"))
       }
@@ -163,7 +163,7 @@ for (var in 1:length(meta$variable)){
                          startyear = as.numeric(unique(data.csv$year)[1]), 
                          endyear = as.numeric(unique(data.csv$year)[length(unique(data.csv$year))]), 
                          tabletype = "prop",
-                         exportpath = paste0(exportpath, variable, "/meta.json"))
+                         exportpath = paste0(exportpath, "/categorical/", variable, "/meta.json"))
         
         print(paste("Die Variable", variable, "wird verarbeitet mit Differenzierung", 
                     paste(difflist[[i]],collapse=","), "als Prozentwert-Tabelle"))
