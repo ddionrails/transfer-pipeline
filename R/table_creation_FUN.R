@@ -362,6 +362,11 @@ create_table_lables <- function(table) {
                                                        "2" = "direkter Migrationshintergrund", 
                                                        "3"  = "indirekter Migrationshintergrund"), 
                                                         as.character(data_with_label$migback))
+    
+  if("regtyp" %in% colnames(data_with_label)){
+      data_with_label$regtyp <- gsubfn(".", list("1"  = "Staedtischer Raum", 
+                                                  "2" = "Laendlicher Raum", 
+                                        as.character(data_with_label$regtyp))
   }
   
   return(data_with_label)
@@ -473,6 +478,7 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
   if (tabletype == "mean") {
     json_output <- jsonlite::toJSON(
       x = list(
+        "dataset" = meta$dataset[meta$variable == variable],
         "title" = varlabel,
         "variable" = variable,
         "statistics" = c("mean", "median"),
@@ -504,7 +510,11 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
                "label" = meta$label_de[meta$variable == "migback"],
                "values" = list("kein Migrationshintergrund", 
                                "direkter Migrationshintergrund",
-                               "indirekter Migrationshintergrund"))
+                               "indirekter Migrationshintergrund")),
+          list("variable" = meta$variable[meta$variable == "regtyp"], 
+               "label" = meta$label_de[meta$variable == "regtyp"],
+               "values" = list("Staedtischer Raum", 
+                               "Ländlicher Raum"))
         ),
         "description_de" = meta$description[meta$variable==variable],
         "start_year" = startyear,
@@ -521,6 +531,7 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
   if (tabletype == "prop") {
     json_output <- jsonlite::toJSON(
       x = list(
+        "dataset" = meta$dataset[meta$variable == variable],
         "title" = varlabel,
         "variable" = variable,
         "statistics" = "percent",
@@ -552,7 +563,11 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
                "label" = meta$label_de[meta$variable == "migback"],
                "values" = list("kein Migrationshintergrund", 
                                "direkter Migrationshintergrund",
-                               "indirekter Migrationshintergrund"))
+                               "indirekter Migrationshintergrund")),
+          list("variable" = meta$variable[meta$variable == "regtyp"], 
+               "label" = meta$label_de[meta$variable == "regtyp"],
+               "values" = list("Staedtischer Raum", 
+                               "Ländlicher Raum"))
         ),
         "description_de" = meta$description[meta$variable==variable],
         "start_year" = startyear,
@@ -569,6 +584,7 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
   if (tabletype == "both") {
     json_output <- jsonlite::toJSON(
       x = list(
+        "dataset" = meta$dataset[meta$variable == variable],
         "title" = varlabel,
         "variable" = variable,
         "statistics" = c("mean", "median", "percent"),
@@ -600,7 +616,11 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
                "label" = meta$label_de[meta$variable == "migback"],
                "values" = list("kein Migrationshintergrund", 
                                "direkter Migrationshintergrund",
-                               "indirekter Migrationshintergrund"))
+                               "indirekter Migrationshintergrund")),
+          list("variable" = meta$variable[meta$variable == "regtyp"], 
+               "label" = meta$label_de[meta$variable == "regtyp"],
+               "values" = list("Staedtischer Raum", 
+                               "Ländlicher Raum"))
         ),
         "description_de" = meta$description[meta$variable==variable],
         "start_year" = startyear,
