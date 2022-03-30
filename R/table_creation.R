@@ -4,15 +4,15 @@
 
 ### Was muss definiert werden:
 # Persönlicher Pfad
-if (Sys.info()[["user"]] == "stefz") {
-  datapath <- "C:/owncloud/Transfer/Plattform/"
+if (Sys.info()[["user"]] == "szimmermann") {
+  datapath <- "H:/data/"
   #"C:/git/platform-datasets/metadaten_example/"  
-  metapath <- "C:/git/soep-transfer/meta/p_platform/"
-  exportpath <- "C:/git/soep-transfer/"
+  metapath <- "H:/Clone/soep-transfer/metadata/"
+  exportpath <- "H:/Clone/soep-transfer/"
 }
 
 # Definition von Objekten
-dataset <- "p_plattform"  # Aus welchem Datensatz sollen Werte genommen werden
+dataset <- "p_statistics"  # Aus welchem Datensatz sollen Werte genommen werden
 cell.min <- 30 # Maximal erlaubte Zellgröße
 year <- "syear" # Erhebungsjahr muss definiert sein
 weight <- "phrf" # Gewicht muss definiert sein
@@ -28,14 +28,14 @@ data.file.num <- read.dta13(paste0(datapath,dataset,".dta"),
 
 # Gewichte mit 0 machen Probleme bei der Mittelwertberechnung
 data.file.num <- data.file.num %>%
-  filter(phrf > 0) 
+  filter(weight > 0) 
 
 data.file.fac <- read.dta13(paste0(datapath,dataset,".dta"), 
                             convert.factors = TRUE, 
                             nonint.factors = TRUE, encoding = "UTF-8")
 
 data.file.fac <- data.file.fac %>%
-  filter(phrf > 0) 
+  filter(weight > 0) 
 
 meta <- read.csv(paste0(metapath, "variables.csv") , header = TRUE,
                  colClasses = "character")
@@ -43,6 +43,10 @@ meta <- read.csv(paste0(metapath, "variables.csv") , header = TRUE,
 ################################################################################
 ################################################################################
 ### Code zum Erzeugen:
+# Datensatz definieren über metadaten
+meta <- meta[meta$dataset==dataset, ]
+
+### Demovariablen vorbereiten
 meta_demo <- meta %>%
   filter(meantable == "demo") 
 

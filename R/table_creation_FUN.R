@@ -310,7 +310,8 @@ create_table_lables <- function(table) {
   data_with_label <- table
   
   if("sex" %in% colnames(data_with_label)){
-    data_with_label$sex <- gsubfn(".", list("1" = "maennlich", "2" = "weiblich"), as.character(data_with_label$sex))
+    data_with_label$sex <- gsubfn(".", list("1" = "maennlich", "2" = "weiblich"), 
+                                  as.character(data_with_label$sex))
   }
   
   if("bula_h" %in% colnames(data_with_label)){
@@ -321,7 +322,7 @@ create_table_lables <- function(table) {
       gsub("13", "Mecklenburg-Vorpommern", .) %>%
       gsub("14", "Sachsen", .) %>%
       gsub("15", "Sachsen-Anhalt", .) %>%
-      gsub("16", "Thueringen", .) %>% 
+      gsub("16", "Thüringen", .) %>% 
       gsub("1", "Schleswig-Holstein", .) %>%
       gsub("2", "Hamburg", .) %>%
       gsub("3", "Niedersachsen", .) %>%
@@ -329,7 +330,7 @@ create_table_lables <- function(table) {
       gsub("5", "Nordrhein-Westfalen", .) %>%
       gsub("6", "Hessen", .) %>%
       gsub("7", "Rheinland-Pfalz", .) %>% 
-      gsub("8", "Baden-Wuerttemberg", .) %>% 
+      gsub("8", "Baden-Württemberg", .) %>% 
       gsub("9", "Bayern", .)
   }
   
@@ -362,11 +363,28 @@ create_table_lables <- function(table) {
                                                        "2" = "direkter Migrationshintergrund", 
                                                        "3"  = "indirekter Migrationshintergrund"), 
                                                         as.character(data_with_label$migback))
-    
+  }
   if("regtyp" %in% colnames(data_with_label)){
-      data_with_label$regtyp <- gsubfn(".", list("1"  = "Staedtischer Raum", 
-                                                  "2" = "Laendlicher Raum", 
-                                        as.character(data_with_label$regtyp))
+    data_with_label$regtyp <- gsubfn(".", list("1" = "Staedtischer Raum", "2" = "Laendlicher Raum"), 
+                                  as.character(data_with_label$regtyp))
+  }
+  
+  if("hhtyp" %in% colnames(data_with_label)){
+    data_with_label$hhtyp <- gsubfn(".", list("1" = "1-Pers.-HH", 
+                                              "2" = "(Ehe-)Paar ohne Kind(er)",
+                                              "3" = "Alleinerziehende",
+                                              "4" = "Paar mit Kind(ern)",
+                                              "5" = "Sonstige"), 
+                                     as.character(data_with_label$hhtyp))
+  }
+  
+  if("quintil" %in% colnames(data_with_label)){
+    data_with_label$quintil <- gsubfn(".", list("1" = "1", 
+                                                "2" = "2",
+                                                "3" = "3",
+                                                "4" = "4",
+                                                "5" = "5"), 
+                                    as.character(data_with_label$quintil))
   }
   
   return(data_with_label)
@@ -397,9 +415,11 @@ create_table_lables <- function(table) {
 
 get_table_export <- function(table, variable, metadatapath, exportpath, diffcount, tabletype) {
   
-  metadata <- read.csv(metadatapath , header = TRUE)
-  variable <- variable
 
+  metadata <- read.csv(metadatapath , header = TRUE)
+  metadata <- metadata[metadata$dataset==dataset, ]
+  variable <- variable
+  
   if(tabletype=="mean"){
     path <- file.path(exportpath, "numerical", variable, "/")
     diffvars <- 1+diffcount
@@ -430,6 +450,7 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
   if (diffcount == 0) {
     filename <- paste0(variable, "_", "year")
   }
+  
   
   dir.create(path, showWarnings = FALSE)
   data.csv <- sapply(table, as.character)
@@ -494,9 +515,9 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
                "label" = meta$label_de[meta$variable == "bula_h"],
                "values" = list("Schleswig-Holstein", "Hamburg",
                                "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
-                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Wuerttemberg", 
+                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Württemberg", 
                                "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
-                               "Sachsen", "Sachsen-Anhalt", "Thueringen")),
+                               "Sachsen", "Sachsen-Anhalt", "Thüringen")),
           list("variable" = meta$variable[meta$variable == "bildungsniveau"], 
                "label" = meta$label_de[meta$variable == "bildungsniveau"],
                "values" = list("(noch) kein Abschluss", "Hauptschulabschluss",
@@ -514,7 +535,21 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
           list("variable" = meta$variable[meta$variable == "regtyp"], 
                "label" = meta$label_de[meta$variable == "regtyp"],
                "values" = list("Staedtischer Raum", 
-                               "Ländlicher Raum"))
+                               "Ländlicher Raum")),
+          list("variable" = meta$variable[meta$variable == "hhtyp"], 
+               "label" = meta$label_de[meta$variable == "hhtyp"],
+               "values" = list("1-Pers.-HH", 
+                               "(Ehe-)Paar ohne Kind(er)",
+                               "Alleinerziehende",
+                               "Paar mit Kind(ern)",
+                               "Sonstige")),
+          list("variable" = meta$variable[meta$variable == "quintil"], 
+               "label" = meta$label_de[meta$variable == "quintil"],
+               "values" = list("1", 
+                               "2",
+                               "3",
+                               "4",
+                               "5"))
         ),
         "description_de" = meta$description[meta$variable==variable],
         "start_year" = startyear,
@@ -547,9 +582,9 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
                "label" = meta$label_de[meta$variable == "bula_h"],
                "values" = list("Schleswig-Holstein", "Hamburg",
                                "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
-                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Wuerttemberg", 
+                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Württemberg", 
                                "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
-                               "Sachsen", "Sachsen-Anhalt", "Thueringen")),
+                               "Sachsen", "Sachsen-Anhalt", "Thüringen")),
           list("variable" = meta$variable[meta$variable == "bildungsniveau"], 
                "label" = meta$label_de[meta$variable == "bildungsniveau"],
                "values" = list("(noch) kein Abschluss", "Hauptschulabschluss",
@@ -567,7 +602,21 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
           list("variable" = meta$variable[meta$variable == "regtyp"], 
                "label" = meta$label_de[meta$variable == "regtyp"],
                "values" = list("Staedtischer Raum", 
-                               "Ländlicher Raum"))
+                               "Ländlicher Raum")),
+          list("variable" = meta$variable[meta$variable == "hhtyp"], 
+               "label" = meta$label_de[meta$variable == "hhtyp"],
+               "values" = list("1-Pers.-HH", 
+                               "(Ehe-)Paar ohne Kind(er)",
+                               "Alleinerziehende",
+                               "Paar mit Kind(ern)",
+                               "Sonstige")),
+          list("variable" = meta$variable[meta$variable == "quintil"], 
+               "label" = meta$label_de[meta$variable == "quintil"],
+               "values" = list("1", 
+                               "2",
+                               "3",
+                               "4",
+                               "5"))
         ),
         "description_de" = meta$description[meta$variable==variable],
         "start_year" = startyear,
@@ -600,9 +649,9 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
                "label" = meta$label_de[meta$variable == "bula_h"],
                "values" = list("Schleswig-Holstein", "Hamburg",
                                "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
-                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Wuerttemberg", 
+                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Württemberg", 
                                "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
-                               "Sachsen", "Sachsen-Anhalt", "Thueringen")),
+                               "Sachsen", "Sachsen-Anhalt", "Thüringen")),
           list("variable" = meta$variable[meta$variable == "bildungsniveau"], 
                "label" = meta$label_de[meta$variable == "bildungsniveau"],
                "values" = list("(noch) kein Abschluss", "Hauptschulabschluss",
@@ -620,7 +669,21 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
           list("variable" = meta$variable[meta$variable == "regtyp"], 
                "label" = meta$label_de[meta$variable == "regtyp"],
                "values" = list("Staedtischer Raum", 
-                               "Ländlicher Raum"))
+                               "Ländlicher Raum")),
+          list("variable" = meta$variable[meta$variable == "hhtyp"], 
+               "label" = meta$label_de[meta$variable == "hhtyp"],
+               "values" = list("1-Pers.-HH", 
+                               "(Ehe-)Paar ohne Kind(er)",
+                               "Alleinerziehende",
+                               "Paar mit Kind(ern)",
+                               "Sonstige")),
+          list("variable" = meta$variable[meta$variable == "quintil"], 
+               "label" = meta$label_de[meta$variable == "quintil"],
+               "values" = list("1", 
+                               "2",
+                               "3",
+                               "4",
+                               "5"))
         ),
         "description_de" = meta$description[meta$variable==variable],
         "start_year" = startyear,
