@@ -12,10 +12,10 @@ if (Sys.info()[["user"]] == "szimmermann") {
 }
 
 # Definition von Objekten
-dataset <- "p_statistics"  # Aus welchem Datensatz sollen Werte genommen werden
+dataset <- "h_statistics"  # Aus welchem Datensatz sollen Werte genommen werden
 cell.min <- 30 # Maximal erlaubte Zellgröße
 year <- "syear" # Erhebungsjahr muss definiert sein
-weight <- "phrf" # Gewicht muss definiert sein
+weight <- "hhrf" # Gewicht muss definiert sein
 #############################################################################
 
 ## load packages
@@ -127,7 +127,8 @@ for (var in 1:length(meta$variable)){
                        startyear = as.numeric(unique(data.csv$year)[1]), 
                        endyear = as.numeric(unique(data.csv$year)[length(unique(data.csv$year))]), 
                        tabletype = "mean",
-                       exportpath = paste0(exportpath, "/numerical/", variable, "/meta.json"))
+                       exportpath = paste0(exportpath, "/numerical/", variable, "/meta.json"),
+                       dataset = dataset)
 
       print(paste("Die Variable", variable, "wird verarbeitet mit Differenzierung", 
                   paste(difflist[[i]],collapse=","), "als Mittelwert-Tabelle"))
@@ -167,7 +168,8 @@ for (var in 1:length(meta$variable)){
                          startyear = as.numeric(unique(data.csv$year)[1]), 
                          endyear = as.numeric(unique(data.csv$year)[length(unique(data.csv$year))]), 
                          tabletype = "prop",
-                         exportpath = paste0(exportpath, "/categorical/", variable, "/meta.json"))
+                         exportpath = paste0(exportpath, "/categorical/", variable, "/meta.json"),
+                         dataset = dataset)
         
         print(paste("Die Variable", variable, "wird verarbeitet mit Differenzierung", 
                     paste(difflist[[i]],collapse=","), "als Prozentwert-Tabelle"))

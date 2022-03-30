@@ -495,7 +495,8 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
 #'  
 #' @examples column_count_check(data = data, columns = columns)
 
-json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, exportpath) {
+json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, exportpath, dataset) {
+  if (dataset == "p_statistics") {  
   if (tabletype == "mean") {
     json_output <- jsonlite::toJSON(
       x = list(
@@ -535,21 +536,7 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
           list("variable" = meta$variable[meta$variable == "regtyp"], 
                "label" = meta$label_de[meta$variable == "regtyp"],
                "values" = list("Staedtischer Raum", 
-                               "Ländlicher Raum")),
-          list("variable" = meta$variable[meta$variable == "hhtyp"], 
-               "label" = meta$label_de[meta$variable == "hhtyp"],
-               "values" = list("1-Pers.-HH", 
-                               "(Ehe-)Paar ohne Kind(er)",
-                               "Alleinerziehende",
-                               "Paar mit Kind(ern)",
-                               "Sonstige")),
-          list("variable" = meta$variable[meta$variable == "quintil"], 
-               "label" = meta$label_de[meta$variable == "quintil"],
-               "values" = list("1", 
-                               "2",
-                               "3",
-                               "4",
-                               "5"))
+                               "Ländlicher Raum"))
         ),
         "description_de" = meta$description[meta$variable==variable],
         "start_year" = startyear,
@@ -602,21 +589,7 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
           list("variable" = meta$variable[meta$variable == "regtyp"], 
                "label" = meta$label_de[meta$variable == "regtyp"],
                "values" = list("Staedtischer Raum", 
-                               "Ländlicher Raum")),
-          list("variable" = meta$variable[meta$variable == "hhtyp"], 
-               "label" = meta$label_de[meta$variable == "hhtyp"],
-               "values" = list("1-Pers.-HH", 
-                               "(Ehe-)Paar ohne Kind(er)",
-                               "Alleinerziehende",
-                               "Paar mit Kind(ern)",
-                               "Sonstige")),
-          list("variable" = meta$variable[meta$variable == "quintil"], 
-               "label" = meta$label_de[meta$variable == "quintil"],
-               "values" = list("1", 
-                               "2",
-                               "3",
-                               "4",
-                               "5"))
+                               "Ländlicher Raum"))
         ),
         "description_de" = meta$description[meta$variable==variable],
         "start_year" = startyear,
@@ -629,72 +602,107 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
     writeLines(json_output, exportpath, useBytes=TRUE)
     close(file_handler)
   }
-  
-  if (tabletype == "both") {
-    json_output <- jsonlite::toJSON(
-      x = list(
-        "dataset" = meta$dataset[meta$variable == variable],
-        "title" = varlabel,
-        "variable" = variable,
-        "statistics" = c("mean", "median", "percent"),
-        "dimensions" = list(
-          list("variable" = meta$variable[meta$variable == "alter_gr"], 
-               "label" = meta$label_de[meta$variable == "alter_gr"],
-               "values" = list("16-34 Jahre alt", "35-65 Jahre alt",
-                               "66 und älter")),
-          list("variable" = meta$variable[meta$variable == "sex"], 
-               "label" = meta$label_de[meta$variable == "sex"],
-               "values" = list("maennlich", "weiblich")),
-          list("variable" = meta$variable[meta$variable == "bula_h"], 
-               "label" = meta$label_de[meta$variable == "bula_h"],
-               "values" = list("Schleswig-Holstein", "Hamburg",
-                               "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
-                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Württemberg", 
-                               "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
-                               "Sachsen", "Sachsen-Anhalt", "Thüringen")),
-          list("variable" = meta$variable[meta$variable == "bildungsniveau"], 
-               "label" = meta$label_de[meta$variable == "bildungsniveau"],
-               "values" = list("(noch) kein Abschluss", "Hauptschulabschluss",
-                               "Realschulabschluss", "(Fach-)Abitur", 
-                               "AkademikerInnen")),
-          list("variable" = meta$variable[meta$variable == "sampreg"], 
-               "label" = meta$label_de[meta$variable == "sampreg"],
-               "values" = list("Westdeutschland, alte Bundeslaender", 
-                               "Ostdeutschland, neue Bundeslaender")),
-          list("variable" = meta$variable[meta$variable == "migback"], 
-               "label" = meta$label_de[meta$variable == "migback"],
-               "values" = list("kein Migrationshintergrund", 
-                               "direkter Migrationshintergrund",
-                               "indirekter Migrationshintergrund")),
-          list("variable" = meta$variable[meta$variable == "regtyp"], 
-               "label" = meta$label_de[meta$variable == "regtyp"],
-               "values" = list("Staedtischer Raum", 
-                               "Ländlicher Raum")),
-          list("variable" = meta$variable[meta$variable == "hhtyp"], 
-               "label" = meta$label_de[meta$variable == "hhtyp"],
-               "values" = list("1-Pers.-HH", 
-                               "(Ehe-)Paar ohne Kind(er)",
-                               "Alleinerziehende",
-                               "Paar mit Kind(ern)",
-                               "Sonstige")),
-          list("variable" = meta$variable[meta$variable == "quintil"], 
-               "label" = meta$label_de[meta$variable == "quintil"],
-               "values" = list("1", 
-                               "2",
-                               "3",
-                               "4",
-                               "5"))
-        ),
-        "description_de" = meta$description[meta$variable==variable],
-        "start_year" = startyear,
-        "end_year" = endyear,
-        "types" = list("numerical", "categorical")
-      ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
-    )
+  }
+  if (dataset == "h_statistics") {  
+    if (tabletype == "mean") {
+      json_output <- jsonlite::toJSON(
+        x = list(
+          "dataset" = meta$dataset[meta$variable == variable],
+          "title" = varlabel,
+          "variable" = variable,
+          "statistics" = c("mean", "median"),
+          "dimensions" = list(
+           list("variable" = meta$variable[meta$variable == "bula_h"], 
+                 "label" = meta$label_de[meta$variable == "bula_h"],
+                 "values" = list("Schleswig-Holstein", "Hamburg",
+                                 "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
+                                 "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Württemberg", 
+                                 "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
+                                 "Sachsen", "Sachsen-Anhalt", "Thüringen")),
+            list("variable" = meta$variable[meta$variable == "sampreg"], 
+                 "label" = meta$label_de[meta$variable == "sampreg"],
+                 "values" = list("Westdeutschland, alte Bundeslaender", 
+                                 "Ostdeutschland, neue Bundeslaender")),
+            list("variable" = meta$variable[meta$variable == "regtyp"], 
+                 "label" = meta$label_de[meta$variable == "regtyp"],
+                 "values" = list("Staedtischer Raum", 
+                                 "Ländlicher Raum")),
+            list("variable" = meta$variable[meta$variable == "hhtyp"], 
+                 "label" = meta$label_de[meta$variable == "hhtyp"],
+                 "values" = list("1-Pers.-HH", 
+                                 "(Ehe-)Paar ohne Kind(er)",
+                                 "Alleinerziehende",
+                                 "Paar mit Kind(ern)",
+                                 "Sonstige")),
+            list("variable" = meta$variable[meta$variable == "quintil"], 
+                 "label" = meta$label_de[meta$variable == "quintil"],
+                 "values" = list("1", 
+                                 "2",
+                                 "3",
+                                 "4",
+                                 "5"))
+          ),
+          "description_de" = meta$description[meta$variable==variable],
+          "start_year" = startyear,
+          "end_year" = endyear,
+          "types" = list("numerical")
+        ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
+      )
+      
+      file_handler <- file("meta.json")
+      writeLines(json_output, exportpath, useBytes=TRUE)
+      close(file_handler)
+    }
     
-    file_handler <- file("meta.json")
-    writeLines(json_output, exportpath, useBytes=TRUE)
-    close(file_handler)
+    if (tabletype == "prop") {
+      json_output <- jsonlite::toJSON(
+        x = list(
+          "dataset" = meta$dataset[meta$variable == variable],
+          "title" = varlabel,
+          "variable" = variable,
+          "statistics" = "percent",
+          "dimensions" = list(
+            list("variable" = meta$variable[meta$variable == "bula_h"], 
+                 "label" = meta$label_de[meta$variable == "bula_h"],
+                 "values" = list("Schleswig-Holstein", "Hamburg",
+                                 "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
+                                 "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Württemberg", 
+                                 "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
+                                 "Sachsen", "Sachsen-Anhalt", "Thüringen")),
+            list("variable" = meta$variable[meta$variable == "sampreg"], 
+                 "label" = meta$label_de[meta$variable == "sampreg"],
+                 "values" = list("Westdeutschland, alte Bundeslaender", 
+                                 "Ostdeutschland, neue Bundeslaender")),
+            list("variable" = meta$variable[meta$variable == "regtyp"], 
+                 "label" = meta$label_de[meta$variable == "regtyp"],
+                 "values" = list("Staedtischer Raum", 
+                                 "Ländlicher Raum")),
+            list("variable" = meta$variable[meta$variable == "hhtyp"], 
+                 "label" = meta$label_de[meta$variable == "hhtyp"],
+                 "values" = list("1-Pers.-HH", 
+                                 "(Ehe-)Paar ohne Kind(er)",
+                                 "Alleinerziehende",
+                                 "Paar mit Kind(ern)",
+                                 "Sonstige")),
+            list("variable" = meta$variable[meta$variable == "quintil"], 
+                 "label" = meta$label_de[meta$variable == "quintil"],
+                 "values" = list("1", 
+                                 "2",
+                                 "3",
+                                 "4",
+                                 "5"))
+          ),
+          "description_de" = meta$description[meta$variable==variable],
+          "start_year" = startyear,
+          "end_year" = endyear,
+          "types" = "categorical"
+        ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
+      )
+      
+      file_handler <- file("meta.json")
+      writeLines(json_output, exportpath, useBytes=TRUE)
+      close(file_handler)
+    }
   }
 }
 
