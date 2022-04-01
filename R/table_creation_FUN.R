@@ -310,7 +310,7 @@ create_table_lables <- function(table) {
   data_with_label <- table
   
   if("sex" %in% colnames(data_with_label)){
-    data_with_label$sex <- gsubfn(".", list("1" = "maennlich", "2" = "weiblich"), 
+    data_with_label$sex <- gsubfn(".", list("1" = "männlich", "2" = "weiblich"), 
                                   as.character(data_with_label$sex))
   }
   
@@ -335,8 +335,8 @@ create_table_lables <- function(table) {
   }
   
   if("sampreg" %in% colnames(data_with_label)){
-    data_with_label$sampreg <- gsubfn(".", list("1" = "Westdeutschland, alte Bundeslaender", 
-                                                "2"  = "Ostdeutschland, neue Bundeslaender"), as.character(data_with_label$sampreg))
+    data_with_label$sampreg <- gsubfn(".", list("1" = "West", 
+                                                "2"  = "Ost"), as.character(data_with_label$sampreg))
   }
   
   if("pgcasmin" %in% colnames(data_with_label)){
@@ -348,14 +348,14 @@ create_table_lables <- function(table) {
   }
   
   if("alter_gr" %in% colnames(data_with_label)){
-    data_with_label$alter_gr <- gsubfn(".", list("1"  = "16-34 Jahre alt", 
-                                                 "2" = "35-65 Jahre alt", "3"  = "66 und älter"), as.character(data_with_label$alter_gr))
+    data_with_label$alter_gr <- gsubfn(".", list("1"  = "16-34 J.", 
+                                                 "2" = "35-65 J.", "3"  = "66 und älter"), as.character(data_with_label$alter_gr))
   }
   
   if("bildungsniveau" %in% colnames(data_with_label)){
     data_with_label$bildungsniveau <- gsubfn(".", list("1"  = "(noch) kein Abschluss", 
-                                                       "2" = "Hauptschulabschluss", "3"  = "Realschulabschluss",
-                                                       "4" = "(Fach-)Abitur", "5"  = "AkademikerInnen"), as.character(data_with_label$bildungsniveau))
+                                                       "2" = "Hauptschule", "3"  = "Realschule",
+                                                       "4" = "(Fach-)Abitur", "5"  = "AkademikerIn"), as.character(data_with_label$bildungsniveau))
   }
   
   if("migback" %in% colnames(data_with_label)){
@@ -507,36 +507,25 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
         "dimensions" = list(
           list("variable" = meta$variable[meta$variable == "alter_gr"], 
                "label" = meta$label_de[meta$variable == "alter_gr"],
-               "values" = list("16-34 Jahre alt", "35-65 Jahre alt",
-                               "66 und älter")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$alter_gr))))))),
           list("variable" = meta$variable[meta$variable == "sex"], 
                "label" = meta$label_de[meta$variable == "sex"],
-               "values" = list("maennlich", "weiblich")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sex))))))),
           list("variable" = meta$variable[meta$variable == "bula_h"], 
                "label" = meta$label_de[meta$variable == "bula_h"],
-               "values" = list("Schleswig-Holstein", "Hamburg",
-                               "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
-                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Württemberg", 
-                               "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
-                               "Sachsen", "Sachsen-Anhalt", "Thüringen")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bula_h))))))),
           list("variable" = meta$variable[meta$variable == "bildungsniveau"], 
                "label" = meta$label_de[meta$variable == "bildungsniveau"],
-               "values" = list("(noch) kein Abschluss", "Hauptschulabschluss",
-                               "Realschulabschluss", "(Fach-)Abitur", 
-                               "AkademikerInnen")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bildungsniveau))))))),
           list("variable" = meta$variable[meta$variable == "sampreg"], 
                "label" = meta$label_de[meta$variable == "sampreg"],
-               "values" = list("Westdeutschland, alte Bundeslaender", 
-                               "Ostdeutschland, neue Bundeslaender")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sampreg))))))),
           list("variable" = meta$variable[meta$variable == "migback"], 
                "label" = meta$label_de[meta$variable == "migback"],
-               "values" = list("kein Migrationshintergrund", 
-                               "direkter Migrationshintergrund",
-                               "indirekter Migrationshintergrund")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$migback))))))),
           list("variable" = meta$variable[meta$variable == "regtyp"], 
                "label" = meta$label_de[meta$variable == "regtyp"],
-               "values" = list("Staedtischer Raum", 
-                               "Ländlicher Raum"))
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp)))))))
         ),
         "description_de" = meta$description[meta$variable==variable],
         "start_year" = startyear,
@@ -560,36 +549,25 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
         "dimensions" = list(
           list("variable" = meta$variable[meta$variable == "alter_gr"], 
                "label" = meta$label_de[meta$variable == "alter_gr"],
-               "values" = list("16-34 Jahre alt", "35-65 Jahre alt",
-                               "66 und älter")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$alter_gr))))))),
           list("variable" = meta$variable[meta$variable == "sex"], 
                "label" = meta$label_de[meta$variable == "sex"],
-               "values" = list("maennlich", "weiblich")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sex))))))),
           list("variable" = meta$variable[meta$variable == "bula_h"], 
                "label" = meta$label_de[meta$variable == "bula_h"],
-               "values" = list("Schleswig-Holstein", "Hamburg",
-                               "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
-                               "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Württemberg", 
-                               "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
-                               "Sachsen", "Sachsen-Anhalt", "Thüringen")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bula_h))))))),
           list("variable" = meta$variable[meta$variable == "bildungsniveau"], 
                "label" = meta$label_de[meta$variable == "bildungsniveau"],
-               "values" = list("(noch) kein Abschluss", "Hauptschulabschluss",
-                               "Realschulabschluss", "(Fach-)Abitur", 
-                               "AkademikerInnen")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bildungsniveau))))))),
           list("variable" = meta$variable[meta$variable == "sampreg"], 
                "label" = meta$label_de[meta$variable == "sampreg"],
-               "values" = list("Westdeutschland, alte Bundeslaender", 
-                               "Ostdeutschland, neue Bundeslaender")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sampreg))))))),
           list("variable" = meta$variable[meta$variable == "migback"], 
                "label" = meta$label_de[meta$variable == "migback"],
-               "values" = list("kein Migrationshintergrund", 
-                               "direkter Migrationshintergrund",
-                               "indirekter Migrationshintergrund")),
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$migback))))))),
           list("variable" = meta$variable[meta$variable == "regtyp"], 
                "label" = meta$label_de[meta$variable == "regtyp"],
-               "values" = list("Staedtischer Raum", 
-                               "Ländlicher Raum"))
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp)))))))
         ),
         "description_de" = meta$description[meta$variable==variable],
         "start_year" = startyear,
@@ -614,33 +592,19 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
           "dimensions" = list(
            list("variable" = meta$variable[meta$variable == "bula_h"], 
                  "label" = meta$label_de[meta$variable == "bula_h"],
-                 "values" = list("Schleswig-Holstein", "Hamburg",
-                                 "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
-                                 "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Württemberg", 
-                                 "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
-                                 "Sachsen", "Sachsen-Anhalt", "Thüringen")),
+                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bula_h))))))),
             list("variable" = meta$variable[meta$variable == "sampreg"], 
                  "label" = meta$label_de[meta$variable == "sampreg"],
-                 "values" = list("Westdeutschland, alte Bundeslaender", 
-                                 "Ostdeutschland, neue Bundeslaender")),
+                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sampreg))))))),
             list("variable" = meta$variable[meta$variable == "regtyp"], 
                  "label" = meta$label_de[meta$variable == "regtyp"],
-                 "values" = list("Staedtischer Raum", 
-                                 "Ländlicher Raum")),
+                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp))))))),
             list("variable" = meta$variable[meta$variable == "hhtyp"], 
                  "label" = meta$label_de[meta$variable == "hhtyp"],
-                 "values" = list("1-Pers.-HH", 
-                                 "(Ehe-)Paar ohne Kind(er)",
-                                 "Alleinerziehende",
-                                 "Paar mit Kind(ern)",
-                                 "Sonstige")),
+                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$hhtyp))))))),
             list("variable" = meta$variable[meta$variable == "quintil"], 
                  "label" = meta$label_de[meta$variable == "quintil"],
-                 "values" = list("1", 
-                                 "2",
-                                 "3",
-                                 "4",
-                                 "5"))
+                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$quintil)))))))
           ),
           "description_de" = meta$description[meta$variable==variable],
           "start_year" = startyear,
@@ -664,33 +628,19 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
           "dimensions" = list(
             list("variable" = meta$variable[meta$variable == "bula_h"], 
                  "label" = meta$label_de[meta$variable == "bula_h"],
-                 "values" = list("Schleswig-Holstein", "Hamburg",
-                                 "Niedersachsen", "Bremen", "Nordrhein-Westfalen",
-                                 "Hessen", "Rheinland-Pfalz,Saarland", "Baden-Württemberg", 
-                                 "Bayern", "Saarland", "Berlin", "Brandenburg", "Mecklenburg-Vorpommern",
-                                 "Sachsen", "Sachsen-Anhalt", "Thüringen")),
+                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bula_h))))))),
             list("variable" = meta$variable[meta$variable == "sampreg"], 
                  "label" = meta$label_de[meta$variable == "sampreg"],
-                 "values" = list("Westdeutschland, alte Bundeslaender", 
-                                 "Ostdeutschland, neue Bundeslaender")),
+                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sampreg))))))),
             list("variable" = meta$variable[meta$variable == "regtyp"], 
                  "label" = meta$label_de[meta$variable == "regtyp"],
-                 "values" = list("Staedtischer Raum", 
-                                 "Ländlicher Raum")),
+                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp))))))),
             list("variable" = meta$variable[meta$variable == "hhtyp"], 
                  "label" = meta$label_de[meta$variable == "hhtyp"],
-                 "values" = list("1-Pers.-HH", 
-                                 "(Ehe-)Paar ohne Kind(er)",
-                                 "Alleinerziehende",
-                                 "Paar mit Kind(ern)",
-                                 "Sonstige")),
+                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$hhtyp))))))),
             list("variable" = meta$variable[meta$variable == "quintil"], 
                  "label" = meta$label_de[meta$variable == "quintil"],
-                 "values" = list("1", 
-                                 "2",
-                                 "3",
-                                 "4",
-                                 "5"))
+                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$quintil)))))))
           ),
           "description_de" = meta$description[meta$variable==variable],
           "start_year" = startyear,
