@@ -1,25 +1,50 @@
-
 ################################################################################
-# Funktionen #
+# Functions #
 ################################################################################
 
-#' @title get_data erzeugt Teilmenge eines Datensatzes
+#' @title loadpackage loads required R-packages
 #'
-#' @description get_data soll Ausgangs-Datensatz im long Format 
-#' auf bestimmte Variablen beschraenken (variable, year, weight, diffvars) und
-#' ausschliesslich valide Werte enthalten.
+#' @description loadpackage should install needed packages if necessary and load them into library
 #'
-#' @param datasetnum data.frame mit numeric Variablen (z.B. plattform_data)
-#' @param datasetfac data.frame mit factor Variablen (z.B. plattform_data)
-#' @param variable Name Analysevariable als string (z.B. "pglabnet" )
-#' @param year Name Erhebungsjahrvariable als string (z.B. "syear")
-#' @param weight Name Gewichtsvariable als string (z.B. "phrf")
-#' @param diffcount Anzahl gewuenschter Differenzierungen (z.B. 2) (range 0-3)
-#' @param diffvars Vector mit Differenzierungsvariablen (z.B. c("alter_gr", "sex", "Bildungsniveau")) (maximal 3 Variablen)
-#' @param vallabel Valuelabel sollen verwendet werden (z.B: vallabel = TRUE) (TRUE/FALSE)
+#' @param x Names of the required R-packages as vector (e.g. c("foreign", "dplyr", "tidyverse", "readstata13"))
 #' 
-#' @return variable.values.valid ist ein Datensatz mit validen Werten der 
-#' Variablen (variable, year, weight, diffvars)
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords loadpackage
+#'  
+#' @examples
+#'       loadpackage(c("foreign", "dplyr", "tidyverse", "readstata13")) 
+
+# install and load packages
+loadpackage <- function(x){
+  for( i in x ){
+    #  require returns TRUE invisibly if it was able to load package
+    if( ! require( i , character.only = TRUE ) ){
+      #  If package was not able to be loaded then re-install
+      install.packages( i , dependencies = TRUE )
+    }
+    #  Load package (after installing)
+    library( i , character.only = TRUE )
+  }
+}
+
+
+#' @title get_data creates subset of a data set
+#'
+#' @description get_data to get the output dataset in long format 
+#' limited to certain variables (variable, year, weight, diffvars) and
+#' contain only valid values.
+#'
+#' @param datasetnum data.frame with numeric variables (e.g. platform_data)
+#' @param datasetfac data.frame with factor variables (e.g. platform_data)
+#' @param variable name analysis variable as string (e.g. "pglabnet" )
+#' @param year Name survey year variable as string (e.g. "syear" )
+#' @param weight Name weight variable as string (e.g. "phrf")
+#' @param diffcount Number of desired differentiations (e.g. 2) (range 0-3)
+#' @param diffvars Vector with differentiation variables (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#' @param vallabel Valuelabel should be used (e.g.: vallabel = TRUE) (TRUE/FALSE)
+#' 
+#' @return variable.values.valid is a data set with valid values of the 
+#' variables (variable, year, weight, diffvars)
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords get_data
@@ -83,48 +108,19 @@ get_data <- function(datasetnum, datasetfac, variable, year, weight, diffcount, 
 
 ################################################################################
 
-#' @title loadpackage laedt benoetigte R-Pakete
-#'
-#' @description loadpackage soll benoetigte Pakete, wenn noetig installieren und in library laden
-#'
-#' @param x Namen der benoetigten R-Packages als Vector (z.B. c("foreign", "dplyr", "tidyverse", "readstata13"))
+#' @title get_mean_values creates mean/median tables with mean, median, n, percentiles, confidence interval
 #' 
-#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords loadpackage
-#'  
-#' @examples
-#'       loadpackage(c("foreign", "dplyr", "tidyverse", "readstata13")) 
-
-# install and load packages
-loadpackage <- function(x){
-  for( i in x ){
-    #  require returns TRUE invisibly if it was able to load package
-    if( ! require( i , character.only = TRUE ) ){
-      #  If package was not able to be loaded then re-install
-      install.packages( i , dependencies = TRUE )
-    }
-    #  Load package (after installing)
-    library( i , character.only = TRUE )
-  }
-}
-
-################################################################################
-
-#' @title get_mean_values erstellt Mittelwert/Mediantabellen mit Mittelwert-Konfidenzinterval
-#' 
-#' @description get_mean_values soll gewichtete Mittelwert/Mediantabellen mit Mittelwert-Konfidenzinterval 
-#' erzeugen mit den Informationen n = Groesse der Subgruppe, mean = gewichteter
-#' Mittelwert, median = gewichteter Median, lower_confidence = unteres Konfidenzintervall 95%,
-#' upper_confidence = oberes Konfidenzintervall 95%
+#' @description get_mean_values creates weighted mean/median tables with
+#'              n, percentiles, confidence interval
 #'
-#' @param dataset data.frame aus get_data (z.B. plattform_data)
-#' @param year Jahresvariable als string (z.B. "year")
-#' @param diffcount Anzahl gewuenschter Differenzierungen (z.B. 2) (range 0-3)
-#' @param diffvar1 Name Differenzierungsvariable 1 als string ("" moeglich)
-#' @param diffvar2 Name Differenzierungsvariable 2 als string ("" moeglich)
-#' @param diffvar3 Anzahl Differenzierungsvariable 3 als string ("" moeglich)
+#' @param dataset data.frame from get_data (e.g. platform_data)
+#' @param year year variable as string (e.g. "year")
+#' @param diffcount number of desired differentiations (e.g. 2) (range 0-3)
+#' @param diffvar1 name differentiation variable 1 as string ("" possible)
+#' @param diffvar2 name differentiation variable 2 as string ("" possible)
+#' @param diffvar3 Number of differentiation variable 3 as string ("" possible)
 #' 
-#' @return mean.values = Datensatz mit n, mean, median, Konfidenzintervalle
+#' @return data = dataset with mean, median, n, percentiles, confidence interval
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords get_mean_values
@@ -163,32 +159,65 @@ get_mean_values <- function(dataset, year, diffcount,
     mutate(sd = sd(usedvariable/sqrt(n))) %>%
     mutate(lower = mean - qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd,
            upper = mean + qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd) %>%
-    mutate(lower_confidence = round((lower),2))  %>%
-    mutate(upper_confidence = round((upper),2))  %>%
+    mutate(lowerci_mean = round((lower),2))  %>%
+    mutate(upperci_mean = round((upper),2))  %>%
+    mutate(max = round(max(usedvariable, na.rm = T), 2),
+           min = round(min(usedvariable, na.rm = T), 2))   %>%
     distinct(mean, .keep_all = TRUE)
   
-  selected.values <- c(columns, "mean", "lower_confidence", 
-                       "upper_confidence", "median", "n")
+  percentile.values <-  dataset[complete.cases(dataset), ] %>%
+    group_by_at(vars(one_of(columns)))  %>% 
+    summarise(ptile10 = round(wtd.quantile(usedvariable, weights = weight, 
+                                     probs = .1, na.rm = TRUE),2),
+              ptile25 = round(wtd.quantile(usedvariable, weights = weight, 
+                                     probs = .25, na.rm = TRUE),2),
+              ptile75 = round(wtd.quantile(usedvariable, weights = weight, 
+                                     probs = .75, na.rm = TRUE),2),
+              ptile90 = round(wtd.quantile(usedvariable, weights = weight, 
+                                     probs = .90, na.rm = TRUE),2), 
+              ptile99 = round(wtd.quantile(usedvariable, weights = weight, 
+                                           probs = .99, na.rm = TRUE),2), .groups = 'drop')
   
-  mean.values <- mean.values[,(names(mean.values) %in% selected.values)]
-  mean.values <-  mean.values %>% 
+  # Median confidence interval calculation
+  median_data <- dataset %>% 
+    group_by_at(vars(one_of(columns))) %>% 
+    filter(n() > 8)
+  
+  medianci.value<- median_data[complete.cases(median_data), ] %>% 
+    nest(data = -columns) %>%
+    mutate(ci = map(data, ~ MedianCI(.x$usedvariable, method = "exact")[2:3])) %>% 
+    unnest_wider(ci)
+  
+  medianci.value$data <- NULL
+  colnames(medianci.value) <- c(columns, "lowerci_median", "upperci_median")
+  
+  data <- merge(mean.values,percentile.values,by=columns)
+  
+  data <- left_join(data,medianci.value,by=columns)
+  
+  selected.values <- c(columns, "mean", "lowerci_mean", "upperci_mean", 
+                       "median", "lowerci_median", "upperci_median", 
+                       "ptile10", "ptile25", "ptile75", "ptile90", "ptile99", "n", "min", "max")
+  
+  data <- data[,(names(data) %in% selected.values)]
+  data <-  data %>% 
     arrange(desc(year), .by_group = TRUE)
   
-  return(mean.values)
+  return(data)
 }
 
 ################################################################################
-#' @title Funktion get_prop_values soll gewichtete Anteilswert-Tabellen mit Konfidenzintervallen erstellen
+#' @title function get_prop_values shall create weighted proportion tables with confidence intervals
 #'
-#' @description get_mean_values soll gewichtete Anteilswert-Tabellen mit Konfidenzintervallen erstellen
-#' erzeugen mit den Informationen n = Groesse der Subgruppe, percent = gewichteter
-#' Anteilswert, lower_confidence = unteres Konfidenzintervall, upper_confidence = oberes Konfidenzintervall 95%
+#' @description get_mean_values shall create weighted proportion value tables with confidence intervals
+#' create with the information n = size of the subgroup, percent = weighted
+#' proportion value, lower_confidence = lower confidence interval, upper_confidence = upper 95% confidence interval
 #' 
-#' @param dataset data.frame aus get_data (z.B. plattform_data)
-#' @param groupvars Vector mit allen Variablen im Datensatz (z.B. c("usedvariable", "year", "sex"))
-#' @param alpha Alpha fuer die Festlegung der Konfidenzintervalles (z.B. 0.05)
+#' @param dataset data.frame from get_data (e.g. platform_data)
+#' @param groupvars vector with all variables in the dataset (e.g. c("usedvariable", "year", "sex"))
+#' @param alpha Alpha for setting the confidence interval (e.g. 0.05)
 #' 
-#' @return data_prop_complete_ci = Datensatz mit n, percent, lower_confidence, upper_confidence
+#' @return data_prop_complete_ci = data set with n, percent, lower_confidence, upper_confidence
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords get_prop_values
@@ -198,15 +227,12 @@ get_mean_values <- function(dataset, year, diffcount,
 #'                       groupvars = c("usedvariable", "year", "sex"), 
 #'                       alpha = 0.05)
 
-
 get_prop_values <- function(dataset, groupvars, alpha) {
   
-  # gewichtete Häufigkeit count_w einzelner elemente
   data_prop1 <-  dataset[complete.cases(dataset), ] %>%
     group_by_at(vars(one_of(groupvars))) %>%
     summarise(count_w = sum(weight), .groups="drop_last")
   
-  # gewichtiete Hüfigkeit aller einzelner Elemente einer Gruppe
   data_prop2 <-  data_prop1[complete.cases(data_prop1), ] %>% 
     group_by(eval(parse(text = groupvars[2])), eval(parse(text = groupvars[3])),
              eval(parse(text = groupvars[4]))) %>%
@@ -248,15 +274,15 @@ get_prop_values <- function(dataset, groupvars, alpha) {
 }
 
 ################################################################################
-#' @title get_protected_values soll bestimmte Zelleninhalte entfernen
+#' @title get_protected_values should remove certain cell contents
 #'
-#' @description get_protected_values soll Zelleninhalte von gewichteten Anteilswert-Tabellen oder Mittelwert-Tabelle 
-#' loeschen wenn eine Minimalbesetzung unterschritten wird.
+#' @description get_protected_values should remove cell contents of weighted proportion tables or mean value table 
+#' delete if a minimum population is not reached.
 #' 
-#' @param dataset data.frame aus get_prop_values oder get_mean_table 
-#' @param cell.size maximal zulaessige Zellengroesse (z.B. 30)
+#' @param dataset data.frame from get_prop_values or get_mean_table 
+#' @param cell.size maximum allowed cell size (e.g. 30)
 #' 
-#' @return protected.data (Datensatz mit n, mean/percent, median, n, Konfidenzintervalle ausschlie?lich mit Zellen >= cell.size)
+#' @return protected.data (dataset with n, mean/percent, median, n, confidence intervals only with cells >= cell.size)
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords get_prop_values
@@ -268,22 +294,26 @@ get_protected_values <- function(dataset, cell.size) {
   
   if(("mean" %in% colnames(dataset))==TRUE){
     
-    save.data <- as.data.frame(apply(dataset[c("mean", "median", "n",
-                                               "lower_confidence", "upper_confidence")], 2, 
+    save.data <- as.data.frame(apply(dataset[c("mean",  "median", "n",  
+                                               "ptile10", "ptile25", "ptile75", "ptile90", "ptile99", 
+                                               "lowerci_mean", "upperci_mean", "min", "max",
+                                               "lowerci_median", "upperci_median")], 2, 
                                      function(x) ifelse(dataset["n"] < cell.size, NA, x)))
     data <- dataset
-    dataset[c("mean", "median", "n",
-              "lower_confidence", "upper_confidence")] <- NULL
+    dataset[c("mean",  "median", "n",  
+              "ptile10", "ptile25", "ptile75", "ptile90", "ptile99",  
+              "lowerci_mean", "upperci_mean", "min", "max",
+              "lowerci_median", "upperci_median")] <- NULL
     
   }
   
   if(("percent" %in% colnames(dataset))==TRUE){
     
-    save.data <- as.data.frame(apply(dataset[c("n","percent", 
+    save.data <- as.data.frame(apply(dataset[c("percent", 
                                                "lower_confidence", "upper_confidence")], 2, 
                                      function(x) ifelse(dataset["n"] < cell.size, NA, x)))
     data <- dataset
-    dataset[c("n","percent", 
+    dataset[c("percent", 
               "lower_confidence", "upper_confidence")] <- NULL
     
   }
@@ -292,13 +322,13 @@ get_protected_values <- function(dataset, cell.size) {
 }
 
 ################################################################################
-#' @title create_table_lables Datensatzes mit Vauluelabel ausstatten
+#' @title create_table_lables data set with vauluelabel
 #'
-#' @description create_table_lables soll spezifische Variablen eines Datensatzes mit Vauluelabel ausstatten
+#' @description create_table_lables is to provide specific variables of a dataset with vauluelabel
 #' 
-#' @param table data.frame aus get_mean_data 
+#' @param table data.frame from get_mean_data 
 #' 
-#' @return data_with_label = Datensatz mit Valuelabels
+#' @return data_with_label = data set with value labels
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords data_with_label
@@ -310,33 +340,31 @@ create_table_lables <- function(table) {
   data_with_label <- table
   
   if("sex" %in% colnames(data_with_label)){
-    data_with_label$sex <- gsubfn(".", list("1" = "männlich", "2" = "weiblich"), 
-                                  as.character(data_with_label$sex))
+    data_with_label$sex <- gsubfn(".", list("1" = "Male", "2" = "Female"), as.character(data_with_label$sex))
   }
   
   if("bula_h" %in% colnames(data_with_label)){
     data_with_label$bula_h <-data_with_label$bula_h %>%
-      gsub("10", "Saarland", .) %>%
       gsub("11", "Berlin", .) %>%
       gsub("12", "Brandenburg", .) %>%
-      gsub("13", "Mecklenburg-Vorpommern", .) %>%
-      gsub("14", "Sachsen", .) %>%
-      gsub("15", "Sachsen-Anhalt", .) %>%
-      gsub("16", "Thüringen", .) %>% 
+      gsub("13", "Mecklenburg-Western Pomerania", .) %>%
+      gsub("14", "Saxony", .) %>%
+      gsub("15", "Saxony-Anhalt", .) %>%
+      gsub("16", "Thuringia", .) %>% 
       gsub("1", "Schleswig-Holstein", .) %>%
       gsub("2", "Hamburg", .) %>%
-      gsub("3", "Niedersachsen", .) %>%
+      gsub("3", "Lower Saxony", .) %>%
       gsub("4", "Bremen", .) %>%
-      gsub("5", "Nordrhein-Westfalen", .) %>%
-      gsub("6", "Hessen", .) %>%
-      gsub("7", "Rheinland-Pfalz", .) %>% 
+      gsub("5", "North Rhine-Westphalia", .) %>%
+      gsub("6", "Hesse", .) %>%
+      gsub("7", "Rhineland-Palatinate,Saarland", .) %>% 
       gsub("8", "Baden-Württemberg", .) %>% 
-      gsub("9", "Bayern", .)
+      gsub("9", "Bavaria", .)
   }
   
   if("sampreg" %in% colnames(data_with_label)){
-    data_with_label$sampreg <- gsubfn(".", list("1" = "West", 
-                                                "2"  = "Ost"), as.character(data_with_label$sampreg))
+    data_with_label$sampreg <- gsubfn(".", list("1" = "West Germany", 
+                                                "2"  = "East Germany"), as.character(data_with_label$sampreg))
   }
   
   if("pgcasmin" %in% colnames(data_with_label)){
@@ -347,60 +375,75 @@ create_table_lables <- function(table) {
                                                  "8" = "(3a) lower tertiary education", "9" = "(3b) higher tertiary education"), as.character(data_with_label$pgcasmin))
   }
   
-  if("alter_gr" %in% colnames(data_with_label)){
-    data_with_label$alter_gr <- gsubfn(".", list("1"  = "16-34 J.", 
-                                                 "2" = "35-65 J.", "3"  = "66 und älter"), as.character(data_with_label$alter_gr))
+  if("pgisced97" %in% colnames(data_with_label)){
+    data_with_label$pgisced97 <- gsubfn(".", list("0" = "in school", "1"  = "inadequately", 
+                                                 "2" = "general elemantary", "3"  = "middle vocational", 
+                                                 "4" = "vocational + Abi", "5"  = "higher vocational", 
+                                                 "6" = "higher education"), as.character(data_with_label$pgisced97))
   }
   
-  if("bildungsniveau" %in% colnames(data_with_label)){
-    data_with_label$bildungsniveau <- gsubfn(".", list("1"  = "(noch) kein Abschluss", 
-                                                       "2" = "Hauptschule", "3"  = "Realschule",
-                                                       "4" = "(Fach-)Abitur", "5"  = "AkademikerIn"), as.character(data_with_label$bildungsniveau))
+  if("age_gr" %in% colnames(data_with_label)){
+    data_with_label$age_gr <- gsubfn(".", list("1"  = "16-34 y.", 
+                                               "2" = "35-65 y.", "3"  = "66 and older"), as.character(data_with_label$age_gr))
+  }
+  
+  if("education" %in% colnames(data_with_label)){
+    data_with_label$education <- gsubfn(".", list("1"  = "lower secondary degree", 
+                                                  "2" = "secondary school degree", "4"  = "college entrance qualification",
+                                                  "5" = "Other degree", "6"  = "no degree/no degree yet"), 
+                                        as.character(data_with_label$education))
   }
   
   if("migback" %in% colnames(data_with_label)){
-    data_with_label$migback <- gsubfn(".", list("1"  = "kein Migrationshintergrund ", 
-                                                       "2" = "direkter Migrationshintergrund", 
-                                                       "3"  = "indirekter Migrationshintergrund"), 
-                                                        as.character(data_with_label$migback))
+    data_with_label$migback <- gsubfn(".", list("1"  = "no migration background", 
+                                                "2" = "direct migration background", 
+                                                "3"  = "indirect migration background"), 
+                                      as.character(data_with_label$migback))
   }
+  
+  if("e11102" %in% colnames(data_with_label)){
+    data_with_label$e11102 <- gsubfn(".", list("0"  = "Not Employed", 
+                                                "1" = "Employed"), 
+                                      as.character(data_with_label$e11102))
+  }
+  
+  if("e11103" %in% colnames(data_with_label)){
+    data_with_label$e11103 <- gsubfn(".", list("1"  = "Full Time", 
+                                                "2" = "Part Time",
+                                                "3"  = "Not Working"), 
+                                      as.character(data_with_label$e11103))
+  }
+  
   if("regtyp" %in% colnames(data_with_label)){
-    data_with_label$regtyp <- gsubfn(".", list("1" = "Staedtischer Raum", "2" = "Laendlicher Raum"), 
-                                  as.character(data_with_label$regtyp))
+    data_with_label$regtyp <- gsubfn(".", list("1" = "Urban Area", "2" = "Rural Area"), 
+                                     as.character(data_with_label$regtyp))
   }
   
-  if("hhtyp" %in% colnames(data_with_label)){
-    data_with_label$hhtyp <- gsubfn(".", list("1" = "1-Pers.-HH", 
-                                              "2" = "(Ehe-)Paar ohne Kind(er)",
-                                              "3" = "Alleinerziehende",
-                                              "4" = "Paar mit Kind(ern)",
-                                              "5" = "Sonstige"), 
-                                     as.character(data_with_label$hhtyp))
-  }
-  
-  if("quintil" %in% colnames(data_with_label)){
-    data_with_label$quintil <- gsubfn(".", list("1" = "1", 
-                                                "2" = "2",
-                                                "3" = "3",
-                                                "4" = "4",
-                                                "5" = "5"), 
-                                    as.character(data_with_label$quintil))
+  if("hgtyp1hh" %in% colnames(data_with_label)){
+    data_with_label$hgtyp1hh <- gsubfn(".", list("1"  = "1-pers.-HH", 
+                                                "2" = "(Married) couple without C.",
+                                                "3"  = "Single parent",
+                                                "4" = "Couple + C. LE 16",
+                                                "5"  = "Couple + C. GT 16 ",
+                                                "6" = "Couple + C. LE and GT 16"), 
+                                      as.character(data_with_label$hgtyp1hh))
   }
   
   return(data_with_label)
 }
 
+
 ################################################################################
-#' @title get_table_export Export von Mittelwert-oder Anteilswertswert-Tabellen
+#' @title get_table_export Export of mean value or proportion value tables
 #'
-#' @description get_table_export soll erzeugte Mittelwert-oder Anteilswertswert-Tabellen als csv Exportieren
+#' @description get_table_export export created mean or proportion tables as csv
 #' 
-#' @param table produzierter data.frame aus get_protected_values (z.B. plattform_data)
-#' @param variable Name Analysevariable aus den Rohdaten als string ("pglabnet")
-#' @param metadatapath Pfad zu den Metadaten mit Variablennamen und Tabellentyp im Datensatz als string
-#' @param exportpath Exportordner als string
-#' @param diffcount Anzahl an Differenzierungen als numeric (0-3 eraubt)
-#' @param tabletype Art der zu verarbeitenden Tabelle ("mean" oder "prop")
+#' @param table produced data.frame from get_protected_values (e.g. platform_data)
+#' @param variable name analysis variable from raw data as string ("pglabnet")
+#' @param metadatapath Path to the metadata with variable name and table type in the dataset as string
+#' @param exportpath export folder as string
+#' @param diffcount number of differentiations as numeric (0-3 robbed)
+#' @param tabletype Type of table to be processed ("mean" or "prop")
 #' 
 #' @return data.csv = exportierte Tabelle als csv
 #'
@@ -415,9 +458,7 @@ create_table_lables <- function(table) {
 
 get_table_export <- function(table, variable, metadatapath, exportpath, diffcount, tabletype) {
   
-
   metadata <- read.csv(metadatapath , header = TRUE)
-  metadata <- metadata[metadata$dataset==dataset, ]
   variable <- variable
   
   if(tabletype=="mean"){
@@ -451,7 +492,6 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
     filename <- paste0(variable, "_", "year")
   }
   
-  
   dir.create(path, showWarnings = FALSE)
   data.csv <- sapply(table, as.character)
   data.csv[is.na(data.csv)] <- ""
@@ -477,199 +517,19 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
 }
 
 ################################################################################
-# Erzeugung von json Metadaten
-
-#' @title json_create_lite 
-#'
-#' @description json_create_lite erzeugt json Metadaten
-#'
-#' @variable variablennamen als character
-#' @varlabel variablenlabel als character
-#' @startyear Jahresbeginn der Informationen als numeric
-#' @endyear Jahresende der Informationen als numeric
-#' @tabletype Tabellentyp (z.B. "mean", "prop", "both")
-#' @exportpath Pfad wo json Datein abgelegt wird
-#'
-#' @author Andreas Franken und Stefan Zimmermann, \email{szimmermann@diw.de} \email{afranken@diw.de}
-#' @keywords column_count_check Spaltenanzahl
-#'  
-#' @examples column_count_check(data = data, columns = columns)
-
-json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, exportpath, dataset) {
-  if (dataset == "p_statistics") {  
-  if (tabletype == "mean") {
-    json_output <- jsonlite::toJSON(
-      x = list(
-        "dataset" = meta$dataset[meta$variable == variable],
-        "title" = varlabel,
-        "variable" = variable,
-        "statistics" = c("mean", "median"),
-        "dimensions" = list(
-          list("variable" = meta$variable[meta$variable == "alter_gr"], 
-               "label" = meta$label_de[meta$variable == "alter_gr"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$alter_gr))))))),
-          list("variable" = meta$variable[meta$variable == "sex"], 
-               "label" = meta$label_de[meta$variable == "sex"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sex))))))),
-          list("variable" = meta$variable[meta$variable == "bula_h"], 
-               "label" = meta$label_de[meta$variable == "bula_h"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bula_h))))))),
-          list("variable" = meta$variable[meta$variable == "bildungsniveau"], 
-               "label" = meta$label_de[meta$variable == "bildungsniveau"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bildungsniveau))))))),
-          list("variable" = meta$variable[meta$variable == "sampreg"], 
-               "label" = meta$label_de[meta$variable == "sampreg"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sampreg))))))),
-          list("variable" = meta$variable[meta$variable == "migback"], 
-               "label" = meta$label_de[meta$variable == "migback"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$migback))))))),
-          list("variable" = meta$variable[meta$variable == "regtyp"], 
-               "label" = meta$label_de[meta$variable == "regtyp"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp)))))))
-        ),
-        "description_de" = meta$description[meta$variable==variable],
-        "start_year" = startyear,
-        "end_year" = endyear,
-        "types" = list("numerical")
-      ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
-    )
-    
-    file_handler <- file("meta.json")
-    writeLines(json_output, exportpath, useBytes=TRUE)
-    close(file_handler)
-  }
-  
-  if (tabletype == "prop") {
-    json_output <- jsonlite::toJSON(
-      x = list(
-        "dataset" = meta$dataset[meta$variable == variable],
-        "title" = varlabel,
-        "variable" = variable,
-        "statistics" = "percent",
-        "dimensions" = list(
-          list("variable" = meta$variable[meta$variable == "alter_gr"], 
-               "label" = meta$label_de[meta$variable == "alter_gr"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$alter_gr))))))),
-          list("variable" = meta$variable[meta$variable == "sex"], 
-               "label" = meta$label_de[meta$variable == "sex"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sex))))))),
-          list("variable" = meta$variable[meta$variable == "bula_h"], 
-               "label" = meta$label_de[meta$variable == "bula_h"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bula_h))))))),
-          list("variable" = meta$variable[meta$variable == "bildungsniveau"], 
-               "label" = meta$label_de[meta$variable == "bildungsniveau"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bildungsniveau))))))),
-          list("variable" = meta$variable[meta$variable == "sampreg"], 
-               "label" = meta$label_de[meta$variable == "sampreg"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sampreg))))))),
-          list("variable" = meta$variable[meta$variable == "migback"], 
-               "label" = meta$label_de[meta$variable == "migback"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$migback))))))),
-          list("variable" = meta$variable[meta$variable == "regtyp"], 
-               "label" = meta$label_de[meta$variable == "regtyp"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp)))))))
-        ),
-        "description_de" = meta$description[meta$variable==variable],
-        "start_year" = startyear,
-        "end_year" = endyear,
-        "types" = "categorical"
-      ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
-    )
-    
-    file_handler <- file("meta.json")
-    writeLines(json_output, exportpath, useBytes=TRUE)
-    close(file_handler)
-  }
-  }
-  if (dataset == "h_statistics") {  
-    if (tabletype == "mean") {
-      json_output <- jsonlite::toJSON(
-        x = list(
-          "dataset" = meta$dataset[meta$variable == variable],
-          "title" = varlabel,
-          "variable" = variable,
-          "statistics" = c("mean", "median"),
-          "dimensions" = list(
-           list("variable" = meta$variable[meta$variable == "bula_h"], 
-                 "label" = meta$label_de[meta$variable == "bula_h"],
-                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bula_h))))))),
-            list("variable" = meta$variable[meta$variable == "sampreg"], 
-                 "label" = meta$label_de[meta$variable == "sampreg"],
-                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sampreg))))))),
-            list("variable" = meta$variable[meta$variable == "regtyp"], 
-                 "label" = meta$label_de[meta$variable == "regtyp"],
-                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp))))))),
-            list("variable" = meta$variable[meta$variable == "hhtyp"], 
-                 "label" = meta$label_de[meta$variable == "hhtyp"],
-                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$hhtyp))))))),
-            list("variable" = meta$variable[meta$variable == "quintil"], 
-                 "label" = meta$label_de[meta$variable == "quintil"],
-                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$quintil)))))))
-          ),
-          "description_de" = meta$description[meta$variable==variable],
-          "start_year" = startyear,
-          "end_year" = endyear,
-          "types" = list("numerical")
-        ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
-      )
-      
-      file_handler <- file("meta.json")
-      writeLines(json_output, exportpath, useBytes=TRUE)
-      close(file_handler)
-    }
-    
-    if (tabletype == "prop") {
-      json_output <- jsonlite::toJSON(
-        x = list(
-          "dataset" = meta$dataset[meta$variable == variable],
-          "title" = varlabel,
-          "variable" = variable,
-          "statistics" = "percent",
-          "dimensions" = list(
-            list("variable" = meta$variable[meta$variable == "bula_h"], 
-                 "label" = meta$label_de[meta$variable == "bula_h"],
-                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$bula_h))))))),
-            list("variable" = meta$variable[meta$variable == "sampreg"], 
-                 "label" = meta$label_de[meta$variable == "sampreg"],
-                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$sampreg))))))),
-            list("variable" = meta$variable[meta$variable == "regtyp"], 
-                 "label" = meta$label_de[meta$variable == "regtyp"],
-                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp))))))),
-            list("variable" = meta$variable[meta$variable == "hhtyp"], 
-                 "label" = meta$label_de[meta$variable == "hhtyp"],
-                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$hhtyp))))))),
-            list("variable" = meta$variable[meta$variable == "quintil"], 
-                 "label" = meta$label_de[meta$variable == "quintil"],
-                 "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$quintil)))))))
-          ),
-          "description_de" = meta$description[meta$variable==variable],
-          "start_year" = startyear,
-          "end_year" = endyear,
-          "types" = "categorical"
-        ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
-      )
-      
-      file_handler <- file("meta.json")
-      writeLines(json_output, exportpath, useBytes=TRUE)
-      close(file_handler)
-    }
-  }
-}
-
 ################################################################################
-################################################################################
-# Erzeugung von json Metadaten
+# Creation of blank lines when information is empty in a year
 
 #' @title expand_table 
 #'
-#' @description expand_table fügt leere Zeilen hinzu, falls Variable in Jahr leer ist. 
+#' @description expand_table add empty rows if variable in year is empty. 
 #'
-#' @table data.frame die mit leeren Zellen aufgefüllt werden soll
-#' @diffvar1 Differenzierungsdimension als character
-#' @diffvar2 Differenzierungsdimension als character
-#' @diffvar3 Differenzierungsdimension als character
-#' @diffcount  Anzahl an Differenzierungen als numeric
-#' @tabletype Tabellentyp ("prop" oder "mean")
+#' @table data.frame to be filled with empty cells
+#' @diffvar1 differentiation dimension as character
+#' @diffvar2 Differentiation dimension as character
+#' @diffvar3 differentiation dimension as character
+#' @diffcount number of differentiations as numeric
+#' @tabletype Table type ("prop" or "mean")
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #'  
@@ -695,7 +555,7 @@ expand_table <- function(table, diffvar1, diffvar2, diffvar3, diffcount, tablety
     if(diffcount == 2){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
                                   diffvar1=unique(pull(table, diffvar1)),
-                                  diffvar2=unique(pull(protected.table, diffvar2)))
+                                  diffvar2=unique(pull(table, diffvar2)))
       names(expand.table) <- c("year", diffvar1, diffvar2)
     }
     
@@ -723,7 +583,7 @@ expand_table <- function(table, diffvar1, diffvar2, diffvar3, diffcount, tablety
       expand.table <- expand.grid(year=seq(start_year, end_year), 
                                   usedvariable=unique(pull(table, usedvariable)),
                                   diffvar1=unique(pull(table, diffvar1)),
-                                  diffvar2=unique(pull(protected.table, diffvar2)))
+                                  diffvar2=unique(pull(table, diffvar2)))
       names(expand.table) <- c("year", "usedvariable", diffvar1, diffvar2)
     }
     
@@ -741,5 +601,274 @@ expand_table <- function(table, diffvar1, diffvar2, diffvar3, diffcount, tablety
   return(final)
 }  
 
+################################################################################
+# creation of json metadata
+
+#' @title json_create_lite 
+#'
+#' @description json_create_lite creates json metadata
+#'
+#' @variable variable names as character
+#' @varlabel variable label as character
+#' @startyear start year of the information as numeric
+#' @endyear end of year information as numeric
+#' @tabletype table type (e.g. "mean", "prop", "both")
+#' @exportpath path where json file will be stored
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords column_count_check Spaltenanzahl
+#'  
+#' @examples column_count_check(data = data, columns = columns)
+
+json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, exportpath) {
+  if (tabletype == "mean") {
+    json_output <- jsonlite::toJSON(
+      x = list(
+        "title" = varlabel,
+        "variable" = variable,
+        "statistics" = c("mean", "lowerci_mean", "upperci_mean", "min", "max",
+                         "median", "lowerci_median", "upperci_median", 
+                         "ptile10", "ptile25", "ptile75", "ptile90", "ptile99"),
+        "dimensions" = list(
+          list("variable" = meta$variable[meta$variable == "age_gr"], 
+               "label" = meta$label_de[meta$variable == "age_gr"],
+               "values" = list("16-34 y.", "35-65 y.",
+                               "66 and older")),
+          list("variable" = meta$variable[meta$variable == "sex"], 
+               "label" = meta$label_de[meta$variable == "sex"],
+               "values" = list("Male", "Female")),
+          list("variable" = meta$variable[meta$variable == "bula_h"], 
+               "label" = meta$label_de[meta$variable == "bula_h"],
+               "values" = list("Schleswig-Holstei", "Hamburg",
+                               "Lower Saxony", "Bremen", "North Rhine-Westphalia",
+                               "Hesse", "Rhineland-Palatinate,Saarland", "Baden-Württemberg", 
+                               "Bavaria", "Berlin", "Brandenburg", "Mecklenburg-Western Pomerania", "Saxony",
+                               "Saxony-Anhalt", "Thuringia")),
+          list("variable" = meta$variable[meta$variable == "education"], 
+               "label" = meta$label_de[meta$variable == "education"],
+               "values" = list("lower secondary degree", "secondary school degree",
+                               "college entrance qualification", "Other degree", 
+                               "no degree/no degree yet")),
+          list("variable" = meta$variable[meta$variable == "pgcasmin"], 
+               "label" = meta$label_de[meta$variable == "pgcasmin"],
+               "values" = list("(0) in school", "(1a) inadequately completed", 
+                               "(1b) general elementary school", "(1c) basic vocational qualification", 
+                               "(2b) intermediate general qualification", "(2a) intermediate vocational", 
+                               "(2c_gen) general maturity certificate", "(2c_voc) vocational maturity certificate",
+                               "(3a) lower tertiary education", "(3b) higher tertiary education")),
+          list("variable" = meta$variable[meta$variable == "pgisced97"], 
+               "label" = meta$label_de[meta$variable == "pgisced97"],
+               "values" = list("in school","inadequately", 
+                               "general elemantary", "middle vocational", 
+                               "vocational + Abi", "higher vocational", 
+                               "higher education")),
+          list("variable" = meta$variable[meta$variable == "sampreg"], 
+               "label" = meta$label_de[meta$variable == "sampreg"],
+               "values" = list("West Germany", 
+                               "East Germany")),
+          list("variable" = meta$variable[meta$variable == "e11102"], 
+               "label" = meta$label_de[meta$variable == "e11102"],
+               "values" = list("Not Employed", 
+                               "Employed")),
+          list("variable" = meta$variable[meta$variable == "e11103"], 
+               "label" = meta$label_de[meta$variable == "e11103"],
+               "values" = list("Full Time", 
+                               "Part Time",
+                               "Not Working")),
+          list("variable" = meta$variable[meta$variable == "hgtyp1hh"], 
+               "label" = meta$label_de[meta$variable == "hgtyp1hh"],
+               "values" = list("1-pers.-HH",
+                               "(Married) couple without C.", 
+                               "Single parent",
+                               "Couple + C. LE 16",
+                               "Couple + C. GT 16",
+                               "Couple + C. LE and GT 16")),
+          list("variable" = meta$variable[meta$variable == "migback"], 
+               "label" = meta$label_de[meta$variable == "migback"],
+               "values" = list("no migration background", 
+                               "direct migration background",
+                               "indirect migration background")),
+          list("variable" = meta$variable[meta$variable == "regtyp"], 
+               "label" = meta$label_de[meta$variable == "regtyp"],
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp)))))))
+
+        ),
+        "description_de" = meta$description[meta$variable==variable],
+        "start_year" = startyear,
+        "end_year" = endyear,
+        "types" = list("numerical")
+      ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
+    )
+    
+    file_handler <- file("meta.json")
+    writeLines(json_output, exportpath, useBytes=TRUE)
+    close(file_handler)
+  }
+  
+  if (tabletype == "prop") {
+    json_output <- jsonlite::toJSON(
+      x = list(
+        "title" = varlabel,
+        "variable" = variable,
+        "statistics" = c("percent", "lower_confidence" ,"upper_confidence"),
+        "dimensions" = list(
+          list("variable" = meta$variable[meta$variable == "age_gr"], 
+               "label" = meta$label_de[meta$variable == "age_gr"],
+               "values" = list("16-34 y.", "35-65 y.",
+                               "66 and older")),
+          list("variable" = meta$variable[meta$variable == "sex"], 
+               "label" = meta$label_de[meta$variable == "sex"],
+               "values" = list("Male", "Female")),
+          list("variable" = meta$variable[meta$variable == "bula_h"], 
+               "label" = meta$label_de[meta$variable == "bula_h"],
+               "values" = list("Schleswig-Holstei", "Hamburg",
+                               "Lower Saxony", "Bremen", "North Rhine-Westphalia",
+                               "Hesse", "Rhineland-Palatinate,Saarland", "Baden-Württemberg", 
+                               "Bavaria", "Berlin", "Brandenburg", "Mecklenburg-Western Pomerania", "Saxony",
+                               "Saxony-Anhalt", "Thuringia")),
+          list("variable" = meta$variable[meta$variable == "education"], 
+               "label" = meta$label_de[meta$variable == "education"],
+               "values" = list("lower secondary degree", "secondary school degree",
+                               "college entrance qualification", "Other degree", 
+                               "no degree/no degree yet")),
+          list("variable" = meta$variable[meta$variable == "pgcasmin"], 
+               "label" = meta$label_de[meta$variable == "pgcasmin"],
+               "values" = list("(0) in school", "(1a) inadequately completed", 
+                               "(1b) general elementary school", "(1c) basic vocational qualification", 
+                               "(2b) intermediate general qualification", "(2a) intermediate vocational", 
+                               "(2c_gen) general maturity certificate", "(2c_voc) vocational maturity certificate",
+                               "(3a) lower tertiary education", "(3b) higher tertiary education")),
+          list("variable" = meta$variable[meta$variable == "pgisced97"], 
+               "label" = meta$label_de[meta$variable == "pgisced97"],
+               "values" = list("in school","inadequately", 
+                               "general elemantary", "middle vocational", 
+                               "vocational + Abi", "higher vocational", 
+                               "higher education")),
+          list("variable" = meta$variable[meta$variable == "sampreg"], 
+               "label" = meta$label_de[meta$variable == "sampreg"],
+               "values" = list("West Germany", 
+                               "East Germany")),
+          list("variable" = meta$variable[meta$variable == "e11102"], 
+               "label" = meta$label_de[meta$variable == "e11102"],
+               "values" = list("Not Employed", 
+                               "Employed")),
+          list("variable" = meta$variable[meta$variable == "e11103"], 
+               "label" = meta$label_de[meta$variable == "e11103"],
+               "values" = list("Full Time", 
+                               "Part Time",
+                               "Not Working")),
+          list("variable" = meta$variable[meta$variable == "hgtyp1hh"], 
+               "label" = meta$label_de[meta$variable == "hgtyp1hh"],
+               "values" = list("1-pers.-HH",
+                               "(Married) couple without C.", 
+                               "Single parent",
+                               "Couple + C. LE 16",
+                               "Couple + C. GT 16",
+                               "Couple + C. LE and GT 16")),
+          list("variable" = meta$variable[meta$variable == "migback"], 
+               "label" = meta$label_de[meta$variable == "migback"],
+               "values" = list("no migration background", 
+                               "direct migration background",
+                               "indirect migration background")),
+          list("variable" = meta$variable[meta$variable == "regtyp"], 
+               "label" = meta$label_de[meta$variable == "regtyp"],
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp)))))))
+        ),
+        "description_de" = meta$description[meta$variable==variable],
+        "start_year" = startyear,
+        "end_year" = endyear,
+        "types" = "categorical"
+      ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
+    )
+    
+    file_handler <- file("meta.json")
+    writeLines(json_output, exportpath, useBytes=TRUE)
+    close(file_handler)
+  }
+  
+  if (tabletype == "both") {
+    json_output <- jsonlite::toJSON(
+      x = list(
+        "title" = varlabel,
+        "variable" = variable,
+        "statistics" = c("mean", "lowerci_mean", "upperci_mean", 
+                         "median", "lowerci_median", "upperci_median", 
+                         "ptile10", "ptile25", "ptile75", "ptile90", "n",
+                         "percent", "lower_confidence" ,"upper_confidence"),
+        "dimensions" = list(
+          list("variable" = meta$variable[meta$variable == "age_gr"], 
+               "label" = meta$label_de[meta$variable == "age_gr"],
+               "values" = list("16-34 y.", "35-65 y.",
+                               "66 and older")),
+          list("variable" = meta$variable[meta$variable == "sex"], 
+               "label" = meta$label_de[meta$variable == "sex"],
+               "values" = list("Male", "Female")),
+          list("variable" = meta$variable[meta$variable == "bula_h"], 
+               "label" = meta$label_de[meta$variable == "bula_h"],
+               "values" = list("Schleswig-Holstei", "Hamburg",
+                               "Lower Saxony", "Bremen", "North Rhine-Westphalia",
+                               "Hesse", "Rhineland-Palatinate,Saarland", "Baden-Württemberg", 
+                               "Bavaria", "Berlin", "Brandenburg", "Mecklenburg-Western Pomerania", "Saxony",
+                               "Saxony-Anhalt", "Thuringia")),
+          list("variable" = meta$variable[meta$variable == "education"], 
+               "label" = meta$label_de[meta$variable == "education"],
+               "values" = list("lower secondary degree", "secondary school degree",
+                               "college entrance qualification", "Other degree", 
+                               "no degree/no degree yet")),
+          list("variable" = meta$variable[meta$variable == "pgcasmin"], 
+               "label" = meta$label_de[meta$variable == "pgcasmin"],
+               "values" = list("(0) in school", "(1a) inadequately completed", 
+                               "(1b) general elementary school", "(1c) basic vocational qualification", 
+                               "(2b) intermediate general qualification", "(2a) intermediate vocational", 
+                               "(2c_gen) general maturity certificate", "(2c_voc) vocational maturity certificate",
+                               "(3a) lower tertiary education", "(3b) higher tertiary education")),
+          list("variable" = meta$variable[meta$variable == "pgisced97"], 
+               "label" = meta$label_de[meta$variable == "pgisced97"],
+               "values" = list("in school","inadequately", 
+                               "general elemantary", "middle vocational", 
+                               "vocational + Abi", "higher vocational", 
+                               "higher education")),
+          list("variable" = meta$variable[meta$variable == "sampreg"], 
+               "label" = meta$label_de[meta$variable == "sampreg"],
+               "values" = list("West Germany", 
+                               "East Germany")),
+          list("variable" = meta$variable[meta$variable == "e11102"], 
+               "label" = meta$label_de[meta$variable == "e11102"],
+               "values" = list("Not Employed", 
+                               "Employed")),
+          list("variable" = meta$variable[meta$variable == "e11103"], 
+               "label" = meta$label_de[meta$variable == "e11103"],
+               "values" = list("Full Time", 
+                               "Part Time",
+                               "Not Working")),
+          list("variable" = meta$variable[meta$variable == "hgtyp1hh"], 
+               "label" = meta$label_de[meta$variable == "hgtyp1hh"],
+               "values" = list("1-pers.-HH",
+                               "(Married) couple without C.", 
+                               "Single parent",
+                               "Couple + C. LE 16",
+                               "Couple + C. GT 16",
+                               "Couple + C. LE and GT 16")),
+          list("variable" = meta$variable[meta$variable == "migback"], 
+               "label" = meta$label_de[meta$variable == "migback"],
+               "values" = list("no migration background", 
+                               "direct migration background",
+                               "indirect migration background")),
+          list("variable" = meta$variable[meta$variable == "regtyp"], 
+               "label" = meta$label_de[meta$variable == "regtyp"],
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp)))))))
+        ),
+        "description_de" = meta$description[meta$variable==variable],
+        "start_year" = startyear,
+        "end_year" = endyear,
+        "types" = list("numerical", "categorical")
+      ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
+    )
+    
+    file_handler <- file("meta.json")
+    writeLines(json_output, exportpath, useBytes=TRUE)
+    close(file_handler)
+  }
+}
 
 
