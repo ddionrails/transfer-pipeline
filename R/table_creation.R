@@ -12,10 +12,10 @@ if (Sys.info()[["user"]] == "szimmermann") {
 }
 
 # Definition of objects
-dataset <- "h_statistics" # Aus welchem Datensatz sollen Werte genommen werden
-cell.min <- 30 # Maximal erlaubte Zellgröße
-year <- "syear" # Erhebungsjahr muss definiert sein
-weight <- "hhrf" # Gewicht muss definiert sein
+dataset <- "h_statistics" # From which data set should values be taken
+cell.min <- 30 # Maximum allowed cell size
+year <- "syear" # Survey year must be defined
+weight <- "hhrf" # Weight must be defined
 #############################################################################
 
 ## load packages
