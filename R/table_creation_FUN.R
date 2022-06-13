@@ -14,6 +14,7 @@
 #' @examples
 #'       loadpackage(c("foreign", "dplyr", "tidyverse", "readstata13")) 
 
+# TODO: Remove this. This is bad practice for using libraries.
 # install and load packages
 loadpackage <- function(x){
   for( i in x ){
@@ -58,7 +59,7 @@ loadpackage <- function(x){
 #'       diffcount = diffcount,
 #'       diffvars = c("alter_gr", "sex", "Bildungsniveau"),
 #'       vallabel = TRUE)
-
+# TODO: Too many arguments. Arguments are badly named. Possibly too many if statements.
 get_data <- function(datasetnum, datasetfac, variable, year, weight, diffcount, diffvars, vallabel){
   
   if (diffcount > 0) {
@@ -132,7 +133,8 @@ get_data <- function(datasetnum, datasetfac, variable, year, weight, diffcount, 
 #'                       diffvar1 = "sex",
 #'                       diffvar2 = "alter_gr",
 #'                       diffvar3 = "")
-
+# TODO: Some arguments are badly named. diffvar1-3 could be one data structure.
+# TODO: Too many if statements
 get_mean_values <- function(dataset, year, diffcount,
                             diffvar1, diffvar2, diffvar3) {
   

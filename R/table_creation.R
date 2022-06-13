@@ -1,6 +1,9 @@
 #############################################################################
 # Erzeugung Aggregierte Tabellen für SOEP-Transfer Projekt
 #############################################################################
+# TODO: No mixing of languages please.
+# TODO: Variable names should be more explicit, no abbreviations.
+# TODO: Use consistent snake case
 
 ### Was muss definiert werden:
 # Persönlicher Pfad
@@ -19,8 +22,8 @@ weight <- "hhrf" # Gewicht muss definiert sein
 #############################################################################
 
 ## load packages
-loadpackage(c("foreign", "dplyr", "tidyverse", "readstata13", "spatstat",
-              "gsubfn", "rjson", "DescTools", "Hmisc"))  
+# TODO: Remove this. Inpropper way to work with dependencies.
+# TODO: Dependenciess could be more specific and therefore smaller.
 loadpackage(c(
   "foreign", "dplyr", "tidyverse", "readstata13", "spatstat",
   "gsubfn", "rjson", "DescTools", "Hmisc"
@@ -33,6 +36,8 @@ data.file.num <- read.dta13(paste0(datapath, dataset, ".dta"),
 )
 
 # Weights with 0 cause problems
+# TODO: %>% Should not be used just to call a single function.
+# TODO: This is done multiple times in this file.
 data.file.num <- data.file.num %>%
   filter(phrf > 0)
 
@@ -43,6 +48,7 @@ data.file.fac <- read.dta13(paste0(datapath, dataset, ".dta"),
 )
 
 # Weights with 0 cause problems
+# TODO: %>% Should not be used just to call a single function.
 data.file.fac <- data.file.fac %>%
   filter(phrf > 0)
 
@@ -68,14 +74,19 @@ meta_demo <- subset(data.file.num,
 )
 
 # Generate a list that represents all the differentiation possibilities of the users
-difflist <- c("",combn(sort(names(meta_demo)),1,simplify=FALSE, FUN = sort), 
-              combn(sort(names(meta_demo)),2,simplify=FALSE))
+# TODO: Hard to read. Should be encapsulated by a function and the function chaining
+# TODO: should be broken up into seperate statements:
+# TODO: sort(names(meta_demo)) is duplicated here.
 difflist <- c(
   "", combn(sort(names(meta_demo)), 1, simplify = FALSE, FUN = sort),
   combn(sort(names(meta_demo)), 2, simplify = FALSE)
 )
 
 # Generate a list that represents ne number of differentiations for each possibility
+# TODO: names(meta_demo) seems to be used quite frequently.
+# TODO: Could be better to store it in an extra variable.
+# TODO: This might belong to the 'function' above.
+# TODO: Purpose of renaming and changes are not clear.
 diffcountlist <- difflist
 diffcountlist[[1]] <- 0
 diffcountlist[2:(1 + length(combn(names(meta_demo), 1, simplify = FALSE)))] <- 1
@@ -83,8 +94,9 @@ diffcountlist[(2 + length(combn(names(meta_demo), 1, simplify = FALSE))):length(
 
 ##############################################################################################
 # Create aggregated data tables
-for (var in 1:length(meta$variable)){
-  
+# TODO: Loop Body is way to long.
+# TODO: Too many if statements. Too many if statements whith unclear purpose.
+# TODO: Should be split into seperate functions.
 for (var in 1:length(meta$variable)) {
   if (meta$meantable[var] == "Yes" | meta$probtable[var] == "Yes") {
     variable <- meta$variable[var]
