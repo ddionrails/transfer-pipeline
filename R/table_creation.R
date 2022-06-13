@@ -1,20 +1,17 @@
 #############################################################################
-# Erzeugung Aggregierte Tabellen für SOEP-Transfer Projekt
+# Create aggregated data tables for SOEP transfer project
 #############################################################################
-# TODO: No mixing of languages please.
 # TODO: Variable names should be more explicit, no abbreviations.
 # TODO: Use consistent snake case
 
-### Was muss definiert werden:
-# Persönlicher Pfad
+### Path definition
 if (Sys.info()[["user"]] == "szimmermann") {
   datapath <- "H:/data/"
-  # "C:/git/platform-datasets/metadaten_example/"
   metapath <- "H:/Clone/soep-transfer/metadata/"
   exportpath <- "H:/Clone/soep-transfer/"
 }
 
-# Definition von Objekten
+# Definition of objects
 dataset <- "h_statistics" # Aus welchem Datensatz sollen Werte genommen werden
 cell.min <- 30 # Maximal erlaubte Zellgröße
 year <- "syear" # Erhebungsjahr muss definiert sein
@@ -26,22 +23,21 @@ weight <- "hhrf" # Gewicht muss definiert sein
 # TODO: Dependenciess could be more specific and therefore smaller.
 loadpackage(c(
   "foreign", "dplyr", "tidyverse", "readstata13", "spatstat",
-  "gsubfn", "rjson", "DescTools", "Hmisc"
+  "gsubfn", "rjson"
 ))
 
-## load dataset
-# data without labels
+## load data without labels
 data.file.num <- read.dta13(paste0(datapath, dataset, ".dta"),
   convert.factors = FALSE, encoding = "UTF-8"
 )
 
-# Weights with 0 cause problems
+# Delete cases with no weighting
 # TODO: %>% Should not be used just to call a single function.
 # TODO: This is done multiple times in this file.
 data.file.num <- data.file.num %>%
-  filter(phrf > 0)
+  filter(weight > 0)
 
-# data with labels
+## load data without labels
 data.file.fac <- read.dta13(paste0(datapath, dataset, ".dta"),
   convert.factors = TRUE,
   nonint.factors = TRUE, encoding = "UTF-8"
@@ -50,15 +46,10 @@ data.file.fac <- read.dta13(paste0(datapath, dataset, ".dta"),
 # Weights with 0 cause problems
 # TODO: %>% Should not be used just to call a single function.
 data.file.fac <- data.file.fac %>%
-  filter(phrf > 0)
+  filter(weight > 0)
 
 # read metainformation
 meta <- read.csv(paste0(metapath, "variables.csv"),
-  header = TRUE,
-  colClasses = "character"
-)
-
-meta_varcat <- read.csv(paste0(metapath, "variable_categories.csv"),
   header = TRUE,
   colClasses = "character"
 )
@@ -73,7 +64,7 @@ meta_demo <- subset(data.file.num,
   select = meta_demo$variable
 )
 
-# Generate a list that represents all the differentiation possibilities of the users
+# Generate a list that represents all the grouping possibilities of the users
 # TODO: Hard to read. Should be encapsulated by a function and the function chaining
 # TODO: should be broken up into seperate statements:
 # TODO: sort(names(meta_demo)) is duplicated here.
@@ -206,12 +197,6 @@ for (var in 1:length(meta$variable)) {
           diffvar2 = diffvar2, diffvar3 = diffvar3,
           diffcount = diffcount, tabletype = "prop"
         )
-
-        # var_cat <- subset(meta_varcat, variable==meta$variable[var] , select = c("value", "label_de"))
-        # protected.table <- merge(protected.table, var_cat, by.x = "usedvariable", by.y = "label_de")
-        # protected.table$value <- as.numeric(protected.table$value)
-
-        # protected.table <- protected.table[with(protected.table, order(year)), ]
 
         data.csv <- get_table_export(
           table = protected.table, variable = variable,
