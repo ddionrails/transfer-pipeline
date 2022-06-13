@@ -6,47 +6,40 @@
 
 ### Path definition
 if (Sys.info()[["user"]] == "szimmermann") {
-  datapath <- "H:/data/"
-  metapath <- "H:/Clone/soep-transfer/metadata/"
-  exportpath <- "H:/Clone/soep-transfer/"
+  datapath <- "C:/datasets/platform_data/"
+  metapath <- "C:/git/soep-transfer/metadata/"
+  exportpath <- "C:/git/soep-transfer/"
 }
 
 # Definition of objects
-dataset <- "h_statistics" # From which data set should values be taken
+dataset <- "p_data" # From which data set should values be taken
 cell.min <- 30 # Maximum allowed cell size
 year <- "syear" # Survey year must be defined
-weight <- "hhrf" # Weight must be defined
+weight_variable <- "phrf" # Weight must be defined
 #############################################################################
 
 ## load packages
 # TODO: Remove this. Inpropper way to work with dependencies.
 # TODO: Dependenciess could be more specific and therefore smaller.
-loadpackage(c(
-  "foreign", "dplyr", "tidyverse", "readstata13", "spatstat",
-  "gsubfn", "rjson"
-))
-
 ## load data without labels
-data.file.num <- read.dta13(paste0(datapath, dataset, ".dta"),
+data.file.num <- readstata13::read.dta13(paste0(datapath, dataset, ".dta"),
   convert.factors = FALSE, encoding = "UTF-8"
 )
 
 # Delete cases with no weighting
 # TODO: %>% Should not be used just to call a single function.
 # TODO: This is done multiple times in this file.
-data.file.num <- data.file.num %>%
-  filter(weight > 0)
+data.file.num <- dplyr::filter(data.file.num, weight_variable > 0)
 
 ## load data without labels
-data.file.fac <- read.dta13(paste0(datapath, dataset, ".dta"),
+data.file.fac <- readstata13::read.dta13(paste0(datapath, dataset, ".dta"),
   convert.factors = TRUE,
   nonint.factors = TRUE, encoding = "UTF-8"
 )
 
 # Weights with 0 cause problems
 # TODO: %>% Should not be used just to call a single function.
-data.file.fac <- data.file.fac %>%
-  filter(weight > 0)
+data.file.num <- dplyr::filter(data.file.num, weight_variable > 0)
 
 # read metainformation
 meta <- read.csv(paste0(metapath, "variables.csv"),
@@ -57,8 +50,7 @@ meta <- read.csv(paste0(metapath, "variables.csv"),
 ################################################################################
 ################################################################################
 ### Code to create the aggregated tables in variables.csv
-meta_demo <- meta %>%
-  filter(meantable == "demo")
+meta_demo <- dplyr::filter(meta, meantable == "demo")
 
 meta_demo <- subset(data.file.num,
   select = meta_demo$variable
@@ -120,7 +112,7 @@ for (var in 1:length(meta$variable)) {
           datasetfac = data.file.fac,
           variable = variable,
           year = year,
-          weight = weight,
+          weight = weight_variable,
           diffcount = diffcount,
           diffvars = diffvars,
           vallabel = FALSE
@@ -176,7 +168,7 @@ for (var in 1:length(meta$variable)) {
           datasetfac = data.file.fac,
           variable = variable,
           year = year,
-          weight = weight,
+          weight = weight_variable,
           diffcount = diffcount,
           diffvars = diffvars,
           vallabel = TRUE

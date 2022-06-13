@@ -2,6 +2,8 @@
 # Functions #
 ################################################################################
 
+`%>%` <- dplyr::`%>%`
+
 #' @title loadpackage loads required R-packages
 #'
 #' @description loadpackage should install needed packages if necessary and load them into library
@@ -154,48 +156,51 @@ get_mean_values <- function(dataset, year, diffcount,
     columns = c(year, diffvar1, diffvar2, diffvar3)
   }
   mean.values <- dataset[complete.cases(dataset), ] %>%
-    group_by_at(vars(one_of(columns))) %>%
-    mutate(mean = round(weighted.mean(usedvariable, weight),2))  %>%
-    mutate(median = round(weighted.median(usedvariable, weight),2))  %>%
-    add_count(year, wt = NULL)  %>%
-    mutate(sd = sd(usedvariable/sqrt(n))) %>%
-    mutate(lower = mean - qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd,
+    dplyr::group_by_at(vars(one_of(columns))) %>%
+    dplyr::mutate(mean = round(weighted.mean(usedvariable, weight),2))  %>%
+    dplyr::mutate(median = round(weighted.median(usedvariable, weight),2))  %>%
+    dplyr::add_count(year, wt = NULL)  %>%
+    dplyr::mutate(sd = sd(usedvariable/sqrt(n))) %>%
+    dplyr::mutate(lower = mean - qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd,
            upper = mean + qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd) %>%
-    mutate(lowerci_mean = round((lower),2))  %>%
-    mutate(upperci_mean = round((upper),2))  %>%
-    mutate(max = round(max(usedvariable, na.rm = T), 2),
+    dplyr::mutate(lowerci_mean = round((lower),2))  %>%
+    dplyr::mutate(upperci_mean = round((upper),2))  %>%
+    dplyr::mutate(max = round(max(usedvariable, na.rm = T), 2),
            min = round(min(usedvariable, na.rm = T), 2))   %>%
-    distinct(mean, .keep_all = TRUE)
+    dplyr::distinct(mean, .keep_all = TRUE)
+
   
   percentile.values <-  dataset[complete.cases(dataset), ] %>%
-    group_by_at(vars(one_of(columns)))  %>% 
-    summarise(ptile10 = round(wtd.quantile(usedvariable, weights = weight, 
+    dplyr::group_by_at(vars(one_of(columns)))  %>% 
+    dplyr::summarise(ptile10 = round(Hmisc::wtd.quantile(usedvariable, weights = weight, 
                                      probs = .1, na.rm = TRUE),2),
-              ptile25 = round(wtd.quantile(usedvariable, weights = weight, 
+              ptile25 = round(Hmisc::wtd.quantile(usedvariable, weights = weight, 
                                      probs = .25, na.rm = TRUE),2),
-              ptile75 = round(wtd.quantile(usedvariable, weights = weight, 
+              ptile75 = round(Hmisc::wtd.quantile(usedvariable, weights = weight, 
                                      probs = .75, na.rm = TRUE),2),
-              ptile90 = round(wtd.quantile(usedvariable, weights = weight, 
+              ptile90 = round(Hmisc::wtd.quantile(usedvariable, weights = weight, 
                                      probs = .90, na.rm = TRUE),2), 
-              ptile99 = round(wtd.quantile(usedvariable, weights = weight, 
+              ptile99 = round(Hmisc::wtd.quantile(usedvariable, weights = weight, 
                                            probs = .99, na.rm = TRUE),2), .groups = 'drop')
-  
+
   # Median confidence interval calculation
   median_data <- dataset %>% 
-    group_by_at(vars(one_of(columns))) %>% 
-    filter(n() > 8)
+    dplyr::group_by_at(vars(one_of(columns))) %>% 
+    dplyr::filter(dplyr::n() > 8)
   
   medianci.value<- median_data[complete.cases(median_data), ] %>% 
-    nest(data = -columns) %>%
-    mutate(ci = map(data, ~ MedianCI(.x$usedvariable, method = "exact")[2:3])) %>% 
-    unnest_wider(ci)
+    tidyr::nest(data = -columns) %>%
+    dplyr::mutate(ci = purrr::map(data, ~ 
+                                    DescTools::MedianCI(.x$usedvariable, 
+                                                        method = "exact")[2:3])) %>% 
+    tidyr::unnest_wider(ci)
   
   medianci.value$data <- NULL
   colnames(medianci.value) <- c(columns, "lowerci_median", "upperci_median")
   
   data <- merge(mean.values,percentile.values,by=columns)
   
-  data <- left_join(data,medianci.value,by=columns)
+  data <- dplyr::left_join(data,medianci.value,by=columns)
   
   selected.values <- c(columns, "mean", "lowerci_mean", "upperci_mean", 
                        "median", "lowerci_median", "upperci_median", 
@@ -203,7 +208,7 @@ get_mean_values <- function(dataset, year, diffcount,
   
   data <- data[,(names(data) %in% selected.values)]
   data <-  data %>% 
-    arrange(desc(year), .by_group = TRUE)
+    dplyr::arrange(desc(year), .by_group = TRUE)
   
   return(data)
 }
@@ -232,28 +237,31 @@ get_mean_values <- function(dataset, year, diffcount,
 get_prop_values <- function(dataset, groupvars, alpha) {
   
   data_prop1 <-  dataset[complete.cases(dataset), ] %>%
-    group_by_at(vars(one_of(groupvars))) %>%
-    summarise(count_w = sum(weight), .groups="drop_last")
+    dplyr::group_by_at(vars(one_of(groupvars))) %>%
+    dplyr::summarise(count_w = sum(weight), .groups="drop_last")
   
   data_prop2 <-  data_prop1[complete.cases(data_prop1), ] %>% 
-    group_by(eval(parse(text = groupvars[2])), eval(parse(text = groupvars[3])),
-             eval(parse(text = groupvars[4]))) %>%
-    mutate(sum_count_w = sum(count_w)) 
+    dplyr::group_by(eval(parse(text = groupvars[2])), 
+                    eval(parse(text = groupvars[3])),
+                    eval(parse(text = groupvars[4]))) %>%
+    dplyr::mutate(sum_count_w = sum(count_w)) 
   
   data_prop3 <- dataset[complete.cases(dataset), ] %>% 
-    group_by_at(vars(one_of(groupvars))) %>%
-    summarise(n = n(), .groups="drop_last") 
+    dplyr::group_by_at(vars(one_of(groupvars))) %>%
+    dplyr::summarise(n = dplyr::n(), .groups="drop_last") 
   
   data_prop4 <- data_prop3[complete.cases(data_prop3), ] %>% 
-    group_by(eval(parse(text = groupvars[2])), eval(parse(text = groupvars[3])),
+    dplyr::group_by(eval(parse(text = groupvars[2])), eval(parse(text = groupvars[3])),
              eval(parse(text = groupvars[4]))) %>%
-    mutate(n_total = sum(n)) 
+    dplyr::mutate(n_total = sum(n)) 
   
-  data_prop <- cbind(data_prop1, data_prop2["sum_count_w"], data_prop3["n"], data_prop4["n_total"])
+  data_prop <- cbind(data_prop1, data_prop2["sum_count_w"], 
+                     data_prop3["n"], 
+                     data_prop4["n_total"])
   data_prop <- data_prop[order(data_prop$year),]
   
   data_prop_complete <-  data_prop[complete.cases(data_prop1), ] %>% 
-    mutate(percent = count_w/sum_count_w,)
+    dplyr::mutate(percent = count_w/sum_count_w,)
   
   n_total <- data_prop_complete$n_total
   p_hat <- data_prop_complete$percent
@@ -269,8 +277,9 @@ get_prop_values <- function(dataset, groupvars, alpha) {
                                  lower_confidence=lower_confidence1, 
                                  upper_confidence=upper_confidence1)
   
-  data_prop_complete_ci <- subset(data_prop_complete_ci, select=c(groupvars, "n", "percent", 
-                                                                  "lower_confidence", "upper_confidence")) 
+  data_prop_complete_ci <- subset(data_prop_complete_ci, 
+                                  select=c(groupvars, "n", "percent", 
+                                           "lower_confidence", "upper_confidence")) 
   
   return(data_prop_complete_ci)
 }
@@ -342,7 +351,9 @@ create_table_lables <- function(table) {
   data_with_label <- table
   
   if("sex" %in% colnames(data_with_label)){
-    data_with_label$sex <- gsubfn(".", list("1" = "Male", "2" = "Female"), as.character(data_with_label$sex))
+    data_with_label$sex <- gsubfn::gsubfn(".", 
+                                          list("1" = "Male", "2" = "Female"), 
+                                          as.character(data_with_label$sex))
   }
   
   if("bula_h" %in% colnames(data_with_label)){
@@ -365,12 +376,13 @@ create_table_lables <- function(table) {
   }
   
   if("sampreg" %in% colnames(data_with_label)){
-    data_with_label$sampreg <- gsubfn(".", list("1" = "West Germany", 
-                                                "2"  = "East Germany"), as.character(data_with_label$sampreg))
+    data_with_label$sampreg <- gsubfn::gsubfn(".", list("1" = "West Germany", 
+                                                        "2"  = "East Germany"), 
+                                              as.character(data_with_label$sampreg))
   }
   
   if("pgcasmin" %in% colnames(data_with_label)){
-    data_with_label$pgcasmin <- gsubfn(".", list("0" = "(0) in school", "1"  = "(1a) inadequately completed", 
+    data_with_label$pgcasmin <- gsubfn::gsubfn(".", list("0" = "(0) in school", "1"  = "(1a) inadequately completed", 
                                                  "2" = "(1b) general elementary school", "3"  = "(1c) basic vocational qualification", 
                                                  "4" = "(2b) intermediate general qualification", "5"  = "(2a) intermediate vocational", 
                                                  "6" = "(2c_gen) general maturity certificate", "7"  = "(2c_voc) vocational maturity certificate",
@@ -378,51 +390,51 @@ create_table_lables <- function(table) {
   }
   
   if("pgisced97" %in% colnames(data_with_label)){
-    data_with_label$pgisced97 <- gsubfn(".", list("0" = "in school", "1"  = "inadequately", 
+    data_with_label$pgisced97 <- gsubfn::gsubfn(".", list("0" = "in school", "1"  = "inadequately", 
                                                  "2" = "general elemantary", "3"  = "middle vocational", 
                                                  "4" = "vocational + Abi", "5"  = "higher vocational", 
                                                  "6" = "higher education"), as.character(data_with_label$pgisced97))
   }
   
   if("age_gr" %in% colnames(data_with_label)){
-    data_with_label$age_gr <- gsubfn(".", list("1"  = "16-34 y.", 
+    data_with_label$age_gr <- gsubfn::gsubfn(".", list("1"  = "16-34 y.", 
                                                "2" = "35-65 y.", "3"  = "66 and older"), as.character(data_with_label$age_gr))
   }
   
   if("education" %in% colnames(data_with_label)){
-    data_with_label$education <- gsubfn(".", list("1"  = "lower secondary degree", 
+    data_with_label$education <- gsubfn::gsubfn(".", list("1"  = "lower secondary degree", 
                                                   "2" = "secondary school degree", "4"  = "college entrance qualification",
                                                   "5" = "Other degree", "6"  = "no degree/no degree yet"), 
                                         as.character(data_with_label$education))
   }
   
   if("migback" %in% colnames(data_with_label)){
-    data_with_label$migback <- gsubfn(".", list("1"  = "no migration background", 
+    data_with_label$migback <- gsubfn::gsubfn(".", list("1"  = "no migration background", 
                                                 "2" = "direct migration background", 
                                                 "3"  = "indirect migration background"), 
                                       as.character(data_with_label$migback))
   }
   
   if("e11102" %in% colnames(data_with_label)){
-    data_with_label$e11102 <- gsubfn(".", list("0"  = "Not Employed", 
+    data_with_label$e11102 <- gsubfn::gsubfn(".", list("0"  = "Not Employed", 
                                                 "1" = "Employed"), 
                                       as.character(data_with_label$e11102))
   }
   
   if("e11103" %in% colnames(data_with_label)){
-    data_with_label$e11103 <- gsubfn(".", list("1"  = "Full Time", 
+    data_with_label$e11103 <- gsubfn::gsubfn(".", list("1"  = "Full Time", 
                                                 "2" = "Part Time",
                                                 "3"  = "Not Working"), 
                                       as.character(data_with_label$e11103))
   }
   
   if("regtyp" %in% colnames(data_with_label)){
-    data_with_label$regtyp <- gsubfn(".", list("1" = "Urban Area", "2" = "Rural Area"), 
+    data_with_label$regtyp <- gsubfn::gsubfn(".", list("1" = "Urban Area", "2" = "Rural Area"), 
                                      as.character(data_with_label$regtyp))
   }
   
   if("hgtyp1hh" %in% colnames(data_with_label)){
-    data_with_label$hgtyp1hh <- gsubfn(".", list("1"  = "1-pers.-HH", 
+    data_with_label$hgtyp1hh <- gsubfn::gsubfn(".", list("1"  = "1-pers.-HH", 
                                                 "2" = "(Married) couple without C.",
                                                 "3"  = "Single parent",
                                                 "4" = "Couple + C. LE 16",
@@ -513,7 +525,7 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
     export <- paste0(path, filename, ".csv")
     colnames(data.csv)[1] <- variable
   }
-  
+
   write.csv(data.csv, export, row.names = FALSE, quote = TRUE, fileEncoding = "UTF-8")
   return(data.csv)
 }
@@ -550,51 +562,51 @@ expand_table <- function(table, diffvar1, diffvar2, diffvar3, diffcount, tablety
     }
     if(diffcount == 1){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
-                                  diffvar1=unique(pull(table, diffvar1)))
+                                  diffvar1=unique(dplyr::pull(table, diffvar1)))
       names(expand.table) <- c("year", diffvar1)
     }
     
     if(diffcount == 2){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
-                                  diffvar1=unique(pull(table, diffvar1)),
-                                  diffvar2=unique(pull(table, diffvar2)))
+                                  diffvar1=unique(dplyr::pull(table, diffvar1)),
+                                  diffvar2=unique(dplyr::pull(table, diffvar2)))
       names(expand.table) <- c("year", diffvar1, diffvar2)
     }
     
     if(diffcount == 3){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
-                                  diffvar1=unique(pull(table, diffvar1)),
-                                  diffvar2=unique(pull(table, diffvar2)),
-                                  diffvar3=unique(pull(table, diffvar3)))
+                                  diffvar1=unique(dplyr::pull(table, diffvar1)),
+                                  diffvar2=unique(dplyr::pull(table, diffvar2)),
+                                  diffvar3=unique(dplyr::pull(table, diffvar3)))
       names(expand.table) <- c("year", diffvar1, diffvar2, diffvar3)
     }
   }
   if (tabletype == "prop") {
     if(diffcount == 0){
       expand.table <- expand.grid(year=seq(start_year, end_year),
-                                  usedvariable=unique(pull(table, usedvariable)))
+                                  usedvariable=unique(dplyr::pull(table, usedvariable)))
     }
     if(diffcount == 1){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
-                                  usedvariable=unique(pull(table, usedvariable)),
-                                  diffvar1=unique(pull(table, diffvar1)))
+                                  usedvariable=unique(dplyr::pull(table, usedvariable)),
+                                  diffvar1=unique(dplyr::pull(table, diffvar1)))
       names(expand.table) <- c("year", "usedvariable", diffvar1)
     }
     
     if(diffcount == 2){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
-                                  usedvariable=unique(pull(table, usedvariable)),
-                                  diffvar1=unique(pull(table, diffvar1)),
-                                  diffvar2=unique(pull(table, diffvar2)))
+                                  usedvariable=unique(dplyr::pull(table, usedvariable)),
+                                  diffvar1=unique(dplyr::pull(table, diffvar1)),
+                                  diffvar2=unique(dplyr::pull(table, diffvar2)))
       names(expand.table) <- c("year", "usedvariable", diffvar1, diffvar2)
     }
     
     if(diffcount == 3){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
-                                  usedvariable=unique(pull(table, usedvariable)),
-                                  diffvar1=unique(pull(table, diffvar1)),
-                                  diffvar2=unique(pull(table, diffvar2)),
-                                  diffvar3=unique(pull(table, diffvar3)))
+                                  usedvariable=unique(dplyr::pull(table, usedvariable)),
+                                  diffvar1=unique(dplyr::pull(table, diffvar1)),
+                                  diffvar2=unique(dplyr::pull(table, diffvar2)),
+                                  diffvar3=unique(dplyr::pull(table, diffvar3)))
       names(expand.table) <- c("year", "usedvariable", diffvar1, diffvar2, diffvar3)
     }
   }
