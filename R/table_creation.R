@@ -6,14 +6,14 @@
 
 ### Path definition
 if (Sys.info()[["user"]] == "szimmermann") {
-  datapath <- "C:/datasets/platform_data/"
-  metapath <- "C:/git/soep-transfer/metadata/"
-  exportpath <- "C:/git/soep-transfer/"
+  dataset_path <- "C:/datasets/platform_data/"
+  metadata_path <- "C:/git/soep-transfer/metadata/"
+  export_path <- "C:/git/soep-transfer/"
 }
 
 # Definition of objects
 dataset <- "p_data" # From which data set should values be taken
-cell.min <- 30 # Maximum allowed cell size
+cell_minimum <- 30 # Maximum allowed cell size
 year <- "syear" # Survey year must be defined
 weight_variable <- "phrf" # Weight must be defined
 #############################################################################
@@ -22,27 +22,31 @@ weight_variable <- "phrf" # Weight must be defined
 # TODO: Remove this. Inpropper way to work with dependencies.
 # TODO: Dependenciess could be more specific and therefore smaller.
 ## load data without labels
-data.file.num <- readstata13::read.dta13(paste0(datapath, dataset, ".dta"),
+datafile_without_labels <- readstata13::read.dta13(paste0(dataset_path, 
+                                                          dataset, ".dta"),
   convert.factors = FALSE, encoding = "UTF-8"
 )
 
 # Delete cases with no weighting
 # TODO: %>% Should not be used just to call a single function.
 # TODO: This is done multiple times in this file.
-data.file.num <- dplyr::filter(data.file.num, weight_variable > 0)
+datafile_without_labels <- dplyr::filter(datafile_without_labels, 
+                                         weight_variable > 0)
 
 ## load data without labels
-data.file.fac <- readstata13::read.dta13(paste0(datapath, dataset, ".dta"),
+datafile_with_labels <- readstata13::read.dta13(paste0(dataset_path, 
+                                                dataset, ".dta"),
   convert.factors = TRUE,
   nonint.factors = TRUE, encoding = "UTF-8"
 )
 
 # Weights with 0 cause problems
 # TODO: %>% Should not be used just to call a single function.
-data.file.num <- dplyr::filter(data.file.num, weight_variable > 0)
+datafile_without_labels <- dplyr::filter(datafile_without_labels, 
+                                         weight_variable > 0)
 
 # read metainformation
-meta <- read.csv(paste0(metapath, "variables.csv"),
+metadaten_variables <- read.csv(paste0(metadata_path, "variables.csv"),
   header = TRUE,
   colClasses = "character"
 )
@@ -50,165 +54,165 @@ meta <- read.csv(paste0(metapath, "variables.csv"),
 ################################################################################
 ################################################################################
 ### Code to create the aggregated tables in variables.csv
-meta_demo <- dplyr::filter(meta, meantable == "demo")
+metadaten_variables_demo <- dplyr::filter(metadaten_variables, meantable == "demo")
 
-meta_demo <- subset(data.file.num,
-  select = meta_demo$variable
+metadaten_variables_demo <- subset(datafile_without_labels,
+  select = metadaten_variables_demo$variable
 )
 
 # Generate a list that represents all the grouping possibilities of the users
 # TODO: Hard to read. Should be encapsulated by a function and the function chaining
 # TODO: should be broken up into seperate statements:
-# TODO: sort(names(meta_demo)) is duplicated here.
-difflist <- c(
-  "", combn(sort(names(meta_demo)), 1, simplify = FALSE, FUN = sort),
-  combn(sort(names(meta_demo)), 2, simplify = FALSE)
+# TODO: sort(names(metadaten_variables_demo)) is duplicated here.
+grouping_variables_list <- c(
+  "", combn(sort(names(metadaten_variables_demo)), 1, simplify = FALSE, FUN = sort),
+  combn(sort(names(metadaten_variables_demo)), 2, simplify = FALSE)
 )
 
 # Generate a list that represents ne number of differentiations for each possibility
-# TODO: names(meta_demo) seems to be used quite frequently.
+# TODO: names(metadaten_variables_demo) seems to be used quite frequently.
 # TODO: Could be better to store it in an extra variable.
 # TODO: This might belong to the 'function' above.
 # TODO: Purpose of renaming and changes are not clear.
-diffcountlist <- difflist
-diffcountlist[[1]] <- 0
-diffcountlist[2:(1 + length(combn(names(meta_demo), 1, simplify = FALSE)))] <- 1
-diffcountlist[(2 + length(combn(names(meta_demo), 1, simplify = FALSE))):length(diffcountlist)] <- 2
+grouping_count_list <- grouping_variables_list
+grouping_count_list[[1]] <- 0
+grouping_count_list[2:(1 + length(combn(names(metadaten_variables_demo), 1, simplify = FALSE)))] <- 1
+grouping_count_list[(2 + length(combn(names(metadaten_variables_demo), 1, simplify = FALSE))):length(grouping_count_list)] <- 2
 
 ##############################################################################################
 # Create aggregated data tables
 # TODO: Loop Body is way to long.
 # TODO: Too many if statements. Too many if statements whith unclear purpose.
 # TODO: Should be split into seperate functions.
-for (var in 1:length(meta$variable)) {
-  if (meta$meantable[var] == "Yes" | meta$probtable[var] == "Yes") {
-    variable <- meta$variable[var]
+for (var in 1:length(metadaten_variables$variable)) {
+  if (metadaten_variables$meantable[var] == "Yes" | metadaten_variables$probtable[var] == "Yes") {
+    variable <- metadaten_variables$variable[var]
 
-    for (i in seq_along(difflist)) {
-      diffcount <- diffcountlist[[i]]
-      diffvars <- difflist[[i]]
+    for (i in seq_along(grouping_variables_list)) {
+      grouping_count <- grouping_count_list[[i]]
+      grouping_variables <- grouping_variables_list[[i]]
 
-      if (!is.na(diffvars[1])) {
-        diffvar1 <- diffvars[1]
+      if (!is.na(grouping_variables[1])) {
+        grouping_variable_one <- grouping_variables[1]
       } else {
-        diffvar1 <- ""
+        grouping_variable_one <- ""
       }
 
-      if (!is.na(diffvars[2])) {
-        diffvar2 <- diffvars[2]
+      if (!is.na(grouping_variables[2])) {
+        grouping_variable_two <- grouping_variables[2]
       } else {
-        diffvar2 <- ""
+        grouping_variable_two <- ""
       }
 
-      if (!is.na(diffvars[3])) {
-        diffvar3 <- diffvars[3]
+      if (!is.na(grouping_variables[3])) {
+        grouping_variable_three <- grouping_variables[3]
       } else {
-        diffvar3 <- ""
+        grouping_variable_three <- ""
       }
 
-      if (meta$meantable[var] == "Yes") {
+      if (metadaten_variables$meantable[var] == "Yes") {
         data <- get_data(
-          datasetnum = data.file.num,
-          datasetfac = data.file.fac,
+          datafile_without_labels = datafile_without_labels,
+          datafile_with_labels = datafile_with_labels,
           variable = variable,
           year = year,
           weight = weight_variable,
-          diffcount = diffcount,
-          diffvars = diffvars,
-          vallabel = FALSE
+          grouping_count = grouping_count,
+          grouping_variables = grouping_variables,
+          value_label = FALSE
         )
 
 
-        table.values <- get_mean_values(
+        table_numeric <- get_mean_values(
           dataset = data,
           year = "year",
-          diffcount = diffcount,
-          diffvar1 = diffvar1,
-          diffvar2 = diffvar2,
-          diffvar3 = diffvar3
+          grouping_count = grouping_count,
+          grouping_variable_one = grouping_variable_one,
+          grouping_variable_two = grouping_variable_two,
+          grouping_variable_three = grouping_variable_three
         )
 
 
-        table.values <- create_table_lables(table = table.values)
+        table_numeric <- create_table_lables(table = table_numeric)
 
-        protected.table <- get_protected_values(dataset = table.values, cell.size = 30)
+        protected_table <- get_protected_values(dataset = table_numeric, cell.size = cell_minimum)
 
 
-        protected.table <- expand_table(
-          table = protected.table, diffvar1 = diffvar1,
-          diffvar2 = diffvar2, diffvar3 = diffvar3,
-          diffcount = diffcount, tabletype = "mean"
+        protected_table <- expand_table(
+          table = protected_table, grouping_variable_one = grouping_variable_one,
+          grouping_variable_two = grouping_variable_two, grouping_variable_three = grouping_variable_three,
+          grouping_count = grouping_count, table_type = "mean"
         )
 
-        data.csv <- get_table_export(
-          table = protected.table, variable = variable,
-          metadatapath = paste0(metapath, "variables.csv"),
-          exportpath = exportpath, diffcount = diffcount,
-          tabletype = "mean"
+        data_csv <- get_table_export(
+          table = protected_table, variable = variable,
+          metadata_path = paste0(metadata_path, "variables.csv"),
+          export_path = export_path, grouping_count = grouping_count,
+          table_type = "mean"
         )
 
         json_create_lite(
           variable = variable,
-          varlabel = meta$label_de[meta$variable == variable],
-          startyear = as.numeric(unique(data.csv$year)[1]),
-          endyear = as.numeric(unique(data.csv$year)[length(unique(data.csv$year))]),
-          tabletype = "mean",
-          exportpath = paste0(exportpath, "/numerical/", variable, "/meta.json")
+          variable_label = datafile_without_labels$label_de[datafile_without_labels$variable == variable],
+          start_year = as.numeric(unique(data_csv$year)[1]),
+          end_year = as.numeric(unique(data_csv$year)[length(unique(data_csv$year))]),
+          table_type = "mean",
+          export_path = paste0(export_path, "/numerical/", variable, "/meta.json")
         )
 
         print(paste(
           "The variable", variable, "is processed with grouping year,",
-          paste(difflist[[i]], collapse = ","), "as numeric mean table"
+          paste(grouping_variables_list[[i]], collapse = ","), "as numeric mean table"
         ))
       }
 
-      if (meta$probtable[var] == "Yes") {
+      if (datafile_without_labels$probtable[var] == "Yes") {
         data <- get_data(
-          datasetnum = data.file.num,
-          datasetfac = data.file.fac,
+          datafile_without_labels = datafile_without_labels,
+          datafile_with_labels = datafile_with_labels,
           variable = variable,
           year = year,
           weight = weight_variable,
-          diffcount = diffcount,
-          diffvars = diffvars,
-          vallabel = TRUE
+          grouping_count = grouping_count,
+          grouping_variables = grouping_variables,
+          value_label = TRUE
         )
 
-        if (diffvars == "") {
+        if (grouping_variables == "") {
           columns <- c("usedvariable", "year")
         } else {
-          columns <- c("usedvariable", "year", diffvars)
+          columns <- c("usedvariable", "year", grouping_variables)
         }
 
         prop.data <- get_prop_values(dataset = data, groupvars = columns, alpha = 0.05)
 
-        protected.table <- get_protected_values(dataset = prop.data, cell.size = 30)
+        protected_table <- get_protected_values(dataset = prop.data, cell.size = cell_minimum)
 
-        protected.table <- expand_table(
-          table = protected.table, diffvar1 = diffvar1,
-          diffvar2 = diffvar2, diffvar3 = diffvar3,
-          diffcount = diffcount, tabletype = "prop"
+        protected_table <- expand_table(
+          table = protected_table, grouping_variable_one = grouping_variable_one,
+          grouping_variable_two = grouping_variable_two, grouping_variable_three = grouping_variable_three,
+          grouping_count = grouping_count, table_type = "prop"
         )
 
-        data.csv <- get_table_export(
-          table = protected.table, variable = variable,
-          metadatapath = paste0(metapath, "variables.csv"),
-          exportpath = exportpath, diffcount = diffcount,
-          tabletype = "prop"
+        data_csv <- get_table_export(
+          table = protected_table, variable = variable,
+          metadata_path = paste0(metadata_path, "variables.csv"),
+          export_path = export_path, grouping_count = grouping_count,
+          table_type = "prop"
         )
 
         json_create_lite(
           variable = variable,
-          varlabel = meta$label_de[meta$variable == variable],
-          startyear = as.numeric(unique(data.csv$year)[1]),
-          endyear = as.numeric(unique(data.csv$year)[length(unique(data.csv$year))]),
-          tabletype = "prop",
-          exportpath = paste0(exportpath, "/categorical/", variable, "/meta.json")
+          variable_label = datafile_without_labels$label_de[datafile_without_labels$variable == variable],
+          start_year = as.numeric(unique(data_csv$year)[1]),
+          end_year = as.numeric(unique(data_csv$year)[length(unique(data_csv$year))]),
+          table_type = "prop",
+          export_path = paste0(export_path, "/categorical/", variable, "/meta.json")
         )
 
         print(paste(
           "The variable", variable, "is processed with grouping year",
-          paste(difflist[[i]], collapse = ","), "as a categorical percentage table"
+          paste(grouping_variables_list[[i]], collapse = ","), "as a categorical percentage table"
         ))
       }
     }

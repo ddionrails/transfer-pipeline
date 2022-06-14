@@ -34,72 +34,72 @@ loadpackage <- function(x){
 #' @title get_data creates subset of a data set
 #'
 #' @description get_data to get the output dataset in long format 
-#' limited to certain variables (variable, year, weight, diffvars) and
+#' limited to certain variables (variable, year, weight, grouping_variables) and
 #' contain only valid values.
 #'
-#' @param datasetnum data.frame with numeric variables (e.g. platform_data)
-#' @param datasetfac data.frame with factor variables (e.g. platform_data)
+#' @param datafile_without_labels data.frame with numeric variables (e.g. platform_data)
+#' @param datafile_with_labels data.frame with factor variables (e.g. platform_data)
 #' @param variable name analysis variable as string (e.g. "pglabnet" )
 #' @param year Name survey year variable as string (e.g. "syear" )
 #' @param weight Name weight variable as string (e.g. "phrf")
-#' @param diffcount Number of desired differentiations (e.g. 2) (range 0-3)
-#' @param diffvars Vector with differentiation variables (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
-#' @param vallabel Valuelabel should be used (e.g.: vallabel = TRUE) (TRUE/FALSE)
+#' @param grouping_count Number of desired differentiations (e.g. 2) (range 0-3)
+#' @param grouping_variables Vector with differentiation variables (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#' @param value_label Valuelabel should be used (e.g.: value_label = TRUE) (TRUE/FALSE)
 #' 
 #' @return variable.values.valid is a data set with valid values of the 
-#' variables (variable, year, weight, diffvars)
+#' variables (variable, year, weight, grouping_variables)
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords get_data
 #'  
 #' @examples
-#'       get_data(datasetnum =  data.file.num, 
-#'       datasetfac = data.file.fac,
+#'       get_data(datafile_without_labels =  datafile_without_labels, 
+#'       datafile_with_labels = datafile_with_labels,
 #'       variable = "pglabnet", 
 #'       year = "syear", 
 #'       weight = "phrf",
-#'       diffcount = diffcount,
-#'       diffvars = c("alter_gr", "sex", "Bildungsniveau"),
-#'       vallabel = TRUE)
+#'       grouping_count = grouping_count,
+#'       grouping_variables = c("alter_gr", "sex", "Bildungsniveau"),
+#'       value_label = TRUE)
 # TODO: Too many arguments. Arguments are badly named. Possibly too many if statements.
-get_data <- function(datasetnum, datasetfac, variable, year, weight, diffcount, diffvars, vallabel){
+get_data <- function(datafile_without_labels, datafile_with_labels, variable, year, weight, grouping_count, grouping_variables, value_label){
   
-  if (diffcount > 0) {
+  if (grouping_count > 0) {
     
-    if (vallabel == FALSE) {
-      variable.values <- subset(datasetnum,
-                                select=c(variable, year, weight, diffvars)) 
-      names(variable.values) <- c("usedvariablenum", "year", "weight", diffvars)
+    if (value_label == FALSE) {
+      variable.values <- subset(datafile_without_labels,
+                                select=c(variable, year, weight, grouping_variables)) 
+      names(variable.values) <- c("usedvariablenum", "year", "weight", grouping_variables)
     }
-    if (vallabel == TRUE) {
-      variable.values <- subset(datasetnum, select=variable) 
-      factorvar <- subset(datasetfac, select=c(variable, year, weight, diffvars))
+    if (value_label == TRUE) {
+      variable.values <- subset(datafile_without_labels, select=variable) 
+      factorvar <- subset(datafile_with_labels, select=c(variable, year, weight, grouping_variables))
       variable.values <- cbind(variable.values, factorvar)
-      names(variable.values) <- c("usedvariablenum", "usedvariable", "year", "weight", diffvars)
+      names(variable.values) <- c("usedvariablenum", "usedvariable", "year", "weight", grouping_variables)
     }
   }
   
-  if (diffcount == 0) {
-    if (vallabel == FALSE) {
-      variable.values <- subset(datasetnum,
+  if (grouping_count == 0) {
+    if (value_label == FALSE) {
+      variable.values <- subset(datafile_without_labels,
                                 select=c(variable, year, weight)) 
       names(variable.values) <- c("usedvariablenum", "year", "weight")
     }
-    if (vallabel == TRUE) {
-      variable.values <- subset(datasetnum, select=variable) 
-      factorvar <- subset(datasetfac, select=c(variable, year, weight))
+    if (value_label == TRUE) {
+      variable.values <- subset(datafile_without_labels, select=variable) 
+      factorvar <- subset(datafile_with_labels, select=c(variable, year, weight))
       variable.values <- cbind(variable.values, factorvar)
       names(variable.values) <- c("usedvariablenum", "usedvariable", "year", "weight")
     }
   }
   
   if (any(variable.values$usedvariablenum >= 0)) { 
-    if (vallabel == FALSE) {
+    if (value_label == FALSE) {
       variable.values.valid <- subset(variable.values, usedvariablenum>= 0) 
       variable.values.valid <- variable.values.valid[order(variable.values.valid$usedvariablenum),]
       names(variable.values.valid)[names(variable.values.valid) == "usedvariablenum"] <- "usedvariable"
     } 
-    if (vallabel == TRUE) {
+    if (value_label == TRUE) {
       variable.values.valid <- subset(variable.values, usedvariablenum>= 0) 
       variable.values.valid <- variable.values.valid[order(variable.values.valid$usedvariablenum),]
       variable.values.valid <- variable.values.valid[2:length(variable.values.valid)]
@@ -118,10 +118,10 @@ get_data <- function(datasetnum, datasetfac, variable, year, weight, diffcount, 
 #'
 #' @param dataset data.frame from get_data (e.g. platform_data)
 #' @param year year variable as string (e.g. "year")
-#' @param diffcount number of desired differentiations (e.g. 2) (range 0-3)
-#' @param diffvar1 name differentiation variable 1 as string ("" possible)
-#' @param diffvar2 name differentiation variable 2 as string ("" possible)
-#' @param diffvar3 Number of differentiation variable 3 as string ("" possible)
+#' @param grouping_count number of desired differentiations (e.g. 2) (range 0-3)
+#' @param grouping_variable_one name differentiation variable 1 as string ("" possible)
+#' @param grouping_variable_two name differentiation variable 2 as string ("" possible)
+#' @param grouping_variable_three Number of differentiation variable 3 as string ("" possible)
 #' 
 #' @return data = dataset with mean, median, n, percentiles, confidence interval
 #'
@@ -131,29 +131,29 @@ get_data <- function(datasetnum, datasetfac, variable, year, weight, diffcount, 
 #' @examples
 #'       get_mean_values(dataset = data, 
 #'                       year = "year", 
-#'                       diffcount = 2,
-#'                       diffvar1 = "sex",
-#'                       diffvar2 = "alter_gr",
-#'                       diffvar3 = "")
-# TODO: Some arguments are badly named. diffvar1-3 could be one data structure.
+#'                       grouping_count = 2,
+#'                       grouping_variable_one = "sex",
+#'                       grouping_variable_two = "alter_gr",
+#'                       grouping_variable_three = "")
+# TODO: Some arguments are badly named. grouping_variable_one-3 could be one data structure.
 # TODO: Too many if statements
-get_mean_values <- function(dataset, year, diffcount,
-                            diffvar1, diffvar2, diffvar3) {
+get_mean_values <- function(dataset, year, grouping_count,
+                            grouping_variable_one, grouping_variable_two, grouping_variable_three) {
   
-  if (diffcount == 0) {
+  if (grouping_count == 0) {
     columns = year
   }
   
-  if (diffcount == 1) {
-    columns = c(year, diffvar1)
+  if (grouping_count == 1) {
+    columns = c(year, grouping_variable_one)
   }
   
-  if (diffcount == 2) {
-    columns = c(year, diffvar1, diffvar2)
+  if (grouping_count == 2) {
+    columns = c(year, grouping_variable_one, grouping_variable_two)
   }
   
-  if (diffcount == 3) {
-    columns = c(year, diffvar1, diffvar2, diffvar3)
+  if (grouping_count == 3) {
+    columns = c(year, grouping_variable_one, grouping_variable_two, grouping_variable_three)
   }
   mean.values <- dataset[complete.cases(dataset), ] %>%
     dplyr::group_by_at(vars(one_of(columns))) %>%
@@ -454,80 +454,80 @@ create_table_lables <- function(table) {
 #' 
 #' @param table produced data.frame from get_protected_values (e.g. platform_data)
 #' @param variable name analysis variable from raw data as string ("pglabnet")
-#' @param metadatapath Path to the metadata with variable name and table type in the dataset as string
-#' @param exportpath export folder as string
-#' @param diffcount number of differentiations as numeric (0-3 robbed)
-#' @param tabletype Type of table to be processed ("mean" or "prop")
+#' @param metadata_path Path to the metadata with variable name and table type in the dataset as string
+#' @param export_path export folder as string
+#' @param grouping_count number of differentiations as numeric (0-3 robbed)
+#' @param table_type Type of table to be processed ("mean" or "prop")
 #' 
-#' @return data.csv = exportierte Tabelle als csv
+#' @return data_csv = exportierte Tabelle als csv
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords data.csv
+#' @keywords data_csv
 #'  
 #' @examples
-#'        get_table_export(table = protected.table, variable = "usedvariable", 
-#'                         metadatapath = paste0(metapath, "varnames.csv"),
-#'                         exportpath = exportpath, diffcount = 2, 
-#'                         tabletype = "mean")
+#'        get_table_export(table = protected_table, variable = "usedvariable", 
+#'                         metadata_path = paste0(metadata_path, "varnames.csv"),
+#'                         export_path = export_path, grouping_count = 2, 
+#'                         table_type = "mean")
 
-get_table_export <- function(table, variable, metadatapath, exportpath, diffcount, tabletype) {
+get_table_export <- function(table, variable, metadata_path, export_path, grouping_count, table_type) {
   
-  metadata <- read.csv(metadatapath , header = TRUE)
+  metadata <- read.csv(metadata_path , header = TRUE)
   variable <- variable
   
-  if(tabletype=="mean"){
-    path <- file.path(exportpath, "numerical", variable, "/")
-    diffvars <- 1+diffcount
+  if(table_type=="mean"){
+    path <- file.path(export_path, "numerical", variable, "/")
+    diffvars <- 1+grouping_count
     filenames  <- names(table)[2:diffvars]
   }
   
-  if(tabletype=="prop"){
-    path <- file.path(exportpath, "categorical", variable, "/")
-    diffvars <- 2+diffcount
+  if(table_type=="prop"){
+    path <- file.path(export_path, "categorical", variable, "/")
+    diffvars <- 2+grouping_count
     filenames  <- names(table)[3:diffvars]
   }
   
-  if (diffcount == 3) {
+  if (grouping_count == 3) {
     filename <- paste0(variable, "_", "year", "_", metadata$variable[metadata$variable==filenames[1]], "_",
                        metadata$variable[metadata$variable==filenames[2]], "_", 
                        metadata$variable[metadata$variable==filenames[3]])
   }
   
-  if (diffcount == 2 ) {
+  if (grouping_count == 2 ) {
     filename <- paste0(variable, "_", "year", "_", metadata$variable[metadata$variable==filenames[1]], "_",
                        metadata$variable[metadata$variable==filenames[2]])
   }
   
-  if (diffcount == 1) {
+  if (grouping_count == 1) {
     filename <- paste0(variable, "_", "year", "_", metadata$variable[metadata$variable==filenames[1]])
   }
   
-  if (diffcount == 0) {
+  if (grouping_count == 0) {
     filename <- paste0(variable, "_", "year")
   }
   
   dir.create(path, showWarnings = FALSE)
-  data.csv <- sapply(table, as.character)
-  data.csv[is.na(data.csv)] <- ""
-  data.csv <- as.data.frame(data.csv)
+  data_csv <- sapply(table, as.character)
+  data_csv[is.na(data_csv)] <- ""
+  data_csv <- as.data.frame(data_csv)
   
-  data.csv <- as.data.frame(apply(data.csv,2,
+  data_csv <- as.data.frame(apply(data_csv,2,
                                   function(x)gsub('^\\[[0-9]*]', '',x)))
   
-  data.csv <- as.data.frame(apply(data.csv,2,
+  data_csv <- as.data.frame(apply(data_csv,2,
                                   function(x)gsub('^\\s+', '',x)))
   
-  if(tabletype=="mean"){
+  if(table_type=="mean"){
     export <- paste0(path, filename, ".csv")
   }
   
-  if(tabletype=="prop"){
+  if(table_type=="prop"){
     export <- paste0(path, filename, ".csv")
-    colnames(data.csv)[1] <- variable
+    colnames(data_csv)[1] <- variable
   }
 
-  write.csv(data.csv, export, row.names = FALSE, quote = TRUE, fileEncoding = "UTF-8")
-  return(data.csv)
+  write.csv(data_csv, export, row.names = FALSE, quote = TRUE, fileEncoding = "UTF-8")
+  return(data_csv)
 }
 
 ################################################################################
@@ -539,75 +539,75 @@ get_table_export <- function(table, variable, metadatapath, exportpath, diffcoun
 #' @description expand_table add empty rows if variable in year is empty. 
 #'
 #' @table data.frame to be filled with empty cells
-#' @diffvar1 differentiation dimension as character
-#' @diffvar2 Differentiation dimension as character
-#' @diffvar3 differentiation dimension as character
-#' @diffcount number of differentiations as numeric
-#' @tabletype Table type ("prop" or "mean")
+#' @grouping_variable_one differentiation dimension as character
+#' @grouping_variable_two Differentiation dimension as character
+#' @grouping_variable_three differentiation dimension as character
+#' @grouping_count number of differentiations as numeric
+#' @table_type Table type ("prop" or "mean")
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #'  
-#' @examples expand_table(table = protected.table, diffvar1 = diffvar1, 
-#'                        diffvar2 = diffvar2, diffvar3 = diffvar3,
-#'                        diffcount = diffcount, tabletype = "prop")
+#' @examples expand_table(table = protected_table, grouping_variable_one = grouping_variable_one, 
+#'                        grouping_variable_two = grouping_variable_two, grouping_variable_three = grouping_variable_three,
+#'                        grouping_count = grouping_count, table_type = "prop")
 
-expand_table <- function(table, diffvar1, diffvar2, diffvar3, diffcount, tabletype) {
+expand_table <- function(table, grouping_variable_one, grouping_variable_two, grouping_variable_three, grouping_count, table_type) {
   
   start_year <- as.numeric(unique(table$year)[1])
   end_year <- as.numeric(unique(table$year)[length(unique(table$year))])
   
-  if (tabletype == "mean") {
-    if(diffcount == 0){
+  if (table_type == "mean") {
+    if(grouping_count == 0){
       expand.table <- expand.grid(year=seq(start_year, end_year))
     }
-    if(diffcount == 1){
+    if(grouping_count == 1){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
-                                  diffvar1=unique(dplyr::pull(table, diffvar1)))
-      names(expand.table) <- c("year", diffvar1)
+                                  grouping_variable_one=unique(dplyr::pull(table, grouping_variable_one)))
+      names(expand.table) <- c("year", grouping_variable_one)
     }
     
-    if(diffcount == 2){
+    if(grouping_count == 2){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
-                                  diffvar1=unique(dplyr::pull(table, diffvar1)),
-                                  diffvar2=unique(dplyr::pull(table, diffvar2)))
-      names(expand.table) <- c("year", diffvar1, diffvar2)
+                                  grouping_variable_one=unique(dplyr::pull(table, grouping_variable_one)),
+                                  grouping_variable_two=unique(dplyr::pull(table, grouping_variable_two)))
+      names(expand.table) <- c("year", grouping_variable_one, grouping_variable_two)
     }
     
-    if(diffcount == 3){
+    if(grouping_count == 3){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
-                                  diffvar1=unique(dplyr::pull(table, diffvar1)),
-                                  diffvar2=unique(dplyr::pull(table, diffvar2)),
-                                  diffvar3=unique(dplyr::pull(table, diffvar3)))
-      names(expand.table) <- c("year", diffvar1, diffvar2, diffvar3)
+                                  grouping_variable_one=unique(dplyr::pull(table, grouping_variable_one)),
+                                  grouping_variable_two=unique(dplyr::pull(table, grouping_variable_two)),
+                                  grouping_variable_three=unique(dplyr::pull(table, grouping_variable_three)))
+      names(expand.table) <- c("year", grouping_variable_one, grouping_variable_two, grouping_variable_three)
     }
   }
-  if (tabletype == "prop") {
-    if(diffcount == 0){
+  if (table_type == "prop") {
+    if(grouping_count == 0){
       expand.table <- expand.grid(year=seq(start_year, end_year),
                                   usedvariable=unique(dplyr::pull(table, usedvariable)))
     }
-    if(diffcount == 1){
+    if(grouping_count == 1){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
                                   usedvariable=unique(dplyr::pull(table, usedvariable)),
-                                  diffvar1=unique(dplyr::pull(table, diffvar1)))
-      names(expand.table) <- c("year", "usedvariable", diffvar1)
+                                  grouping_variable_one=unique(dplyr::pull(table, grouping_variable_one)))
+      names(expand.table) <- c("year", "usedvariable", grouping_variable_one)
     }
     
-    if(diffcount == 2){
+    if(grouping_count == 2){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
                                   usedvariable=unique(dplyr::pull(table, usedvariable)),
-                                  diffvar1=unique(dplyr::pull(table, diffvar1)),
-                                  diffvar2=unique(dplyr::pull(table, diffvar2)))
-      names(expand.table) <- c("year", "usedvariable", diffvar1, diffvar2)
+                                  grouping_variable_one=unique(dplyr::pull(table, grouping_variable_one)),
+                                  grouping_variable_two=unique(dplyr::pull(table, grouping_variable_two)))
+      names(expand.table) <- c("year", "usedvariable", grouping_variable_one, grouping_variable_two)
     }
     
-    if(diffcount == 3){
+    if(grouping_count == 3){
       expand.table <- expand.grid(year=seq(start_year, end_year), 
                                   usedvariable=unique(dplyr::pull(table, usedvariable)),
-                                  diffvar1=unique(dplyr::pull(table, diffvar1)),
-                                  diffvar2=unique(dplyr::pull(table, diffvar2)),
-                                  diffvar3=unique(dplyr::pull(table, diffvar3)))
-      names(expand.table) <- c("year", "usedvariable", diffvar1, diffvar2, diffvar3)
+                                  grouping_variable_one=unique(dplyr::pull(table, grouping_variable_one)),
+                                  grouping_variable_two=unique(dplyr::pull(table, grouping_variable_two)),
+                                  grouping_variable_three=unique(dplyr::pull(table, grouping_variable_three)))
+      names(expand.table) <- c("year", "usedvariable", grouping_variable_one, grouping_variable_two, grouping_variable_three)
     }
   }
   final <- merge(table, expand.table, all.y = TRUE)
@@ -623,22 +623,22 @@ expand_table <- function(table, diffvar1, diffvar2, diffvar3, diffcount, tablety
 #' @description json_create_lite creates json metadata
 #'
 #' @variable variable names as character
-#' @varlabel variable label as character
-#' @startyear start year of the information as numeric
-#' @endyear end of year information as numeric
-#' @tabletype table type (e.g. "mean", "prop", "both")
-#' @exportpath path where json file will be stored
+#' @variable_label variable label as character
+#' @start_year start year of the information as numeric
+#' @end_year end of year information as numeric
+#' @table_type table type (e.g. "mean", "prop", "both")
+#' @export_path path where json file will be stored
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords column_count_check Spaltenanzahl
 #'  
 #' @examples column_count_check(data = data, columns = columns)
 
-json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, exportpath) {
-  if (tabletype == "mean") {
+json_create_lite <- function(variable, variable_label, start_year, end_year, table_type, export_path) {
+  if (table_type == "mean") {
     json_output <- jsonlite::toJSON(
       x = list(
-        "title" = varlabel,
+        "title" = variable_label,
         "variable" = variable,
         "statistics" = c("mean", "lowerci_mean", "upperci_mean", "min", "max",
                          "median", "lowerci_median", "upperci_median", 
@@ -704,25 +704,25 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
                                "indirect migration background")),
           list("variable" = meta$variable[meta$variable == "regtyp"], 
                "label" = meta$label_de[meta$variable == "regtyp"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp)))))))
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(datafile_with_labels$regtyp)))))))
 
         ),
         "description_de" = meta$description[meta$variable==variable],
-        "start_year" = startyear,
-        "end_year" = endyear,
+        "start_year" = start_year,
+        "end_year" = end_year,
         "types" = list("numerical")
       ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
     )
     
     file_handler <- file("meta.json")
-    writeLines(json_output, exportpath, useBytes=TRUE)
+    writeLines(json_output, export_path, useBytes=TRUE)
     close(file_handler)
   }
   
-  if (tabletype == "prop") {
+  if (table_type == "prop") {
     json_output <- jsonlite::toJSON(
       x = list(
-        "title" = varlabel,
+        "title" = variable_label,
         "variable" = variable,
         "statistics" = c("percent", "lower_confidence" ,"upper_confidence"),
         "dimensions" = list(
@@ -786,24 +786,24 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
                                "indirect migration background")),
           list("variable" = meta$variable[meta$variable == "regtyp"], 
                "label" = meta$label_de[meta$variable == "regtyp"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp)))))))
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(datafile_with_labels$regtyp)))))))
         ),
         "description_de" = meta$description[meta$variable==variable],
-        "start_year" = startyear,
-        "end_year" = endyear,
+        "start_year" = start_year,
+        "end_year" = end_year,
         "types" = "categorical"
       ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
     )
     
     file_handler <- file("meta.json")
-    writeLines(json_output, exportpath, useBytes=TRUE)
+    writeLines(json_output, export_path, useBytes=TRUE)
     close(file_handler)
   }
   
-  if (tabletype == "both") {
+  if (table_type == "both") {
     json_output <- jsonlite::toJSON(
       x = list(
-        "title" = varlabel,
+        "title" = variable_label,
         "variable" = variable,
         "statistics" = c("mean", "lowerci_mean", "upperci_mean", 
                          "median", "lowerci_median", "upperci_median", 
@@ -870,17 +870,17 @@ json_create_lite <- function(variable, varlabel, startyear, endyear, tabletype, 
                                "indirect migration background")),
           list("variable" = meta$variable[meta$variable == "regtyp"], 
                "label" = meta$label_de[meta$variable == "regtyp"],
-               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(data.file.fac$regtyp)))))))
+               "values" = list(as.list(str_trim(gsub("[[0-9]+]", "", levels(factor(datafile_with_labels$regtyp)))))))
         ),
         "description_de" = meta$description[meta$variable==variable],
-        "start_year" = startyear,
-        "end_year" = endyear,
+        "start_year" = start_year,
+        "end_year" = end_year,
         "types" = list("numerical", "categorical")
       ), encoding = "UTF-8", pretty = TRUE, auto_unbox=TRUE
     )
     
     file_handler <- file("meta.json")
-    writeLines(json_output, exportpath, useBytes=TRUE)
+    writeLines(json_output, export_path, useBytes=TRUE)
     close(file_handler)
   }
 }
