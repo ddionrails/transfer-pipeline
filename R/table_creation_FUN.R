@@ -885,4 +885,61 @@ json_create_lite <- function(variable, variable_label, start_year, end_year, tab
   }
 }
 
+################################################################################
+get_grouping_variables_list <- function(metadaten_variables_demo) {
+  # TODO: Hard to read. Should be encapsulated by a function and the function chaining
+  # TODO: should be broken up into seperate statements:
+  # TODO: sort(names(metadaten_variables_demo)) is duplicated here.
+  
+  metadaten_variables_demo_sorted <- sort(names(metadaten_variables_demo))
+  
+  single_grouping_combinations <- combn(metadaten_variables_demo_sorted, 1, 
+                                          simplify = FALSE, FUN = sort)
+  
+  double_grouping_combinations <- combn(metadaten_variables_demo_sorted, 2, 
+                                          simplify = FALSE)
+  
+  grouping_variables_list <- c("", single_grouping_combinations, 
+                               double_grouping_combinations)
+  
+  return(grouping_variables_list)
+}
+
+################################################################################
+get_grouping_count_list <- function(metadaten_variables_demo) {
+  # TODO: names(metadaten_variables_demo) seems to be used quite frequently.
+  # TODO: Could be better to store it in an extra variable.
+  # TODO: This might belong to the 'function' above.
+  # TODO: Purpose of renaming and changes are not clear.
+  
+  # number of single groupings
+  single_length <- length(metadaten_variables_demo)
+  # number of double groupings
+  double_length <- length(combn(names(
+                          metadaten_variables_demo), 2, 
+                          simplify = FALSE))
+  # empty list
+  grouping_count_list <- list()
+  
+  # First list element is 0
+  grouping_count_list[[1]] <- 0
+  
+  # Single grouping combinatons always count = 1
+  single_grouping_combinations <- rep(list(1), single_length) 
+  
+  # Double grouping combinatons always count = 2
+  double_grouping_combinations <- rep(list(2), double_length) 
+  
+  # Append single_grouping_combinations
+  grouping_count_list <- append(grouping_count_list, 
+                                single_grouping_combinations, 
+                                after = 1)
+  
+  # Append double grouping combinations
+  grouping_count_list <- append(grouping_count_list, 
+                                double_grouping_combinations, 
+                                after = length(grouping_count_list))
+    
+  return(grouping_count_list)
+}
 

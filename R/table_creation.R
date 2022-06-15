@@ -1,26 +1,21 @@
 #############################################################################
 # Create aggregated data tables for SOEP transfer project
 #############################################################################
-# TODO: Variable names should be more explicit, no abbreviations.
-# TODO: Use consistent snake case
-
 ### Path definition
 if (Sys.info()[["user"]] == "szimmermann") {
-  dataset_path <- "C:/datasets/platform_data/"
-  metadata_path <- "C:/git/soep-transfer/metadata/"
+  dataset_path <- "H:/data/"
+  metadata_path <- "H:/Clone/soep-transfer/metadata/"
   export_path <- "C:/git/soep-transfer/"
 }
 
 # Definition of objects
-dataset <- "p_data" # From which data set should values be taken
+dataset <- "p_statistics" # From which data set should values be taken
 cell_minimum <- 30 # Maximum allowed cell size
 year <- "syear" # Survey year must be defined
 weight_variable <- "phrf" # Weight must be defined
 #############################################################################
 
 ## load packages
-# TODO: Remove this. Inpropper way to work with dependencies.
-# TODO: Dependenciess could be more specific and therefore smaller.
 ## load data without labels
 datafile_without_labels <- readstata13::read.dta13(paste0(dataset_path, 
                                                           dataset, ".dta"),
@@ -28,8 +23,6 @@ datafile_without_labels <- readstata13::read.dta13(paste0(dataset_path,
 )
 
 # Delete cases with no weighting
-# TODO: %>% Should not be used just to call a single function.
-# TODO: This is done multiple times in this file.
 datafile_without_labels <- dplyr::filter(datafile_without_labels, 
                                          weight_variable > 0)
 
@@ -41,7 +34,6 @@ datafile_with_labels <- readstata13::read.dta13(paste0(dataset_path,
 )
 
 # Weights with 0 cause problems
-# TODO: %>% Should not be used just to call a single function.
 datafile_without_labels <- dplyr::filter(datafile_without_labels, 
                                          weight_variable > 0)
 
@@ -54,7 +46,10 @@ metadaten_variables <- read.csv(paste0(metadata_path, "variables.csv"),
 ################################################################################
 ################################################################################
 ### Code to create the aggregated tables in variables.csv
-metadaten_variables_demo <- dplyr::filter(metadaten_variables, meantable == "demo")
+metadaten_variables <- metadaten_variables[metadaten_variables$dataset==dataset, ]
+
+metadaten_variables_demo <- dplyr::filter(metadaten_variables, 
+                                          meantable == "demo")
 
 metadaten_variables_demo <- subset(datafile_without_labels,
   select = metadaten_variables_demo$variable
@@ -64,20 +59,19 @@ metadaten_variables_demo <- subset(datafile_without_labels,
 # TODO: Hard to read. Should be encapsulated by a function and the function chaining
 # TODO: should be broken up into seperate statements:
 # TODO: sort(names(metadaten_variables_demo)) is duplicated here.
-grouping_variables_list <- c(
-  "", combn(sort(names(metadaten_variables_demo)), 1, simplify = FALSE, FUN = sort),
-  combn(sort(names(metadaten_variables_demo)), 2, simplify = FALSE)
-)
+grouping_variables_list <- get_grouping_variables_list(
+  metadaten_variables_demo = metadaten_variables_demo
+  )
 
 # Generate a list that represents ne number of differentiations for each possibility
 # TODO: names(metadaten_variables_demo) seems to be used quite frequently.
 # TODO: Could be better to store it in an extra variable.
 # TODO: This might belong to the 'function' above.
 # TODO: Purpose of renaming and changes are not clear.
-grouping_count_list <- grouping_variables_list
-grouping_count_list[[1]] <- 0
-grouping_count_list[2:(1 + length(combn(names(metadaten_variables_demo), 1, simplify = FALSE)))] <- 1
-grouping_count_list[(2 + length(combn(names(metadaten_variables_demo), 1, simplify = FALSE))):length(grouping_count_list)] <- 2
+
+grouping_count_list <- get_grouping_count_list(
+  metadaten_variables_demo = metadaten_variables_demo
+  )
 
 ##############################################################################################
 # Create aggregated data tables
@@ -135,12 +129,15 @@ for (var in 1:length(metadaten_variables$variable)) {
 
         table_numeric <- create_table_lables(table = table_numeric)
 
-        protected_table <- get_protected_values(dataset = table_numeric, cell.size = cell_minimum)
+        protected_table <- get_protected_values(dataset = table_numeric, 
+                                                cell.size = cell_minimum)
 
 
         protected_table <- expand_table(
-          table = protected_table, grouping_variable_one = grouping_variable_one,
-          grouping_variable_two = grouping_variable_two, grouping_variable_three = grouping_variable_three,
+          table = protected_table, 
+          grouping_variable_one = grouping_variable_one,
+          grouping_variable_two = grouping_variable_two, 
+          grouping_variable_three = grouping_variable_three,
           grouping_count = grouping_count, table_type = "mean"
         )
 
