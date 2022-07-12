@@ -19,8 +19,8 @@ Imports:
    gsubfn,
    readstata13,
    spatstat,
-   tidyverse,
-   rjson
+   rjson,
+   optparse
 Suggests:
     testthat (>= 3.0.0),
     styler,
