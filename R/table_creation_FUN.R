@@ -45,54 +45,34 @@
 # statements.
 
 get_data <-
-  function(datafile_without_labels,
-           datafile_with_labels,
-           variable,
-           year,
-           weight,
-           grouping_count,
+  function(variable,
            grouping_variables,
            value_label) {
-    if (grouping_count > 0) {
-      if (value_label == FALSE) {
-        variable.values <- subset(datafile_without_labels,
-                                  select = c(variable, year, weight, 
-                                             grouping_variables))
-        names(variable.values) <-
-          c("usedvariablenum", "year", "weight", grouping_variables)
-      }
-      if (value_label == TRUE) {
-        variable.values <-
-          subset(datafile_without_labels, select = variable)
-        factorvar <-
-          subset(datafile_with_labels,
-                 select = c(variable, year, weight, grouping_variables))
-        variable.values <- cbind(variable.values, factorvar)
-        names(variable.values) <-
-          c("usedvariablenum",
-            "usedvariable",
-            "year",
-            "weight",
-            grouping_variables)
-      }
-    }
     
-    if (grouping_count == 0) {
-      if (value_label == FALSE) {
-        variable.values <- subset(datafile_without_labels,
-                                  select = c(variable, year, weight))
-        names(variable.values) <-
-          c("usedvariablenum", "year", "weight")
-      }
-      if (value_label == TRUE) {
-        variable.values <-
-          subset(datafile_without_labels, select = variable)
-        factorvar <-
-          subset(datafile_with_labels, select = c(variable, year, weight))
-        variable.values <- cbind(variable.values, factorvar)
-        names(variable.values) <-
-          c("usedvariablenum", "usedvariable", "year", "weight")
-      }
+    columns <- c(variable, "syear", "weight", 
+                 grouping_variables)
+    
+    columns <- columns[columns != ""]
+    renamed_columns <- columns[columns != variable]
+    
+    if (value_label == FALSE) {
+      variable.values <- subset(datafile_without_labels,
+                                select = columns)
+      names(variable.values) <-
+        c("usedvariablenum", 
+          renamed_columns)
+    }
+    if (value_label == TRUE) {
+      variable.values <-
+        subset(datafile_without_labels, select = variable)
+      factorvar <-
+        subset(datafile_with_labels,
+               select = columns)
+      variable.values <- cbind(variable.values, factorvar)
+      names(variable.values) <-
+        c("usedvariablenum",
+          "usedvariable",
+          renamed_columns)
     }
     
     if (any(variable.values$usedvariablenum >= 0)) {

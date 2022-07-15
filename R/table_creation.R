@@ -36,6 +36,10 @@ main <- function() {
   datafile_without_labels <- dplyr::filter(datafile_without_labels,
                                            weight_variable > 0)
   
+  # Rename weighting variable to weight
+  names(datafile_without_labels)[names(
+    datafile_without_labels) == weight_variable] <- 'weight'
+  
   ## load data without labels
   datafile_with_labels <- readstata13::read.dta13(
     paste0(dataset_path,
@@ -46,8 +50,12 @@ main <- function() {
   )
   
   # Weights with 0 cause problems
-  datafile_without_labels <- dplyr::filter(datafile_without_labels,
-                                           weight_variable > 0)
+  datafile_with_labels <- dplyr::filter(datafile_with_labels,
+                                        weight_variable > 0)
+  
+  # Rename weighting variable to weight
+  names(datafile_with_labels)[names(
+    datafile_with_labels) == weight_variable] <- 'weight'
   
   # read metainformation
   metadaten_variables <-
@@ -70,20 +78,11 @@ main <- function() {
                                      select = metadaten_variables_demo$variable)
   
   # Generate a list that represents all the grouping possibilities of the users
-  # TODO: Hard to read. Should be encapsulated by a function and the function 
-  # chaining
-  # TODO: should be broken up into seperate statements:
-  # TODO: sort(names(metadaten_variables_demo)) is duplicated here.
   grouping_variables_list <- get_grouping_variables_list(
     metadaten_variables_demo = metadaten_variables_demo)
   
   # Generate a list that represents ne number of differentiations for each
   # possibility
-  # TODO: names(metadaten_variables_demo) seems to be used quite frequently.
-  # TODO: Could be better to store it in an extra variable.
-  # TODO: This might belong to the 'function' above.
-  # TODO: Purpose of renaming and changes are not clear.
-  
   grouping_count_list <- get_grouping_count_list(
     metadaten_variables_demo = metadaten_variables_demo)
   
@@ -121,12 +120,7 @@ main <- function() {
         
         if (metadaten_variables$meantable[var] == "Yes") {
           data <- get_data(
-            datafile_without_labels = datafile_without_labels,
-            datafile_with_labels = datafile_with_labels,
             variable = variable,
-            year = year,
-            weight = weight_variable,
-            grouping_count = grouping_count,
             grouping_variables = grouping_variables,
             value_label = FALSE
           )
@@ -192,12 +186,7 @@ main <- function() {
         
         if (datafile_without_labels$probtable[var] == "Yes") {
           data <- get_data(
-            datafile_without_labels = datafile_without_labels,
-            datafile_with_labels = datafile_with_labels,
             variable = variable,
-            year = year,
-            weight = weight_variable,
-            grouping_count = grouping_count,
             grouping_variables = grouping_variables,
             value_label = TRUE
           )
