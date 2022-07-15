@@ -54,6 +54,7 @@ get_data <-
     
     columns <- columns[columns != ""]
     renamed_columns <- columns[columns != variable]
+    renamed_columns <- dplyr::recode(renamed_columns, syear = "year")
     
     if (value_label == FALSE) {
       variable.values <- subset(datafile_without_labels,
@@ -132,34 +133,15 @@ get_data <-
 # TODO: Too many if statements
 
 get_mean_values <- function(dataset,
-                            year,
-                            grouping_count,
-                            grouping_variable_one,
-                            grouping_variable_two,
-                            grouping_variable_three) {
-  if (grouping_count == 0) {
-    columns <- year
-  }
+                            grouping_variables) {
   
-  if (grouping_count == 1) {
-    columns <- c(year, grouping_variable_one)
-  }
+  columns <- c("year", grouping_variables)
+  columns <- columns[columns != ""]
   
-  if (grouping_count == 2) {
-    columns <- c(year, grouping_variable_one, grouping_variable_two)
-  }
-  
-  if (grouping_count == 3) {
-    columns <-
-      c(year,
-        grouping_variable_one,
-        grouping_variable_two,
-        grouping_variable_three)
-  }
   mean.values <- dataset[complete.cases(dataset),] %>%
-    dplyr::group_by_at(vars(one_of(columns))) %>%
+    dplyr::group_by_at(dplyr::vars(one_of(columns))) %>%
     dplyr::mutate(mean = round(weighted.mean(usedvariable, weight), 2)) %>%
-    dplyr::mutate(median = round(weighted.median(usedvariable, weight), 2)) %>%
+    dplyr::mutate(median = round(spatstat.geom::weighted.median(usedvariable, weight), 2)) %>%
     dplyr::add_count(year, wt = NULL) %>%
     dplyr::mutate(sd = sd(usedvariable / sqrt(n))) %>%
     dplyr::mutate(
@@ -174,7 +156,7 @@ get_mean_values <- function(dataset,
   
   
   percentile.values <- dataset[complete.cases(dataset),] %>%
-    dplyr::group_by_at(vars(one_of(columns))) %>%
+    dplyr::group_by_at(dplyr::vars(one_of(columns))) %>%
     dplyr::summarise(
       ptile10 = round(
         Hmisc::wtd.quantile(
@@ -226,7 +208,7 @@ get_mean_values <- function(dataset,
   
   # Median confidence interval calculation
   median_data <- dataset %>%
-    dplyr::group_by_at(vars(one_of(columns))) %>%
+    dplyr::group_by_at(dplyr::vars(one_of(columns))) %>%
     dplyr::filter(dplyr::n() > 8)
   
   medianci.value <- median_data[complete.cases(median_data),] %>%
@@ -302,7 +284,7 @@ get_mean_values <- function(dataset,
 #'
 get_prop_values <- function(dataset, groupvars, alpha) {
   data_prop1 <- dataset[complete.cases(dataset),] %>%
-    dplyr::group_by_at(vars(one_of(groupvars))) %>%
+    dplyr::group_by_at(dplyr::vars(one_of(groupvars))) %>%
     dplyr::summarise(count_w = sum(weight), .groups = "drop_last")
   
   data_prop2 <- data_prop1[complete.cases(data_prop1),] %>%
@@ -312,7 +294,7 @@ get_prop_values <- function(dataset, groupvars, alpha) {
     dplyr::mutate(sum_count_w = sum(count_w))
   
   data_prop3 <- dataset[complete.cases(dataset),] %>%
-    dplyr::group_by_at(vars(one_of(groupvars))) %>%
+    dplyr::group_by_at(dplyr::vars(one_of(groupvars))) %>%
     dplyr::summarise(n = dplyr::n(), .groups = "drop_last")
   
   data_prop4 <- data_prop3[complete.cases(data_prop3),] %>%

@@ -126,15 +126,9 @@ main <- function() {
           )
           
           
-          table_numeric <- get_mean_values(
-            dataset = data,
-            year = "year",
-            grouping_count = grouping_count,
-            grouping_variable_one = grouping_variable_one,
-            grouping_variable_two = grouping_variable_two,
-            grouping_variable_three = grouping_variable_three
-          )
-          
+          table_numeric <- get_mean_values(dataset = data,
+                                           grouping_variables = 
+                                             grouping_variables)
           
           table_numeric <-
             create_table_lables(table = table_numeric)
