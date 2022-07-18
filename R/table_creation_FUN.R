@@ -427,156 +427,22 @@ get_protected_values <- function(dataset, cell.size) {
 #' @examples
 #' create_table_lables(table = data)
 #'
-create_table_lables <- function(table) {
-  data_with_label <- table
+create_table_lables <- function(table, grouping_variables) {
   
-  if ("sex" %in% colnames(data_with_label)) {
-    data_with_label$sex <- gsubfn::gsubfn(".",
-                                          list("1" = "Male", "2" = "Female"),
-                                          as.character(data_with_label$sex))
+  for(groupingvar in grouping_variables) {
+    
+    variable_categories_subset <-
+      subset(metadaten_variable_categories, variable %in% groupingvar)
+    
+    valuelabel_list <- split(variable_categories_subset$label_de, 
+                             variable_categories_subset$value)
+    
+    table[,groupingvar] <- gsubfn::gsubfn(".", valuelabel_list,
+                                          as.character(table[,groupingvar]))
+    
   }
-  
-  if ("bula_h" %in% colnames(data_with_label)) {
-    data_with_label$bula_h <- data_with_label$bula_h %>%
-      gsub("11", "Berlin", .) %>%
-      gsub("12", "Brandenburg", .) %>%
-      gsub("13", "Mecklenburg-Western Pomerania", .) %>%
-      gsub("14", "Saxony", .) %>%
-      gsub("15", "Saxony-Anhalt", .) %>%
-      gsub("16", "Thuringia", .) %>%
-      gsub("1", "Schleswig-Holstein", .) %>%
-      gsub("2", "Hamburg", .) %>%
-      gsub("3", "Lower Saxony", .) %>%
-      gsub("4", "Bremen", .) %>%
-      gsub("5", "North Rhine-Westphalia", .) %>%
-      gsub("6", "Hesse", .) %>%
-      gsub("7", "Rhineland-Palatinate,Saarland", .) %>%
-      gsub("8", "Baden-Württemberg", .) %>%
-      gsub("9", "Bavaria", .)
-  }
-  
-  if ("sampreg" %in% colnames(data_with_label)) {
-    data_with_label$sampreg <- gsubfn::gsubfn(
-      ".",
-      list("1" = "West Germany",
-           "2" = "East Germany"),
-      as.character(data_with_label$sampreg)
-    )
-  }
-  
-  if ("pgcasmin" %in% colnames(data_with_label)) {
-    data_with_label$pgcasmin <- gsubfn::gsubfn(
-      ".",
-      list(
-        "0" = "(0) in school",
-        "1" = "(1a) inadequately completed",
-        "2" = "(1b) general elementary school",
-        "3" = "(1c) basic vocational qualification",
-        "4" = "(2b) intermediate general qualification",
-        "5" = "(2a) intermediate vocational",
-        "6" = "(2c_gen) general maturity certificate",
-        "7" = "(2c_voc) vocational maturity certificate",
-        "8" = "(3a) lower tertiary education",
-        "9" = "(3b) higher tertiary education"
-      ),
-      as.character(data_with_label$pgcasmin)
-    )
-  }
-  
-  if ("pgisced97" %in% colnames(data_with_label)) {
-    data_with_label$pgisced97 <- gsubfn::gsubfn(
-      ".",
-      list(
-        "0" = "in school",
-        "1" = "inadequately",
-        "2" = "general elemantary",
-        "3" = "middle vocational",
-        "4" = "vocational + Abi",
-        "5" = "higher vocational",
-        "6" = "higher education"
-      ),
-      as.character(data_with_label$pgisced97)
-    )
-  }
-  
-  if ("age_gr" %in% colnames(data_with_label)) {
-    data_with_label$age_gr <- gsubfn::gsubfn(
-      ".",
-      list("1" = "16-34 y.",
-           "2" = "35-65 y.", "3" = "66 and older"),
-      as.character(data_with_label$age_gr)
-    )
-  }
-  
-  if ("education" %in% colnames(data_with_label)) {
-    data_with_label$education <- gsubfn::gsubfn(
-      ".",
-      list(
-        "1" = "lower secondary degree",
-        "2" = "secondary school degree",
-        "4" = "college entrance qualification",
-        "5" = "Other degree",
-        "6" = "no degree/no degree yet"
-      ),
-      as.character(data_with_label$education)
-    )
-  }
-  
-  if ("migback" %in% colnames(data_with_label)) {
-    data_with_label$migback <- gsubfn::gsubfn(
-      ".",
-      list("1" = "no migration background",
-           "2" = "direct migration background",
-           "3" = "indirect migration background"),
-      as.character(data_with_label$migback)
-    )
-  }
-  
-  if ("e11102" %in% colnames(data_with_label)) {
-    data_with_label$e11102 <- gsubfn::gsubfn(
-      ".",
-      list("0" = "Not Employed",
-           "1" = "Employed"),
-      as.character(data_with_label$e11102)
-    )
-  }
-  
-  if ("e11103" %in% colnames(data_with_label)) {
-    data_with_label$e11103 <- gsubfn::gsubfn(
-      ".",
-      list("1" = "Full Time",
-           "2" = "Part Time",
-           "3" = "Not Working"),
-      as.character(data_with_label$e11103)
-    )
-  }
-  
-  if ("regtyp" %in% colnames(data_with_label)) {
-    data_with_label$regtyp <- gsubfn::gsubfn(
-      ".",
-      list("1" = "Urban Area", "2" = "Rural Area"),
-      as.character(data_with_label$regtyp)
-    )
-  }
-  
-  if ("hgtyp1hh" %in% colnames(data_with_label)) {
-    data_with_label$hgtyp1hh <- gsubfn::gsubfn(
-      ".",
-      list(
-        "1" = "1-pers.-HH",
-        "2" = "(Married) couple without C.",
-        "3" = "Single parent",
-        "4" = "Couple + C. LE 16",
-        "5" = "Couple + C. GT 16 ",
-        "6" = "Couple + C. LE and GT 16"
-      ),
-      as.character(data_with_label$hgtyp1hh)
-    )
-  }
-  
-  return(data_with_label)
-}
-
+  return(table)
+}  
 
 ################################################################################
 #' @title get_table_export Export of mean value or proportion value tables

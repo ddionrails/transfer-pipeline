@@ -21,6 +21,10 @@ main <- function() {
   cell_minimum <- 30 # Maximum allowed cell size
   year <- "syear" # Survey year must be defined
   weight_variable <- "phrf" # Weight must be defined
+  version <- "v37"
+  
+  metadata_path <- paste0("https://git.soep.de/kwenzig/publicecoredoku/raw/master/datasets/",
+                          dataset, "/", version, "/")
   #############################################################################
   
   ## load packages
@@ -62,8 +66,20 @@ main <- function() {
     read.csv(
       paste0(metadata_path, "variables.csv"),
       header = TRUE,
-      colClasses = "character"
+      colClasses = "character",
+      encoding = "UTF-8"
     )
+  
+  metadaten_variable_categories <-
+    read.csv(
+      paste0(metadata_path, "variable_categories.csv"),
+      header = TRUE,
+      encoding = "UTF-8"
+    )
+  
+  # Weights with 0 cause problems
+  metadaten_variable_categories <- dplyr::filter(metadaten_variable_categories,
+                                                 value >= 0)
   
   ##############################################################################
   ##############################################################################
@@ -131,7 +147,8 @@ main <- function() {
                                              grouping_variables)
           
           table_numeric <-
-            create_table_lables(table = table_numeric)
+            create_table_lables(table = table_numeric, 
+                                grouping_variables = grouping_variables)
           
           protected_table <- get_protected_values(dataset = table_numeric,
                                                   cell.size = cell_minimum)
