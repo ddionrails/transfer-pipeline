@@ -166,9 +166,6 @@ main <- function() {
           data_csv <- get_table_export(
             table = protected_table,
             variable = variable,
-            metadata_path = paste0(metadata_path, "variables.csv"),
-            export_path = export_path,
-            grouping_count = grouping_count,
             table_type = "mean"
           )
           
@@ -228,9 +225,6 @@ main <- function() {
           data_csv <- get_table_export(
             table = protected_table,
             variable = variable,
-            metadata_path = paste0(metadata_path, "variables.csv"),
-            export_path = export_path,
-            grouping_count = grouping_count,
             table_type = "prop"
           )
           

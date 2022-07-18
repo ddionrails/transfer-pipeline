@@ -474,58 +474,23 @@ create_table_lables <- function(table, grouping_variables) {
 get_table_export <-
   function(table,
            variable,
-           metadata_path,
-           export_path,
-           grouping_count,
            table_type) {
-    metadata <- read.csv(metadata_path, header = TRUE)
-    variable <- variable
     
     if (table_type == "mean") {
       path <- file.path(export_path, "numerical", variable, "/")
-      diffvars <- 1 + grouping_count
-      filenames <- names(table)[2:diffvars]
     }
     
     if (table_type == "prop") {
       path <- file.path(export_path, "categorical", variable, "/")
-      diffvars <- 2 + grouping_count
-      filenames <- names(table)[3:diffvars]
     }
     
-    if (grouping_count == 3) {
-      filename <- paste0(
-        variable,
-        "_",
-        "year",
-        "_",
-        metadata$variable[metadata$variable == filenames[1]],
-        "_",
-        metadata$variable[metadata$variable == filenames[2]],
-        "_",
-        metadata$variable[metadata$variable == filenames[3]]
-      )
-    }
+    filename_elements <- c(variable,"year", grouping_variables)
+    filename_elements <- filename_elements[filename_elements != ""]
     
-    if (grouping_count == 2) {
-      filename <- paste0(variable,
-                         "_",
-                         "year",
-                         "_",
-                         metadata$variable[metadata$variable == filenames[1]],
-                         "_",
-                         metadata$variable[metadata$variable == filenames[2]])
-    }
-    
-    if (grouping_count == 1) {
-      filename <-
-        paste0(variable, "_", "year", "_", 
-               metadata$variable[metadata$variable == filenames[1]])
-    }
-    
-    if (grouping_count == 0) {
-      filename <- paste0(variable, "_", "year")
-    }
+    filename <- paste0(
+      filename_elements,
+      collapse = "_"
+    )
     
     dir.create(path, showWarnings = FALSE)
     data_csv <- sapply(table, as.character)
