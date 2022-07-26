@@ -156,10 +156,6 @@ main <- function() {
           
           protected_table <- expand_table(
             table = protected_table,
-            grouping_variable_one = grouping_variable_one,
-            grouping_variable_two = grouping_variable_two,
-            grouping_variable_three = grouping_variable_three,
-            grouping_count = grouping_count,
             table_type = "mean"
           )
           
@@ -215,10 +211,6 @@ main <- function() {
           
           protected_table <- expand_table(
             table = protected_table,
-            grouping_variable_one = grouping_variable_one,
-            grouping_variable_two = grouping_variable_two,
-            grouping_variable_three = grouping_variable_three,
-            grouping_count = grouping_count,
             table_type = "prop"
           )
           

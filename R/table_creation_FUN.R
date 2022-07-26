@@ -429,17 +429,19 @@ get_protected_values <- function(dataset, cell.size) {
 #'
 create_table_lables <- function(table, grouping_variables) {
   
-  for(groupingvar in grouping_variables) {
+  if (grouping_variables != '') {
+    for(groupingvar in grouping_variables) {
+      
+      variable_categories_subset <-
+        subset(metadaten_variable_categories, variable %in% groupingvar)
     
-    variable_categories_subset <-
-      subset(metadaten_variable_categories, variable %in% groupingvar)
+      valuelabel_list <- split(variable_categories_subset$label_de, 
+                               variable_categories_subset$value)
     
-    valuelabel_list <- split(variable_categories_subset$label_de, 
-                             variable_categories_subset$value)
+      table[,groupingvar] <- gsubfn::gsubfn(".", valuelabel_list,
+                                            as.character(table[,groupingvar]))
     
-    table[,groupingvar] <- gsubfn::gsubfn(".", valuelabel_list,
-                                          as.character(table[,groupingvar]))
-    
+    }
   }
   return(table)
 }  
@@ -550,114 +552,51 @@ get_table_export <-
 #'
 expand_table <-
   function(table,
-           grouping_variable_one,
-           grouping_variable_two,
-           grouping_variable_three,
-           grouping_count,
            table_type) {
-    start_year <- as.numeric(unique(table$year)[1])
-    end_year <-
-      as.numeric(unique(table$year)[length(unique(table$year))])
+    
+    start_year <- max(table$year)
+    end_year   <- min(table$year)
+    
+    columns <- c("year", grouping_variables)
+    columns <- c(columns, rep("", 5))
+    
+    variable_categories_subset <-
+      subset(metadaten_variable_categories, variable %in% grouping_variables)
+    
+    value_label_grouping1 <- variable_categories_subset$label_de[which(
+      variable_categories_subset$variable == columns[[2]])]
+    
+    value_label_grouping2 <- variable_categories_subset$label_de[which(
+      variable_categories_subset$variable == columns[[3]])]
+    
+    if(identical(value_label_grouping1, character(0))) {
+      value_label_grouping1 <- ""
+    }
+    if(identical(value_label_grouping2, character(0))) {
+      value_label_grouping2 <- ""
+    }
     
     if (table_type == "mean") {
-      if (grouping_count == 0) {
-        expand.table <- expand.grid(year = seq(start_year, end_year))
-      }
-      if (grouping_count == 1) {
-        expand.table <- expand.grid(
-          year = seq(start_year, end_year),
-          grouping_variable_one = unique(dplyr::pull(table, 
-                                                     grouping_variable_one))
-        )
-        names(expand.table) <- c("year", grouping_variable_one)
-      }
-      
-      if (grouping_count == 2) {
-        expand.table <- expand.grid(
-          year = seq(start_year, end_year),
-          grouping_variable_one = unique(dplyr::pull(table, 
-                                                     grouping_variable_one)),
-          grouping_variable_two = unique(dplyr::pull(table, 
-                                                     grouping_variable_two))
-        )
-        names(expand.table) <-
-          c("year", grouping_variable_one, grouping_variable_two)
-      }
-      
-      if (grouping_count == 3) {
-        expand.table <- expand.grid(
-          year = seq(start_year, end_year),
-          grouping_variable_one = unique(dplyr::pull(table, 
-                                                     grouping_variable_one)),
-          grouping_variable_two = unique(dplyr::pull(table, 
-                                                     grouping_variable_two)),
-          grouping_variable_three = unique(dplyr::pull(table, 
-                                                       grouping_variable_three))
-        )
-        names(expand.table) <-
-          c(
-            "year",
-            grouping_variable_one,
-            grouping_variable_two,
-            grouping_variable_three
-          )
-      }
+      expand.table <- expand.grid(
+        year = seq(start_year, end_year),
+        grouping_variable_one = value_label_grouping1,
+        grouping_variable_two = value_label_grouping2
+      )
+      columns <- c("year", grouping_variables)
     }
+    
     if (table_type == "prop") {
-      if (grouping_count == 0) {
-        expand.table <- expand.grid(
-          year = seq(start_year, end_year),
-          usedvariable = unique(dplyr::pull(table, usedvariable))
-        )
-      }
-      if (grouping_count == 1) {
-        expand.table <- expand.grid(
-          year = seq(start_year, end_year),
-          usedvariable = unique(dplyr::pull(table, usedvariable)),
-          grouping_variable_one = unique(dplyr::pull(table, 
-                                                     grouping_variable_one))
-        )
-        names(expand.table) <-
-          c("year", "usedvariable", grouping_variable_one)
-      }
-      
-      if (grouping_count == 2) {
-        expand.table <- expand.grid(
-          year = seq(start_year, end_year),
-          usedvariable = unique(dplyr::pull(table, usedvariable)),
-          grouping_variable_one = unique(dplyr::pull(table, 
-                                                     grouping_variable_one)),
-          grouping_variable_two = unique(dplyr::pull(table, 
-                                                     grouping_variable_two))
-        )
-        names(expand.table) <-
-          c("year",
-            "usedvariable",
-            grouping_variable_one,
-            grouping_variable_two)
-      }
-      
-      if (grouping_count == 3) {
-        expand.table <- expand.grid(
-          year = seq(start_year, end_year),
-          usedvariable = unique(dplyr::pull(table, usedvariable)),
-          grouping_variable_one = unique(dplyr::pull(table, 
-                                                     grouping_variable_one)),
-          grouping_variable_two = unique(dplyr::pull(table, 
-                                                     grouping_variable_two)),
-          grouping_variable_three = unique(dplyr::pull(table, 
-                                                       grouping_variable_three))
-        )
-        names(expand.table) <-
-          c(
-            "year",
-            "usedvariable",
-            grouping_variable_one,
-            grouping_variable_two,
-            grouping_variable_three
-          )
-      }
+      expand.table <- expand.grid(
+        year = seq(start_year, end_year),
+        usedvariable = unique(dplyr::pull(table, usedvariable)),
+        grouping_variable_one = value_label_grouping1,
+        grouping_variable_two = value_label_grouping2
+      )
+      columns <-c("usedvariable", "year", grouping_variables)
     }
+    
+    columns <- columns[columns != ""]
+    names(expand.table) <- columns
     final <- merge(table, expand.table, all.y = TRUE)
     final <- final[with(final, order(year)),]
     return(final)
