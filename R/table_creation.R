@@ -25,6 +25,7 @@ main <- function() {
   
   metadata_path <- paste0("https://git.soep.de/kwenzig/publicecoredoku/raw/master/datasets/",
                           dataset, "/", version, "/")
+  export_path <- "C:/git/soep-transfer/"
   #############################################################################
   
   ## load packages
@@ -165,17 +166,9 @@ main <- function() {
             table_type = "mean"
           )
           
-          json_create_lite(
-            variable = variable,
-            variable_label = datafile_without_labels$label_de[
-              datafile_without_labels$variable == variable],
-            start_year = as.numeric(unique(data_csv$year)[1]),
-            end_year = as.numeric(unique(data_csv$year)[
-              length(unique(data_csv$year))]),
-            table_type = "mean",
-            export_path = paste0(export_path, "/numerical/", 
-                                 variable, "/meta.json")
-          )
+          json_create(table = protected_table,
+                      variable = variable,
+                      table_type = "mean")
           
           print(
             paste(
@@ -220,21 +213,9 @@ main <- function() {
             table_type = "prop"
           )
           
-          json_create_lite(
-            variable = variable,
-            variable_label = datafile_without_labels$label_de[
-              datafile_without_labels$variable == variable],
-            start_year = as.numeric(unique(data_csv$year)[1]),
-            end_year = as.numeric(unique(data_csv$year)[
-              length(unique(data_csv$year))]),
-            table_type = "prop",
-            export_path = paste0(
-              export_path,
-              "/categorical/",
-              variable,
-              "/meta.json"
-            )
-          )
+          json_create(table = protected_table,
+                      variable = variable,
+                      table_type = "prop")
           
           print(
             paste(

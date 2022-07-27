@@ -429,7 +429,7 @@ get_protected_values <- function(dataset, cell.size) {
 #'
 create_table_lables <- function(table, grouping_variables) {
   
-  if (grouping_variables != '') {
+  if (all(nzchar(grouping_variables))) {
     for(groupingvar in grouping_variables) {
       
       variable_categories_subset <-
@@ -605,9 +605,9 @@ expand_table <-
 ################################################################################
 # creation of json metadata
 
-#' @title json_create_lite
+#' @title json_create
 #'
-#' @description json_create_lite creates json metadata
+#' @description json_create creates json metadata
 #'
 #' @variable variable names as character
 #' @variable_label variable label as character
@@ -617,477 +617,69 @@ expand_table <-
 #' @export_path path where json file will be stored
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords column_count_check Spaltenanzahl
+#' @keywords 
 #'
-#' @examples column_count_check(data = data, columns = columns)
-#'
-json_create_lite <-
-  function(variable,
-           variable_label,
-           start_year,
-           end_year,
-           table_type,
-           export_path) {
+#' @examples 
+#
+
+json_create <-
+  function(table, 
+           variable,
+           table_type) {
+    
+    all_grouping_variables <- metadaten_variables$variable[
+      metadaten_variables$meantable == "demo" & 
+        metadaten_variables$variable != "syear"]
+    
     if (table_type == "mean") {
-      json_output <- jsonlite::toJSON(
-        x = list(
-          "title" = variable_label,
-          "variable" = variable,
-          "statistics" = c(
-            "mean",
-            "lowerci_mean",
-            "upperci_mean",
-            "min",
-            "max",
-            "median",
-            "lowerci_median",
-            "upperci_median",
-            "ptile10",
-            "ptile25",
-            "ptile75",
-            "ptile90",
-            "ptile99"
-          ),
-          "dimensions" = list(
-            list(
-              "variable" = meta$variable[meta$variable == "age_gr"],
-              "label" = meta$label_de[meta$variable == "age_gr"],
-              "values" = list("16-34 y.", "35-65 y.",
-                              "66 and older")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "sex"],
-              "label" = meta$label_de[meta$variable == "sex"],
-              "values" = list("Male", "Female")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "bula_h"],
-              "label" = meta$label_de[meta$variable == "bula_h"],
-              "values" = list(
-                "Schleswig-Holstei",
-                "Hamburg",
-                "Lower Saxony",
-                "Bremen",
-                "North Rhine-Westphalia",
-                "Hesse",
-                "Rhineland-Palatinate,Saarland",
-                "Baden-Württemberg",
-                "Bavaria",
-                "Berlin",
-                "Brandenburg",
-                "Mecklenburg-Western Pomerania",
-                "Saxony",
-                "Saxony-Anhalt",
-                "Thuringia"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "education"],
-              "label" = meta$label_de[meta$variable == "education"],
-              "values" = list(
-                "lower secondary degree",
-                "secondary school degree",
-                "college entrance qualification",
-                "Other degree",
-                "no degree/no degree yet"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "pgcasmin"],
-              "label" = meta$label_de[meta$variable == "pgcasmin"],
-              "values" = list(
-                "(0) in school",
-                "(1a) inadequately completed",
-                "(1b) general elementary school",
-                "(1c) basic vocational qualification",
-                "(2b) intermediate general qualification",
-                "(2a) intermediate vocational",
-                "(2c_gen) general maturity certificate",
-                "(2c_voc) vocational maturity certificate",
-                "(3a) lower tertiary education",
-                "(3b) higher tertiary education"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "pgisced97"],
-              "label" = meta$label_de[meta$variable == "pgisced97"],
-              "values" = list(
-                "in school",
-                "inadequately",
-                "general elemantary",
-                "middle vocational",
-                "vocational + Abi",
-                "higher vocational",
-                "higher education"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "sampreg"],
-              "label" = meta$label_de[meta$variable == "sampreg"],
-              "values" = list("West Germany",
-                              "East Germany")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "e11102"],
-              "label" = meta$label_de[meta$variable == "e11102"],
-              "values" = list("Not Employed",
-                              "Employed")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "e11103"],
-              "label" = meta$label_de[meta$variable == "e11103"],
-              "values" = list("Full Time",
-                              "Part Time",
-                              "Not Working")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "hgtyp1hh"],
-              "label" = meta$label_de[meta$variable == "hgtyp1hh"],
-              "values" = list(
-                "1-pers.-HH",
-                "(Married) couple without C.",
-                "Single parent",
-                "Couple + C. LE 16",
-                "Couple + C. GT 16",
-                "Couple + C. LE and GT 16"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "migback"],
-              "label" = meta$label_de[meta$variable == "migback"],
-              "values" = list(
-                "no migration background",
-                "direct migration background",
-                "indirect migration background"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "regtyp"],
-              "label" = meta$label_de[meta$variable == "regtyp"],
-              "values" = list(as.list(str_trim(
-                gsub("[[0-9]+]", "", levels(
-                  factor(datafile_with_labels$regtyp)
-                ))
-              )))
-            )
-          ),
-          "description_de" = meta$description[meta$variable == variable],
-          "start_year" = start_year,
-          "end_year" = end_year,
-          "types" = list("numerical")
-        ),
-        encoding = "UTF-8",
-        pretty = TRUE,
-        auto_unbox = TRUE
-      )
-      
-      file_handler <- file("meta.json")
-      writeLines(json_output, export_path, useBytes = TRUE)
-      close(file_handler)
+      statistics <- c("mean", "lowerci_mean", "upperci_mean", "min", "max",
+                      "median", "lowerci_median", "upperci_median", 
+                      "ptile10", "ptile25", "ptile75", "ptile90", "ptile99")
+      level <- "numerical"
+      exportfile <- paste0(export_path,"/numerical/", variable, "/meta.json")
     }
     
     if (table_type == "prop") {
-      json_output <- jsonlite::toJSON(
-        x = list(
-          "title" = variable_label,
-          "variable" = variable,
-          "statistics" = c("percent", "lower_confidence", "upper_confidence"),
-          "dimensions" = list(
-            list(
-              "variable" = meta$variable[meta$variable == "age_gr"],
-              "label" = meta$label_de[meta$variable == "age_gr"],
-              "values" = list("16-34 y.", "35-65 y.",
-                              "66 and older")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "sex"],
-              "label" = meta$label_de[meta$variable == "sex"],
-              "values" = list("Male", "Female")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "bula_h"],
-              "label" = meta$label_de[meta$variable == "bula_h"],
-              "values" = list(
-                "Schleswig-Holstei",
-                "Hamburg",
-                "Lower Saxony",
-                "Bremen",
-                "North Rhine-Westphalia",
-                "Hesse",
-                "Rhineland-Palatinate,Saarland",
-                "Baden-Württemberg",
-                "Bavaria",
-                "Berlin",
-                "Brandenburg",
-                "Mecklenburg-Western Pomerania",
-                "Saxony",
-                "Saxony-Anhalt",
-                "Thuringia"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "education"],
-              "label" = meta$label_de[meta$variable == "education"],
-              "values" = list(
-                "lower secondary degree",
-                "secondary school degree",
-                "college entrance qualification",
-                "Other degree",
-                "no degree/no degree yet"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "pgcasmin"],
-              "label" = meta$label_de[meta$variable == "pgcasmin"],
-              "values" = list(
-                "(0) in school",
-                "(1a) inadequately completed",
-                "(1b) general elementary school",
-                "(1c) basic vocational qualification",
-                "(2b) intermediate general qualification",
-                "(2a) intermediate vocational",
-                "(2c_gen) general maturity certificate",
-                "(2c_voc) vocational maturity certificate",
-                "(3a) lower tertiary education",
-                "(3b) higher tertiary education"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "pgisced97"],
-              "label" = meta$label_de[meta$variable == "pgisced97"],
-              "values" = list(
-                "in school",
-                "inadequately",
-                "general elemantary",
-                "middle vocational",
-                "vocational + Abi",
-                "higher vocational",
-                "higher education"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "sampreg"],
-              "label" = meta$label_de[meta$variable == "sampreg"],
-              "values" = list("West Germany",
-                              "East Germany")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "e11102"],
-              "label" = meta$label_de[meta$variable == "e11102"],
-              "values" = list("Not Employed",
-                              "Employed")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "e11103"],
-              "label" = meta$label_de[meta$variable == "e11103"],
-              "values" = list("Full Time",
-                              "Part Time",
-                              "Not Working")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "hgtyp1hh"],
-              "label" = meta$label_de[meta$variable == "hgtyp1hh"],
-              "values" = list(
-                "1-pers.-HH",
-                "(Married) couple without C.",
-                "Single parent",
-                "Couple + C. LE 16",
-                "Couple + C. GT 16",
-                "Couple + C. LE and GT 16"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "migback"],
-              "label" = meta$label_de[meta$variable == "migback"],
-              "values" = list(
-                "no migration background",
-                "direct migration background",
-                "indirect migration background"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "regtyp"],
-              "label" = meta$label_de[meta$variable == "regtyp"],
-              "values" = list(as.list(str_trim(
-                gsub("[[0-9]+]", "", levels(
-                  factor(datafile_with_labels$regtyp)
-                ))
-              )))
-            )
-          ),
-          "description_de" = meta$description[meta$variable == variable],
-          "start_year" = start_year,
-          "end_year" = end_year,
-          "types" = "categorical"
-        ),
-        encoding = "UTF-8",
-        pretty = TRUE,
-        auto_unbox = TRUE
-      )
-      
-      file_handler <- file("meta.json")
-      writeLines(json_output, export_path, useBytes = TRUE)
-      close(file_handler)
+      statistics <- c("percent", "lower_confidence", "upper_confidence")
+      level <- "categorical"
+      exportfile <- paste0(export_path,"/categorical/", variable, "/meta.json")
     }
     
-    if (table_type == "both") {
-      json_output <- jsonlite::toJSON(
-        x = list(
-          "title" = variable_label,
-          "variable" = variable,
-          "statistics" = c(
-            "mean",
-            "lowerci_mean",
-            "upperci_mean",
-            "median",
-            "lowerci_median",
-            "upperci_median",
-            "ptile10",
-            "ptile25",
-            "ptile75",
-            "ptile90",
-            "n",
-            "percent",
-            "lower_confidence",
-            "upper_confidence"
-          ),
-          "dimensions" = list(
-            list(
-              "variable" = meta$variable[meta$variable == "age_gr"],
-              "label" = meta$label_de[meta$variable == "age_gr"],
-              "values" = list("16-34 y.", "35-65 y.",
-                              "66 and older")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "sex"],
-              "label" = meta$label_de[meta$variable == "sex"],
-              "values" = list("Male", "Female")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "bula_h"],
-              "label" = meta$label_de[meta$variable == "bula_h"],
-              "values" = list(
-                "Schleswig-Holstei",
-                "Hamburg",
-                "Lower Saxony",
-                "Bremen",
-                "North Rhine-Westphalia",
-                "Hesse",
-                "Rhineland-Palatinate,Saarland",
-                "Baden-Württemberg",
-                "Bavaria",
-                "Berlin",
-                "Brandenburg",
-                "Mecklenburg-Western Pomerania",
-                "Saxony",
-                "Saxony-Anhalt",
-                "Thuringia"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "education"],
-              "label" = meta$label_de[meta$variable == "education"],
-              "values" = list(
-                "lower secondary degree",
-                "secondary school degree",
-                "college entrance qualification",
-                "Other degree",
-                "no degree/no degree yet"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "pgcasmin"],
-              "label" = meta$label_de[meta$variable == "pgcasmin"],
-              "values" = list(
-                "(0) in school",
-                "(1a) inadequately completed",
-                "(1b) general elementary school",
-                "(1c) basic vocational qualification",
-                "(2b) intermediate general qualification",
-                "(2a) intermediate vocational",
-                "(2c_gen) general maturity certificate",
-                "(2c_voc) vocational maturity certificate",
-                "(3a) lower tertiary education",
-                "(3b) higher tertiary education"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "pgisced97"],
-              "label" = meta$label_de[meta$variable == "pgisced97"],
-              "values" = list(
-                "in school",
-                "inadequately",
-                "general elemantary",
-                "middle vocational",
-                "vocational + Abi",
-                "higher vocational",
-                "higher education"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "sampreg"],
-              "label" = meta$label_de[meta$variable == "sampreg"],
-              "values" = list("West Germany",
-                              "East Germany")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "e11102"],
-              "label" = meta$label_de[meta$variable == "e11102"],
-              "values" = list("Not Employed",
-                              "Employed")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "e11103"],
-              "label" = meta$label_de[meta$variable == "e11103"],
-              "values" = list("Full Time",
-                              "Part Time",
-                              "Not Working")
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "hgtyp1hh"],
-              "label" = meta$label_de[meta$variable == "hgtyp1hh"],
-              "values" = list(
-                "1-pers.-HH",
-                "(Married) couple without C.",
-                "Single parent",
-                "Couple + C. LE 16",
-                "Couple + C. GT 16",
-                "Couple + C. LE and GT 16"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "migback"],
-              "label" = meta$label_de[meta$variable == "migback"],
-              "values" = list(
-                "no migration background",
-                "direct migration background",
-                "indirect migration background"
-              )
-            ),
-            list(
-              "variable" = meta$variable[meta$variable == "regtyp"],
-              "label" = meta$label_de[meta$variable == "regtyp"],
-              "values" = list(as.list(str_trim(
-                gsub("[[0-9]+]", "", levels(
-                  factor(datafile_with_labels$regtyp)
-                ))
-              )))
-            )
-          ),
-          "description_de" = meta$description[meta$variable == variable],
-          "start_year" = start_year,
-          "end_year" = end_year,
-          "types" = list("numerical", "categorical")
-        ),
-        encoding = "UTF-8",
-        pretty = TRUE,
-        auto_unbox = TRUE
-      )
-      
-      file_handler <- file("meta.json")
-      writeLines(json_output, export_path, useBytes = TRUE)
-      close(file_handler)
+    grouping_information <- list(NULL)
+    i <- 0
+    for(groupingvar in all_grouping_variables) {
+      i <- i+1
+      grouping_information[[i]] <- 
+        list("variable" = metadaten_variables$variable[
+          metadaten_variables$variable == groupingvar], 
+          "label" = metadaten_variables$label_de[
+            metadaten_variables$variable == groupingvar],
+          "values" = list(as.list(stringr::str_trim(
+            gsub("[[0-9]+]", "", levels(
+              factor(datafile_with_labels[[groupingvar]]))))))
+        )
     }
+    json_output <- jsonlite::toJSON(
+      x = list(
+        "title" = metadaten_variables$label_de[
+          metadaten_variables$variable == variable],
+        "variable" = metadaten_variables$variable[
+          metadaten_variables$variable == variable],
+        "statistics" = statistics,
+        "dimensions" = grouping_information,
+        "description_de" = metadaten_variables$description_de[
+          metadaten_variables$variable==variable],
+        "start_year" = min(table$year),
+        "end_year" = max(table$year),
+        "types" = level
+      ), 
+      encoding = "UTF-8", 
+      pretty = TRUE, 
+      auto_unbox=TRUE
+    )
+    file_handler <- file("meta.json")
+    writeLines(json_output, exportfile, useBytes=TRUE)
+    close(file_handler)
   }
 
 ################################################################################
