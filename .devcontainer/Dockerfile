@@ -9,6 +9,7 @@ RUN apt-get update \
     gfortran \
     libreadline-dev \
     zlib1g \
+    locales \
     zlib1g-dev \
     libbz2-dev \
     libcurl4-openssl-dev \
@@ -17,6 +18,13 @@ RUN apt-get update \
     liblzma-dev \
     libpcre2-dev \
     openjdk-17-jre \
+    libfontconfig1-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libjpeg-dev \
     libicu66 \
     make \
     git \
@@ -31,6 +39,13 @@ RUN apt-get update \
     && cd .. \
     && rm R-4.2.1.tar.gz \
     && rm -rf R-4.2.1
+
+
+RUN sed -i '/de_DE.UTF-8/s/^# //g' /etc/locale.gen && \
+    locale-gen
+ENV LANG de_DE.UTF-8  
+ENV LANGUAGE de_DE:de  
+ENV LC_ALL de_DE.UTF-8   
 
 
 
