@@ -2,54 +2,53 @@
 % Please edit documentation in R/table_creation_FUN.R
 \name{get_data}
 \alias{get_data}
-\title{get_data erzeugt Teilmenge eines Datensatzes}
+\title{get_data creates subset of a data set}
 \usage{
-get_data(
-  datasetnum,
-  datasetfac,
-  variable,
-  year,
-  weight,
-  diffcount,
-  diffvars,
-  vallabel
-)
+get_data(variable, grouping_variables, value_label)
 }
 \arguments{
-\item{datasetnum}{data.frame mit numeric Variablen (z.B. plattform_data)}
+\item{variable}{name analysis variable as string (e.g. "pglabnet" )}
 
-\item{datasetfac}{data.frame mit factor Variablen (z.B. plattform_data)}
+\item{grouping_variables}{Vector with differentiation variables
+(e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)}
 
-\item{variable}{Name Analysevariable als string (z.B. "pglabnet" )}
+\item{value_label}{Valuelabel should be used (e.g.: value_label = TRUE)
+(TRUE/FALSE)}
 
-\item{year}{Name Erhebungsjahrvariable als string (z.B. "syear")}
+\item{datafile_without_labels}{data.frame with numeric variables
+(e.g. platform_data)}
 
-\item{weight}{Name Gewichtsvariable als string (z.B. "phrf")}
+\item{datafile_with_labels}{data.frame with factor variables
+(e.g. platform_data)}
 
-\item{diffcount}{Anzahl gewuenschter Differenzierungen (z.B. 2) (range 0-3)}
+\item{year}{Name survey year variable as string (e.g. "syear" )}
 
-\item{diffvars}{Vector mit Differenzierungsvariablen (z.B. c("alter_gr", "sex", "Bildungsniveau")) (maximal 3 Variablen)}
+\item{weight}{Name weight variable as string (e.g. "phrf")}
 
-\item{vallabel}{Valuelabel sollen verwendet werden (z.B: vallabel = TRUE) (TRUE/FALSE)}
+\item{grouping_count}{Number of desired differentiations (e.g. 2)
+(range 0-3)}
 }
 \value{
-variable.values.valid ist ein Datensatz mit validen Werten der
-Variablen (variable, year, weight, diffvars)
+variable.values.valid is a data set with valid values of the
+variables (variable, year, weight, grouping_variables)
 }
 \description{
-get_data soll Ausgangs-Datensatz im long Format
-auf bestimmte Variablen beschraenken (variable, year, weight, diffvars) und
-ausschliesslich valide Werte enthalten.
+get_data to get the output dataset in long format
+limited to certain variables (variable, year, weight, grouping_variables) and
+contain only valid values.
 }
 \examples{
-      get_data(datasetnum =  data.file.num, 
-      datasetfac = data.file.fac,
-      variable = "pglabnet", 
-      year = "syear", 
-      weight = "phrf",
-      diffcount = diffcount,
-      diffvars = c("alter_gr", "sex", "Bildungsniveau"),
-      vallabel = TRUE)
+get_data(
+  datafile_without_labels = datafile_without_labels,
+  datafile_with_labels = datafile_with_labels,
+  variable = "pglabnet",
+  year = "syear",
+  weight = "phrf",
+  grouping_count = grouping_count,
+  grouping_variables = c("alter_gr", "sex", "Bildungsniveau"),
+  value_label = TRUE
+)
+
 }
 \author{
 Stefan Zimmermann, \email{szimmermann@diw.de}

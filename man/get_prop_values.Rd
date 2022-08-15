@@ -2,29 +2,37 @@
 % Please edit documentation in R/table_creation_FUN.R
 \name{get_prop_values}
 \alias{get_prop_values}
-\title{Funktion get_prop_values soll gewichtete Anteilswert-Tabellen mit Konfidenzintervallen erstellen}
+\title{function get_prop_values shall create weighted proportion tables with
+confidence intervals}
 \usage{
 get_prop_values(dataset, groupvars, alpha)
 }
 \arguments{
-\item{dataset}{data.frame aus get_data (z.B. plattform_data)}
+\item{dataset}{data.frame from get_data (e.g. platform_data)}
 
-\item{groupvars}{Vector mit allen Variablen im Datensatz (z.B. c("usedvariable", "year", "sex"))}
+\item{groupvars}{vector with all variables in the dataset
+(e.g. c("usedvariable", "year", "sex"))}
 
-\item{alpha}{Alpha fuer die Festlegung der Konfidenzintervalles (z.B. 0.05)}
+\item{alpha}{Alpha for setting the confidence interval (e.g. 0.05)}
 }
 \value{
-data_prop_complete_ci = Datensatz mit n, percent, lower_ci, upper_ci
+data_prop_complete_ci = data set with n, percent, lower_confidence,
+upper_confidence
 }
 \description{
-get_mean_values soll gewichtete Anteilswert-Tabellen mit Konfidenzintervallen erstellen
-erzeugen mit den Informationen n = Groesse der Subgruppe, percent = gewichteter
-Anteilswert, lower_ci = unteres Konfidenzintervall, upper_ci = oberes Konfidenzintervall 95\%
+get_mean_values shall create weighted proportion value tables
+with confidence intervals
+create with the information n = size of the subgroup, percent = weighted
+proportion value, lower_confidence = lower confidence interval,
+upper_confidence = upper 95\% confidence interval
 }
 \examples{
-      get_prop_values(dataset = data, 
-                      groupvars = c("usedvariable", "year", "sex"), 
-                      alpha = 0.05)
+get_prop_values(
+  dataset = data,
+  groupvars = c("usedvariable", "year", "sex"),
+  alpha = 0.05
+)
+
 }
 \author{
 Stefan Zimmermann, \email{szimmermann@diw.de}

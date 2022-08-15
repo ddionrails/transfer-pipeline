@@ -2,43 +2,41 @@
 % Please edit documentation in R/table_creation_FUN.R
 \name{get_table_export}
 \alias{get_table_export}
-\title{get_table_export Export von Mittelwert-oder Anteilswertswert-Tabellen}
+\title{get_table_export Export of mean value or proportion value tables}
 \usage{
-get_table_export(
-  table,
-  variable,
-  metadatapath,
-  exportpath,
-  diffcount,
-  tabletype
-)
+get_table_export(table, variable, table_type)
 }
 \arguments{
-\item{table}{produzierter data.frame aus get_protected_values (z.B. plattform_data)}
+\item{table}{produced data.frame from get_protected_values
+(e.g. platform_data)}
 
-\item{variable}{Name Analysevariable aus den Rohdaten als string ("pglabnet")}
+\item{variable}{name analysis variable from raw data as string ("pglabnet")}
 
-\item{metadatapath}{Pfad zu den Metadaten mit Variablennamen und Tabellentyp im Datensatz als string}
+\item{table_type}{Type of table to be processed ("mean" or "prop")}
 
-\item{exportpath}{Exportordner als string}
+\item{metadata_path}{Path to the metadata with variable name and table type
+in the dataset as string}
 
-\item{diffcount}{Anzahl an Differenzierungen als numeric (0-3 eraubt)}
+\item{export_path}{export folder as string}
 
-\item{tabletype}{Art der zu verarbeitenden Tabelle ("mean" oder "prop")}
+\item{grouping_count}{number of differentiations as numeric (0-3 robbed)}
 }
 \value{
-data.csv = exportierte Tabelle als csv
+data_csv = exportierte Tabelle als csv
 }
 \description{
-get_table_export soll erzeugte Mittelwert-oder Anteilswertswert-Tabellen als csv Exportieren
+get_table_export export created mean or proportion tables as csv
 }
 \examples{
-       get_table_export(table = protected.table, variable = "usedvariable", 
-                        metadatapath = paste0(metapath, "varnames.csv"),
-                        exportpath = exportpath, diffcount = 2, 
-                        tabletype = "mean")
+get_table_export(
+  table = protected_table, variable = "usedvariable",
+  metadata_path = paste0(metadata_path, "varnames.csv"),
+  export_path = export_path, grouping_count = 2,
+  table_type = "mean"
+)
+
 }
 \author{
 Stefan Zimmermann, \email{szimmermann@diw.de}
 }
-\keyword{data.csv}
+\keyword{data_csv}

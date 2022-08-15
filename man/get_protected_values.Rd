@@ -2,24 +2,27 @@
 % Please edit documentation in R/table_creation_FUN.R
 \name{get_protected_values}
 \alias{get_protected_values}
-\title{get_protected_values soll bestimmte Zelleninhalte entfernen}
+\title{get_protected_values should remove certain cell contents}
 \usage{
 get_protected_values(dataset, cell.size)
 }
 \arguments{
-\item{dataset}{data.frame aus get_prop_values oder get_mean_table}
+\item{dataset}{data.frame from get_prop_values or get_mean_table}
 
-\item{cell.size}{maximal zulaessige Zellengroesse (z.B. 30)}
+\item{cell.size}{maximum allowed cell size (e.g. 30)}
 }
 \value{
-protected.data (Datensatz mit n, mean/percent, median, n, Konfidenzintervalle ausschlie?lich mit Zellen >= cell.size)
+protected.data (dataset with n, mean/percent, median, n, confidence
+intervals only with cells >= cell.size)
 }
 \description{
-get_protected_values soll Zelleninhalte von gewichteten Anteilswert-Tabellen oder Mittelwert-Tabelle
-loeschen wenn eine Minimalbesetzung unterschritten wird.
+get_protected_values should remove cell contents of weighted
+proportion tables or mean value table
+delete if a minimum population is not reached.
 }
 \examples{
-      get_prop_values(dataset = data, alpha = 0.05)
+get_prop_values(dataset = data, alpha = 0.05)
+
 }
 \author{
 Stefan Zimmermann, \email{szimmermann@diw.de}

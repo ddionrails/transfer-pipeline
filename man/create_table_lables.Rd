@@ -2,21 +2,23 @@
 % Please edit documentation in R/table_creation_FUN.R
 \name{create_table_lables}
 \alias{create_table_lables}
-\title{create_table_lables Datensatzes mit Vauluelabel ausstatten}
+\title{create_table_lables data set with vauluelabel}
 \usage{
-create_table_lables(table)
+create_table_lables(table, grouping_variables)
 }
 \arguments{
-\item{table}{data.frame aus get_mean_data}
+\item{table}{data.frame from get_mean_data}
 }
 \value{
-data_with_label = Datensatz mit Valuelabels
+data_with_label = data set with value labels
 }
 \description{
-create_table_lables soll spezifische Variablen eines Datensatzes mit Vauluelabel ausstatten
+create_table_lables is to provide specific variables of a
+dataset with vauluelabel
 }
 \examples{
-      create_table_lables(table = data)
+create_table_lables(table = data)
+
 }
 \author{
 Stefan Zimmermann, \email{szimmermann@diw.de}

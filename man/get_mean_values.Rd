@@ -2,39 +2,42 @@
 % Please edit documentation in R/table_creation_FUN.R
 \name{get_mean_values}
 \alias{get_mean_values}
-\title{get_mean_values erstellt Mittelwert/Mediantabellen mit Mittelwert-Konfidenzinterval}
+\title{get_mean_values creates mean/median tables with mean, median, n,
+percentiles, confidence interval}
 \usage{
-get_mean_values(dataset, year, diffcount, diffvar1, diffvar2, diffvar3)
+get_mean_values(dataset, grouping_variables)
 }
 \arguments{
-\item{dataset}{data.frame aus get_data (z.B. plattform_data)}
+\item{dataset}{data.frame from get_data (e.g. platform_data)}
 
-\item{year}{Jahresvariable als string (z.B. "year")}
+\item{year}{year variable as string (e.g. "year")}
 
-\item{diffcount}{Anzahl gewuenschter Differenzierungen (z.B. 2) (range 0-3)}
+\item{grouping_count}{number of desired differentiations (e.g. 2) (range 0-3)}
 
-\item{diffvar1}{Name Differenzierungsvariable 1 als string ("" moeglich)}
+\item{grouping_variable_one}{name differentiation variable 1 as string or ""}
 
-\item{diffvar2}{Name Differenzierungsvariable 2 als string ("" moeglich)}
+\item{grouping_variable_two}{name differentiation variable 2 as string or ""}
 
-\item{diffvar3}{Anzahl Differenzierungsvariable 3 als string ("" moeglich)}
+\item{grouping_variable_three}{Number of differentiation variable 3 as string
+("" possible)}
 }
 \value{
-mean.values = Datensatz mit n, mean, median, Konfidenzintervalle
+data = dataset with mean, median, n, percentiles, confidence interval
 }
 \description{
-get_mean_values soll gewichtete Mittelwert/Mediantabellen mit Mittelwert-Konfidenzinterval
-erzeugen mit den Informationen n = Groesse der Subgruppe, mean = gewichteter
-Mittelwert, median = gewichteter Median, lower_ci = unteres Konfidenzintervall 95\%,
-upper_ci = oberes Konfidenzintervall 95\%
+get_mean_values creates weighted mean/median tables with
+n, percentiles, confidence interval
 }
 \examples{
-      get_mean_values(dataset = data, 
-                      year = "year", 
-                      diffcount = 2,
-                      diffvar1 = "sex",
-                      diffvar2 = "alter_gr",
-                      diffvar3 = "")
+get_mean_values(
+  dataset = data,
+  year = "year",
+  grouping_count = 2,
+  grouping_variable_one = "sex",
+  grouping_variable_two = "alter_gr",
+  grouping_variable_three = ""
+)
+
 }
 \author{
 Stefan Zimmermann, \email{szimmermann@diw.de}

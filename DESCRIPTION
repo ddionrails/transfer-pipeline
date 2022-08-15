@@ -12,7 +12,7 @@ License: use_gpl3_license()
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.1
 Imports:
    dplyr,
    foreign,
@@ -27,3 +27,9 @@ Suggests:
     lintr,
     languageserver
 Config/testthat/edition: 3
+Collate: 
+    'cli.R'
+    'helpers.R'
+    'main.R'
+    'table_creation.R'
+    'table_creation_FUN.R'
