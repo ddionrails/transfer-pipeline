@@ -31,5 +31,6 @@ Collate:
     'cli.R'
     'helpers.R'
     'main.R'
+    'read_and_write.R'
     'table_creation.R'
     'table_creation_FUN.R'
