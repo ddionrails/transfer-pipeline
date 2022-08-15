@@ -1,0 +1,108 @@
+
+study,dataset,name,concept,description,description_de,label,label_de,version,template_id,type,case_sensitive_name,categories,categories_de,statistics
+soep-core,zvp,zvdatm,vdatm,,,Month Of Interview,Monat des Interviews,v36,,byte,,,,False
+soep-core,zvp,vpid,,,,ID person deceased,Personennummer des Verstorbenen,v36,,byte,,,,False
+soep-core,p_statistics,alter_gr,geburt,,,,Altersgruppen,v37,,,,,,False
+soep-core,p_statistics,beruf,_pgen_pgstib,,,,Berufsgruppen,v37,,categorical,,,,True
+soep-core,p_statistics,bildungsniveau,_pgen_pgcasmin,,,,Bildungsniveau,v37,,,,,,False
+soep-core,p_statistics,bula_h,bula,,,,Bundesland,v37,,,,,,False
+soep-core,p_statistics,erwst,_pgen_pgemplst,,,,Erwerbsstatus,v37,,categorical,,,,True
+soep-core,p_statistics,hid,,,,,Aktuelle Haushaltsnummer,v37,,,,,,False
+soep-core,p_statistics,migback,migback,,,,Migrationshintergrund,v37,,,,,,False
+soep-core,p_statistics,party,ppol3,,,,Parteineigung,v37,,categorical,,,,True
+soep-core,p_statistics,pglabgro,_pgen_pglabgro,,,,Aktuelles Bruttoerwerbseinkommen in Euro,v37,,numerical,,,,True
+soep-core,p_statistics,pglabnet,_pgen_pglabnet,,,,Aktuelles Nettoerwerbseinkommen in Euro,v37,,numerical,,,,True
+soep-core,p_statistics,pgtatzeit,_pgen_pgtatzt,This variable provides data on actual weekly working hours (including overtime) for all persons employed at the time of the survey (including the self-employed). The data are obtained by asking respondents how many hours they work on average per week.,"Diese Variable liefert Daten über die tatsächliche Wochenarbeitszeit (einschließlich Überstunden) für alle zum Zeitpunkt der Erhebung beschäftigten Personen (einschließlich der Selbstständigen). Die Daten werden erhoben, indem die Befragten gefragt werden, wie viele Stunden sie im Durchschnitt pro Woche arbeiten.",,Tatsächliche Arbeitszeit pro Woche,v37,,numerical,,,,True
+soep-core,p_statistics,pgvebzeit,_pgen_pgvebzt,,,,Vereinbarte Arbeitszeit pro Woche,v37,,numerical,,,,True
+soep-core,p_statistics,phrf,,,,,Hochrechnungsfaktor,v37,,,,,,False
+soep-core,p_statistics,pid,,,,,Unveränderliche Personennummer,v37,,,,,,False
+soep-core,p_statistics,plh0032,psor01,,,,Sorgen um allgemeine wirtschaftliche Entwicklung,v37,,categorical,,,,True
+soep-core,p_statistics,plh0033,psor02,,,,Sorgen um eigene wirtschaftliche Situation,v37,,categorical,,,,True
+soep-core,p_statistics,plh0034,psor13,,,,Sorgen um Stabilität der Finanzmärkte,v37,,categorical,,,,True
+soep-core,p_statistics,plh0035,psor03,,,,Sorgen um eigene Gesundheit,v37,,categorical,,,,True
+soep-core,p_statistics,plh0036,psor04,,,,Sorgen um Umweltschutz,v37,,categorical,,,,True
+soep-core,p_statistics,plh0037,psor14,,,,Sorgen um Klimawandelfolgen,v37,,categorical,,,,True
+soep-core,p_statistics,plh0038,psor05,,,,Sorgen um Friedenserhaltung,v37,,categorical,,,,True
+soep-core,p_statistics,plh0039,psor12,,,,Sorgen über globalen Terrorismus,v37,,categorical,,,,True
+soep-core,p_statistics,plh0040,psor06,,,,Sorgen über Kriminalitätsentwicklung in Deutschland,v37,,categorical,,,,True
+soep-core,p_statistics,plh0042,psor10,,,,Sorgen um Arbeitsplatzsicherheit,v37,,categorical,,,,True
+soep-core,p_statistics,plh0164,pzuf06,,,,Zufriedenheit mit Schul- und Berufsausbildung,v37,,numerical,,,,True
+soep-core,p_statistics,plh0166,pzule3,,,,Allgemeine Lebenszufriedenheit in einem Jahr,v37,,numerical,,,,True
+soep-core,p_statistics,plh0171,pzuf01,,,,Zufriedenheit mit Gesundheit,v37,,numerical,,,,True
+soep-core,p_statistics,plh0172,pzuf20,,,,Zufriedenheit mit Schlaf,v37,,numerical,,,,True
+soep-core,p_statistics,plh0173,pzuf02,,,,Zufriedenheit mit Arbeit,v37,,numerical,,,,True
+soep-core,p_statistics,plh0174,pzuf03,,,,Zufriedenheit mit Haushalts-Tätigkeit,v37,,numerical,,,,True
+soep-core,p_statistics,plh0175,pzuf04,,,,Zufriedenheit mit Haushalts-Einkommen,v37,,numerical,,,,True
+soep-core,p_statistics,plh0176,pzuf05,,,,Zufriedenheit mit persönlichem Einkommen,v37,,numerical,,,,True
+soep-core,p_statistics,plh0177,pzuf07,,,,Zufriedenheit mit Wohnung,v37,,numerical,,,,True
+soep-core,p_statistics,plh0178,pzuf08,,,,Zufriedenheit mit Freizeit,v37,,numerical,,,,True
+soep-core,p_statistics,plh0179,pzuf09,,,,Zufriedenheit mit Kinderbetreuung,v37,,numerical,,,,True
+soep-core,p_statistics,plh0180,pzuf13,,,,Zufriedenheit mit Familienleben,v37,,numerical,,,,True
+soep-core,p_statistics,plh0181,pzuf14,,,,"Zufriedenheit mit Freundes-, Bekanntenkreis",v37,,numerical,,,,True
+soep-core,p_statistics,plh0182,pzule1,,,,Allgemeine Lebenszufriedenheit gegenwärtig,v37,,numerical,,,,True
+soep-core,p_statistics,plh0183,pzule2,,,,Allgemeine Lebenszufriedenheit in 5 Jahren,v37,,numerical,,,,True
+soep-core,p_statistics,pli0092_h,_pequiv_m11104,,,,Häufigkeit Aktiver Sport,v37,,categorical,,,,True
+soep-core,p_statistics,pli0095_h,pfz6,,,,"Häufigkeit Mithelfen bei Freunden, Verwandten",v37,,categorical,,,,True
+soep-core,p_statistics,pli0096_h,pfrei06,,,,"Häufigkeit ehrenamtliche Tätigkeiten in Vereinen, Verbänden oder sozialen Dienst",v37,,categorical,,,,True
+soep-core,p_statistics,pli0097_h,pfrei05,,,,"Häufgkeit Beteiligung in Bürgerinitiativen, in Parteien, in der Kommunalpolitik",v37,,categorical,,,,True
+soep-core,p_statistics,pli0098_h,pfrei07,,,,"Häufigkeit Kirchgang, Besuch religiöser Veranstaltungen",v37,,categorical,,,,True
+soep-core,p_statistics,plj0046,psor08,,,,Sorgen über Zuwanderung,v37,,categorical,,,,True
+soep-core,p_statistics,plj0047,psor09,,,,Sorgen über Ausländerfeindlichkeit,v37,,categorical,,,,True
+soep-core,p_statistics,regtyp,regtyp,,,,Stadt/Land,v37,,,,,,False
+soep-core,p_statistics,sampreg,sampreg,,,,Ost-/ Westdeutschland,v37,,,,,,False
+soep-core,p_statistics,sex,pla0008,,,,Geschlecht,v37,,,,,,False
+soep-core,p_statistics,syear,_syear,,,,Erhebungsjahr,v37,,,,,,False
+soep-core,p_statistics,y11101,_pequiv_y11101,,"Der Verbraucherpreisindex für Deutschland misst die durchschnittliche Preisentwicklung aller Waren und Dienstleistungen, die von privaten Haushalten für Konsumzwecke gekauft werden. [Weitere Informationen] (https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Verbraucherpreisindex/Methoden/Erlaeuterungen/verbraucherpreisindex.html)",,Verbraucherpreisindex,v37,,numerical,,,,True
+soep-core,h_statistics,bula_h,,,,,Bundesland,v37,,,,,,False
+soep-core,h_statistics,d11107,_pequiv_d11107,,,,Anzahl Kinder im HH,v37,,numerical,,,,True
+soep-core,h_statistics,eigentum,_hgen_hgowner,,,,Eigentümer,v37,,numerical,,,,True
+soep-core,h_statistics,essen,hlmk2,,,,Mntl. Ausgaben Lebensmittel,v37,,numerical,,,,True
+soep-core,h_statistics,h11101,_pequiv_h11101,,,,Anzahl Kinder im HH 0-14 J.,v37,,numerical,,,,True
+soep-core,h_statistics,heizen,_hgen_hgheat,,,,Mntl. Heiz- und Warmwasserkosten,v37,,numerical,,,,True
+soep-core,h_statistics,hgeqpgar,_hgen_hgeqpgar,,,,Garten,v37,,categorical,,,,True
+soep-core,h_statistics,hgeqpinsul,hgeqpinsul,,,,Wärmedämmung,v37,,categorical,,,,True
+soep-core,h_statistics,hgeqpmglass,hgeqpmglass,,,,mind. Doppelverglasung,v37,,categorical,,,,True
+soep-core,h_statistics,hgeqpsol,_hgen_hgeqpsol,,,,Solaranlage,v37,,categorical,,,,True
+soep-core,h_statistics,hgeqpter,_hgen_hgeqpter,,,,"Balkon, Terrasse",v37,,categorical,,,,True
+soep-core,h_statistics,hgowner,_hgen_hgowner,,,,"Eigentuemer, Mieter",v37,,categorical,,,,True
+soep-core,h_statistics,hgrent,_hgen_hgrent,,,,Monatl. Bruttokaltmiete (EUR),v37,,numerical,,,,True
+soep-core,h_statistics,hgroom,_hgen_hgroom,,,,Zahl der Wohnraeume ueber 6 qm,v37,,numerical,,,,True
+soep-core,h_statistics,hgsize,_hgen_hgsize,,,,Wohnflaeche in qm,v37,,numerical,,,,True
+soep-core,h_statistics,hhgr,hhgr,,,,Aktuelle Haushaltsgroesse,v37,,numerical,,,,True
+soep-core,h_statistics,hhrf,,,,,Hochrechnungsfaktor,v37,,,,,,False
+soep-core,h_statistics,hhrf1,,,,,Hochrechnungsfaktor ohne neue Stichproben (Welle 1),v37,,,,,,False
+soep-core,h_statistics,hhtyp,htyp,,,,Haushaltstyp,v37,,,,,,False
+soep-core,h_statistics,hid,,,,,Aktuelle Haushaltsnummer,v37,,,,,,False
+soep-core,h_statistics,hinc_eq,_hgen_hgi1hinc,,,,OECD-Äquivalenzeinkommen,v37,,numerical,,,,True
+soep-core,h_statistics,hlc0052,hlag1,,,,"ALG2, Sozialgeld im letzten Jahr",v37,,categorical,,,,True
+soep-core,h_statistics,hlc0061_h,hlgs1,,,,"Grundsicherung im Alter, Vorjahr",v37,,categorical,,,,True
+soep-core,h_statistics,hlc0080_h,hlwg1,,,,"Wohngeld,Lastenzuschuss Vorjahr",v37,,categorical,,,,True
+soep-core,h_statistics,hlc0083_h,hdwg1,,,,Wohngeld heute,v37,,categorical,,,,True
+soep-core,h_statistics,hlc0119_h,hspar1,,,,Sparbetrag monatlich,v37,,categorical,,,,True
+soep-core,h_statistics,hlc0178,179,,,,Groessere Geldbetraege/Vermoegenswerte - Erbschaft,v37,,categorical,,,,True
+soep-core,h_statistics,hlc0180,181,,,,Groessere Geldbetraege/Vermoegenswerte - Geschenk,v37,,categorical,,,,True
+soep-core,h_statistics,hlc0182,183,,,,Groessere Geldbetraege/Vermoegenswerte - Lotteriegewinn,v37,,categorical,,,,True
+soep-core,h_statistics,hlf0036,hwohn22,,,,Wohnung mit sonst. alternat. Energiequellen,v37,,categorical,,,,True
+soep-core,h_statistics,hlf0071_h,hgr,,,,Beurteilung der Wohnungsgroesse,v37,,categorical,,,,True
+soep-core,h_statistics,hlf0151,hkrim,,,,Sicherheit des Wohngebiets,v37,,categorical,,,,True
+soep-core,h_statistics,hlf0178_h,hh11,,,,Internetzugang,v37,,categorical,,,,True
+soep-core,h_statistics,hlf0180,hh03,,,,Auto im HH,v37,,categorical,,,,True
+soep-core,h_statistics,hlf0186,hh07,,,,Notfallruecklagen,v37,,categorical,,,,True
+soep-core,h_statistics,hlf0188,hh08,,,,Jaehrliche Urlaubsreise,v37,,categorical,,,,True
+soep-core,h_statistics,hlf0192,hh10,,,,Alle 2 Tage: Fisch/Fleisch/Gefluegel,v37,,categorical,,,,True
+soep-core,h_statistics,hlf0197,hbuch,,,,Anzahl Buecher im HH,v37,,numerical,,,,True
+soep-core,h_statistics,hlf0261,hputz,,,,"Putz-,Haushaltshilfe beschaeftigt",v37,,categorical,,,,True
+soep-core,h_statistics,hlf0291,hpfleg,,,,"Hilfe-,Pflegebeduerft. Person im HH",v37,,categorical,,,,True
+soep-core,h_statistics,hlf0613,277,,,,Monatlich Freizeitbeschaeftigung,v37,,categorical,,,,True
+soep-core,h_statistics,hlf0631,290,,,,Anzahl pflegebeduerftige Personen im HH,v37,,numerical,,,,True
+soep-core,h_statistics,hlf0632,290,,,,Beurteilung Belastung durch Wohnkosten (Tilgung / Zinsen und Nebenkosten),v37,,categorical,,,,True
+soep-core,h_statistics,hlf0633,290,,,,Beurteilung Belastung durch Wohnkosten (Miete und Nebenkosten),v37,,categorical,,,,True
+soep-core,h_statistics,hsample,,,,,Stichprobenart,v37,,,,,,False
+soep-core,h_statistics,pid,,,,,Unveränderliche Personennummer,v37,,,,,,False
+soep-core,h_statistics,quintil,_hgen_hgi1hinc,,,,Netto-HH-Einkommens-Quintile,v37,,,,,,False
+soep-core,h_statistics,regtyp,,,,,Siedlungsstruktur,v37,,,,,,False
+soep-core,h_statistics,sampreg,,,,,Ost-/ Westdeutschland,v37,,,,,,False
+soep-core,h_statistics,strom,_hgen_hgelectr,,,,Mntl. Stromkosten,v37,,numerical,,,,True
+soep-core,h_statistics,syear,,,,,Survey Year,v37,,,,,,False
+soep-core,h_statistics,umlage,_hgen_hgutil,,,,Mntl. Umlagekosten,v37,,numerical,,,,True
+soep-core,h_statistics,wohnk,humzww,,,,Beurteilung Belastung durch Wohnkosten,v37,,numerical,,,,True
