@@ -2,7 +2,7 @@ add_option <- function(...) optparse::add_option(...)
 option_parser <- function(...) optparse::OptionParser(...)
 parse_args <- function(...) optparse::parse_args(...)
 
-define_arguments <- function() {
+parse_arguments <- function() {
     parser <- option_parser()
     parser <- add_option(
         parser,
@@ -22,6 +22,7 @@ define_arguments <- function() {
     parser <- add_option(
         parser,
         c("-n", "--dataset-name"),
+        dest = "dataset_name",
         default = "p_statistics",
         help = "Target path for the generated data."
     )
@@ -29,6 +30,7 @@ define_arguments <- function() {
         parser,
         c("-m", "--minimal-group-size"),
         default = 30,
+        dest = "minimal_group_size",
         help = paste0(
             "Minimal N for a grouping to be evaluated. ",
             "Smaller groups are filtered out.",
@@ -38,12 +40,14 @@ define_arguments <- function() {
     parser <- add_option(
         parser,
         c("-w", "--weight-column"),
+        dest = "weight_column",
         default = "phrf",
         help = "Name of the column used for weighing the data.",
     )
     parser <- add_option(
         parser,
-        c("-y", "--survey-year"),
+        c("-y", "--survey-year-column"),
+        dest = "survey_year_column",
         default = "syear",
         help = "Name of the column used for weighing the data.",
     )
