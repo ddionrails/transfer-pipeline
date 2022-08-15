@@ -622,12 +622,15 @@ expand_table <- function(table, grouping_variable_one, grouping_variable_two, gr
 #'
 #' @description json_create_lite creates json metadata
 #'
-#' @variable variable names as character
-#' @variable_label variable label as character
-#' @start_year start year of the information as numeric
-#' @end_year end of year information as numeric
-#' @table_type table type (e.g. "mean", "prop", "both")
-#' @export_path path where json file will be stored
+# TODO NOTE: This is not how roxygen parameter docu works
+# @variable variable names as character
+# @variable_label variable label as character
+# @start_year start year of the information as numeric
+# @end_year end of year information as numeric
+# @table_type table type (e.g. "mean", "prop", "both")
+# TODO NOTE: This makes roxygen export "_path" "path" "where" "json" "file" "will" "be"
+# TODO NOTE: and "stored"
+# @export_path path where json file will be stored
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords column_count_check Spaltenanzahl
