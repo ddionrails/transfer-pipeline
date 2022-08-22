@@ -12,6 +12,9 @@
 	// Note that some extensions may not work in Alpine Linux. See https://aka.ms/vscode-remote/linux.
 	"extensions": [
 		"REditorSupport.R"
+	],
+	"mounts": [
+		"source=${localEnv:HOME}/.gnupg/docker-dev/,target=/root/.gnupg,type=bind"
 	]
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],

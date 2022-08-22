@@ -28,6 +28,7 @@ RUN apt-get update \
     libicu66 \
     make \
     git \
+    gpg \
     vim \
     && rm -rf /var/lib/apt/lists/* \
     && wget https://cran.r-project.org/src/base/R-4/R-4.2.1.tar.gz \
@@ -47,7 +48,8 @@ ENV LANG de_DE.UTF-8
 ENV LANGUAGE de_DE:de  
 ENV LC_ALL de_DE.UTF-8   
 
-
+COPY dev.bashrc /dev.bashrc
+RUN cat /dev.bashrc >> ~/.bashrc
 
 RUN R -e "install.packages('devtools', repos='https://ftp.gwdg.de/pub/misc/cran/')"
 RUN R -e "install.packages('renv', repos='https://ftp.gwdg.de/pub/misc/cran/')"
