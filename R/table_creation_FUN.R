@@ -625,7 +625,11 @@ expand_table <-
         grouping_variable_one = value_label_grouping1,
         grouping_variable_two = value_label_grouping2
       )
+<<<<<<< HEAD
       columns <- c("usedvariable", "year", grouping_variables)
+=======
+      columns <-c("year", "usedvariable", grouping_variables)
+>>>>>>> a1c59c7 (Update Skript)
     }
 
     columns <- columns[columns != ""]

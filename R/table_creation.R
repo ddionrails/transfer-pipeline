@@ -8,8 +8,6 @@ main <- function() {
   # Problem:
   # if (Sys.info()[["user"]] == "szimmermann") {
   #  dataset_path <- "H:/data/"
-  #  metadata_path <- "H:/Clone/soep-transfer/metadata/"
-  #  export_path <- "C:/git/soep-transfer/"
   # }
   #
   # Clutters the code, is highly dependent on a static environment.
@@ -24,12 +22,20 @@ main <- function() {
   year <- "syear" # Survey year must be defined
   weight_variable <- arguments$weight_column # Weight must be defined
   version <- "v37"
+<<<<<<< HEAD
 
   metadata_path <- paste0(
     "https://git.soep.de/kwenzig/publicecoredoku/raw/master/datasets/",
     dataset, "/", version, "/"
   )
   export_path <- "C:/git/soep-transfer/"
+=======
+  
+  dataset_path <- "H:/data/"
+  metadata_path <- paste0("https://git.soep.de/kwenzig/publicecoredoku/raw/master/datasets/",
+                          dataset, "/", version, "/")
+  export_path <- "H:/Clone/soep-transfer/"
+>>>>>>> a1c59c7 (Update Skript)
   #############################################################################
 
   metadaten_variables <-
@@ -130,13 +136,18 @@ main <- function() {
   # TODO: Too many if statements. Too many if statements whith unclear purpose.
   # TODO: Should be split into seperate functions.
   for (var in 1:length(metadaten_variables$variable)) {
+<<<<<<< HEAD
     if (metadaten_variables$meantable[var] == "Yes" |
       metadaten_variables$probtable[var] == "Yes") {
+=======
+    if (metadaten_variables$meantable[var] == "yes" |
+        metadaten_variables$probtable[var] == "yes") {
+>>>>>>> a1c59c7 (Update Skript)
       variable <- metadaten_variables$variable[var]
 
       for (i in seq_along(grouping_variables_list)) {
-        grouping_count <- grouping_count_list[[i]]
         grouping_variables <- grouping_variables_list[[i]]
+<<<<<<< HEAD
 
         if (!is.na(grouping_variables[1])) {
           grouping_variable_one <- grouping_variables[1]
@@ -157,11 +168,16 @@ main <- function() {
         }
 
         if (metadaten_variables$meantable[var] == "Yes") {
+=======
+        
+        if (metadaten_variables$meantable[var] == "yes") {
+>>>>>>> a1c59c7 (Update Skript)
           data <- get_data(
             variable = variable,
             grouping_variables = grouping_variables,
             value_label = FALSE
           )
+<<<<<<< HEAD
 
 
           table_numeric <- get_mean_values(
@@ -170,6 +186,14 @@ main <- function() {
               grouping_variables
           )
 
+=======
+          
+          
+          table_numeric <- get_mean_values(dataset = data,
+                                           grouping_variables = 
+                                           grouping_variables)
+          
+>>>>>>> a1c59c7 (Update Skript)
           table_numeric <-
             create_table_lables(
               table = table_numeric,
@@ -209,8 +233,13 @@ main <- function() {
             )
           )
         }
+<<<<<<< HEAD
 
         if (datafile_without_labels$probtable[var] == "Yes") {
+=======
+        
+        if (metadaten_variables$probtable[var] == "yes") {
+>>>>>>> a1c59c7 (Update Skript)
           data <- get_data(
             variable = variable,
             grouping_variables = grouping_variables,
@@ -263,4 +292,4 @@ main <- function() {
       }
     }
   }
-}
+
