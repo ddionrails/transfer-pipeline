@@ -27,8 +27,7 @@ main <- function() {
     "https://git.soep.de/kwenzig/publicecoredoku/raw/master/datasets/",
     dataset, "/", version, "/"
   )
-  export_path <- "C:/git/soep-transfer/"
-  
+
   dataset_path <- "H:/data/"
   metadata_path <- paste0("https://git.soep.de/kwenzig/publicecoredoku/raw/master/datasets/",
                           dataset, "/", version, "/")
@@ -140,24 +139,6 @@ main <- function() {
       for (i in seq_along(grouping_variables_list)) {
         grouping_variables <- grouping_variables_list[[i]]
 
-        if (!is.na(grouping_variables[1])) {
-          grouping_variable_one <- grouping_variables[1]
-        } else {
-          grouping_variable_one <- ""
-        }
-
-        if (!is.na(grouping_variables[2])) {
-          grouping_variable_two <- grouping_variables[2]
-        } else {
-          grouping_variable_two <- ""
-        }
-
-        if (!is.na(grouping_variables[3])) {
-          grouping_variable_three <- grouping_variables[3]
-        } else {
-          grouping_variable_three <- ""
-        }
-      
         if (metadaten_variables$meantable[var] == "yes") {
           data <- get_data(
             variable = variable,
@@ -167,13 +148,9 @@ main <- function() {
           table_numeric <- get_mean_values(
             dataset = data,
             grouping_variables =
-              grouping_variables
+            grouping_variables
           )
                
-          table_numeric <- get_mean_values(dataset = data,
-                                           grouping_variables = 
-                                           grouping_variables)
-          
           table_numeric <-
             create_table_lables(
               table = table_numeric,
@@ -221,7 +198,7 @@ main <- function() {
             value_label = TRUE
           )
 
-          if (grouping_variables == "") {
+          if ("" %in% grouping_variables) {
             columns <- c("usedvariable", "year")
           } else {
             columns <- c("usedvariable", "year", grouping_variables)

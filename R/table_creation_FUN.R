@@ -154,11 +154,11 @@ get_mean_values <- function(dataset,
       lower = mean - qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd,
       upper = mean + qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd
     ) %>%
-    dplyr::mutate(lowerci_mean = round((lower), 2)) %>%
-    dplyr::mutate(upperci_mean = round((upper), 2)) %>%
+    dplyr::mutate(lowerconfidence_mean = round((lower), 2)) %>%
+    dplyr::mutate(upperconfidence_mean = round((upper), 2)) %>%
     dplyr::mutate(
-      max = round(max(usedvariable, na.rm = T), 2),
-      min = round(min(usedvariable, na.rm = T), 2)
+      maximum = round(max(usedvariable, na.rm = T), 2),
+      minimum = round(min(usedvariable, na.rm = T), 2)
     ) %>%
     dplyr::distinct(mean, .keep_all = TRUE)
 
@@ -166,7 +166,7 @@ get_mean_values <- function(dataset,
   percentile.values <- dataset[complete.cases(dataset), ] %>%
     dplyr::group_by_at(dplyr::vars(one_of(columns))) %>%
     dplyr::summarise(
-      ptile10 = round(
+      percentile_10 = round(
         Hmisc::wtd.quantile(
           usedvariable,
           weights = weight,
@@ -175,7 +175,7 @@ get_mean_values <- function(dataset,
         ),
         2
       ),
-      ptile25 = round(
+      percentile_25 = round(
         Hmisc::wtd.quantile(
           usedvariable,
           weights = weight,
@@ -184,7 +184,7 @@ get_mean_values <- function(dataset,
         ),
         2
       ),
-      ptile75 = round(
+      percentile_75 = round(
         Hmisc::wtd.quantile(
           usedvariable,
           weights = weight,
@@ -193,7 +193,7 @@ get_mean_values <- function(dataset,
         ),
         2
       ),
-      ptile90 = round(
+      percentile_90 = round(
         Hmisc::wtd.quantile(
           usedvariable,
           weights = weight,
@@ -202,7 +202,7 @@ get_mean_values <- function(dataset,
         ),
         2
       ),
-      ptile99 = round(
+      percentile_99 = round(
         Hmisc::wtd.quantile(
           usedvariable,
           weights = weight,
@@ -232,7 +232,7 @@ get_mean_values <- function(dataset,
 
   medianci.value$data <- NULL
   colnames(medianci.value) <-
-    c(columns, "lowerci_median", "upperci_median")
+    c(columns, "lowerconfidence_median", "upperconfidence_median")
 
   data <- merge(mean.values, percentile.values, by = columns)
 
@@ -241,19 +241,19 @@ get_mean_values <- function(dataset,
   selected.values <- c(
     columns,
     "mean",
-    "lowerci_mean",
-    "upperci_mean",
+    "lowerconfidence_mean",
+    "upperconfidence_mean",
     "median",
-    "lowerci_median",
-    "upperci_median",
-    "ptile10",
-    "ptile25",
-    "ptile75",
-    "ptile90",
-    "ptile99",
+    "lowerconfidence_median",
+    "upperconfidence_median",
+    "percentile_10",
+    "percentile_25",
+    "percentile_75",
+    "percentile_90",
+    "percentile_99",
     "n",
-    "min",
-    "max"
+    "minimum",
+    "maximum"
   )
 
   data <- data[, (names(data) %in% selected.values)]
@@ -338,8 +338,8 @@ get_prop_values <- function(dataset, groupvars, alpha) {
   upper_confidence1 <- p_hat + margin1
 
   data_prop_complete_ci <- cbind(data_prop_complete,
-    lower_confidence = lower_confidence1,
-    upper_confidence = upper_confidence1
+    lowerconfidence_percent = lower_confidence1,
+    upperconfidence_percent = upper_confidence1
   )
 
   data_prop_complete_ci <- subset(
@@ -348,8 +348,8 @@ get_prop_values <- function(dataset, groupvars, alpha) {
       groupvars,
       "n",
       "percent",
-      "lower_confidence",
-      "upper_confidence"
+      "lowerconfidence_percent",
+      "upperconfidence_percent"
     )
   )
 
@@ -382,17 +382,17 @@ get_protected_values <- function(dataset, cell.size) {
         "mean",
         "median",
         "n",
-        "ptile10",
-        "ptile25",
-        "ptile75",
-        "ptile90",
-        "ptile99",
-        "lowerci_mean",
-        "upperci_mean",
-        "min",
-        "max",
-        "lowerci_median",
-        "upperci_median"
+        "percentile_10",
+        "percentile_25",
+        "percentile_75",
+        "percentile_90",
+        "percentile_99",
+        "lowerconfidence_mean",
+        "upperconfidence_mean",
+        "minimum",
+        "maximum",
+        "lowerconfidence_median",
+        "upperconfidence_median"
       )], 2,
       function(x) {
         ifelse(dataset["n"] < cell.size, NA, x)
@@ -403,17 +403,17 @@ get_protected_values <- function(dataset, cell.size) {
       "mean",
       "median",
       "n",
-      "ptile10",
-      "ptile25",
-      "ptile75",
-      "ptile90",
-      "ptile99",
-      "lowerci_mean",
-      "upperci_mean",
-      "min",
-      "max",
-      "lowerci_median",
-      "upperci_median"
+      "percentile_10",
+      "percentile_25",
+      "percentile_75",
+      "percentile_90",
+      "percentile_99",
+      "lowerconfidence_mean",
+      "upperconfidence_mean",
+      "minimum",
+      "maximum",
+      "lowerconfidence_median",
+      "upperconfidence_median"
     )] <- NULL
   }
 
@@ -421,7 +421,7 @@ get_protected_values <- function(dataset, cell.size) {
     save.data <- as.data.frame(apply(
       dataset[c(
         "percent",
-        "lower_confidence", "upper_confidence"
+        "lowerconfidence_percent", "upperconfidence_percent"
       )], 2,
       function(x) {
         ifelse(dataset["n"] < cell.size, NA, x)
@@ -430,7 +430,7 @@ get_protected_values <- function(dataset, cell.size) {
     data <- dataset
     dataset[c(
       "percent",
-      "lower_confidence", "upper_confidence"
+      "lowerconfidence_percent", "upperconfidence_percent"
     )] <- NULL
   }
   protected.data <- cbind(dataset, save.data)
@@ -585,30 +585,31 @@ get_table_export <-
 expand_table <-
   function(table,
            table_type) {
+
     start_year <- max(table$year)
     end_year <- min(table$year)
-
+    
     columns <- c("year", grouping_variables)
     columns <- c(columns, rep("", 5))
-
+    
     variable_categories_subset <-
       subset(metadaten_variable_categories, variable %in% grouping_variables)
-
+    
     value_label_grouping1 <- variable_categories_subset$label_de[which(
       variable_categories_subset$variable == columns[[2]]
     )]
-
+    
     value_label_grouping2 <- variable_categories_subset$label_de[which(
       variable_categories_subset$variable == columns[[3]]
     )]
-
+    
     if (identical(value_label_grouping1, character(0))) {
       value_label_grouping1 <- ""
     }
     if (identical(value_label_grouping2, character(0))) {
       value_label_grouping2 <- ""
     }
-
+    
     if (table_type == "mean") {
       expand.table <- expand.grid(
         year = seq(start_year, end_year),
@@ -617,21 +618,23 @@ expand_table <-
       )
       columns <- c("year", grouping_variables)
     }
-
+    
     if (table_type == "prop") {
       expand.table <- expand.grid(
-        year = seq(start_year, end_year),
         usedvariable = unique(dplyr::pull(table, usedvariable)),
+        year = seq(start_year, end_year),
         grouping_variable_one = value_label_grouping1,
         grouping_variable_two = value_label_grouping2
       )
-      columns <-c("year", "usedvariable", grouping_variables)
-    }
-
+      columns <-c("usedvariable", "year", grouping_variables)
+    } 
+    
     columns <- columns[columns != ""]
     names(expand.table) <- columns
+    expand.table <- expand.table %>% 
+      purrr::discard(~all(is.na(.) | . ==""))
     final <- merge(table, expand.table, all.y = TRUE)
-    final <- final[with(final, order(year)), ]
+    final <- final[with(final, order(year)), ] 
     return(final)
   }
 
@@ -666,16 +669,19 @@ json_create <-
 
     if (table_type == "mean") {
       statistics <- c(
-        "mean", "lowerci_mean", "upperci_mean", "min", "max",
-        "median", "lowerci_median", "upperci_median",
-        "ptile10", "ptile25", "ptile75", "ptile90", "ptile99"
+        "mean", "lowerconfidence_mean", "upperconfidence_mean", 
+        "minimum", "maximum",
+        "median", "lowerconfidence_median", "lowerconfidence_median",
+        "percentile_10", "percentile_25", "percentile_75", 
+        "percentile_90", "percentile_99"
       )
       level <- "numerical"
       exportfile <- paste0(export_path, "/numerical/", variable, "/meta.json")
     }
 
     if (table_type == "prop") {
-      statistics <- c("percent", "lower_confidence", "upper_confidence")
+      statistics <- c("percent", "lowerconfidence_percent", 
+                      "upperconfidence_percent")
       level <- "categorical"
       exportfile <- paste0(export_path, "/categorical/", variable, "/meta.json")
     }
