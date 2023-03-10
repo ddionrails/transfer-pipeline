@@ -3,35 +3,35 @@
 #############################################################################
 #' @include cli.R
 
-main <- function() {
-  ### Path definition
-  # Problem:
-  # if (Sys.info()[["user"]] == "szimmermann") {
-  #  dataset_path <- "H:/data/"
-  # }
-  #
-  # Clutters the code, is highly dependent on a static environment.
-  # Publishes information about the private path structure and usernames.
-  # Instead use command line arguments and/or a config file
-  arguments <- parse_arguments()
+### Path definition
+# main <- function() {
+# Problem:
+# if (Sys.info()[["user"]] == "szimmermann") {
+#  dataset_path <- "H:/data/"
+# }
+#
+# Clutters the code, is highly dependent on a static environment.
+# Publishes information about the private path structure and usernames.
+# Instead use command line arguments and/or a config file
+# arguments <- parse_arguments()
 
+# Definition of objects
+# dataset <- arguments$input # From which data set should values be taken
+# cell_minimum <- arguments$minimal_group_size # Maximum allowed cell size
+# year <- "syear" # Survey year must be defined
+# weight_variable <- arguments$weight_column # Weight must be defined
+# version <- "v37"
 
-  # Definition of objects
-  dataset <- arguments$input # From which data set should values be taken
-  cell_minimum <- arguments$minimal_group_size # Maximum allowed cell size
-  year <- "syear" # Survey year must be defined
-  weight_variable <- arguments$weight_column # Weight must be defined
-  version <- "v37"
+dataset <- "h_statistics"
+version <- "v37"
+cell_minimum <- 30 # Maximum allowed cell size
+year <- "syear" # Survey year must be defined
+weight_variable <- "hhrf" # Weight must be defined
 
-  metadata_path <- paste0(
-    "https://git.soep.de/kwenzig/publicecoredoku/raw/master/datasets/",
-    dataset, "/", version, "/"
-  )
-
-  dataset_path <- "H:/data/"
-  metadata_path <- paste0("https://git.soep.de/kwenzig/publicecoredoku/raw/master/datasets/",
-                          dataset, "/", version, "/")
-  export_path <- "H:/Clone/soep-transfer/"
+dataset_path <- "H:/data/"
+metadata_path <- paste0("https://git.soep.de/kwenzig/publicecoredoku/raw/master/datasets/",
+                        dataset, "/", version, "/")
+export_path <- "H:/Clone/soep-transfer/"
   #############################################################################
 
   metadaten_variables <-
@@ -49,7 +49,6 @@ main <- function() {
       encoding = "UTF-8"
     )
 
-  ## load packages
   ## load data without labels
   datafile_without_labels <- readstata13::read.dta13(
     paste0(
@@ -67,11 +66,12 @@ main <- function() {
   )
 
   # Rename weighting variable to weight
+  # syear umbenennen year
   names(datafile_without_labels)[names(
     datafile_without_labels
   ) == weight_variable] <- "weight"
 
-  ## load data without labels
+  ## load data with labels
   datafile_with_labels <- readstata13::read.dta13(
     paste0(
       dataset_path,
@@ -89,12 +89,13 @@ main <- function() {
   )
 
   # Rename weighting variable to weight
+  # syear umbenennen year
   names(datafile_with_labels)[names(
     datafile_with_labels
   ) == weight_variable] <- "weight"
 
 
-  # Weights with 0 cause problems
+  # keep valid value labels
   metadaten_variable_categories <- dplyr::filter(
     metadaten_variable_categories,
     value >= 0
@@ -106,130 +107,55 @@ main <- function() {
   metadaten_variables <-
     metadaten_variables[metadaten_variables$dataset == dataset, ]
 
-  metadaten_variables_demo <- dplyr::filter(
+  dimension_variables <- dplyr::filter(
     metadaten_variables,
-    meantable == "demo"
+    statistical_type == "dimension" 
   )
-
-  metadaten_variables_demo <- subset(datafile_without_labels,
-    select = metadaten_variables_demo$variable
+  
+  dimension_variables <- subset(datafile_without_labels,
+    select = dimension_variables$variable
   )
 
   # Generate a list that represents all the grouping possibilities of the users
   grouping_variables_list <- get_grouping_variables_list(
-    metadaten_variables_demo = metadaten_variables_demo
+    dimension_variables = dimension_variables
   )
 
   # Generate a list that represents ne number of differentiations for each
   # possibility
   grouping_count_list <- get_grouping_count_list(
-    metadaten_variables_demo = metadaten_variables_demo
+    dimension_variables = dimension_variables
   )
 
   ##############################################################################
   # Create aggregated data tables
-  # TODO: Loop Body is way to long.
-  # TODO: Too many if statements. Too many if statements whith unclear purpose.
-  # TODO: Should be split into seperate functions.
+  # in Vergleich setzen wenn statistical_type != numeric, categorical, ordinal
+  
   for (var in 1:length(metadaten_variables$variable)) {
-    if (metadaten_variables$meantable[var] == "yes" |
-        metadaten_variables$probtable[var] == "yes") {
+    # create tables for variables on numeric, categorical or ordinal level
+    if (any(is.element(c('numeric', 'categorical', 'ordinal'), 
+                   metadaten_variables$statistical_type[var]))) {
       variable <- metadaten_variables$variable[var]
 
+    # create aggregated tables for all possible dimension combinations  
       for (i in seq_along(grouping_variables_list)) {
         grouping_variables <- grouping_variables_list[[i]]
 
-        if (metadaten_variables$meantable[var] == "yes") {
-          data <- get_data(
-            variable = variable,
-            grouping_variables = grouping_variables,
-            value_label = FALSE
-          )
-          table_numeric <- get_mean_values(
-            dataset = data,
-            grouping_variables =
-            grouping_variables
-          )
-               
-          table_numeric <-
-            create_table_lables(
-              table = table_numeric,
-              grouping_variables = grouping_variables
-            )
-
-          protected_table <- get_protected_values(
-            dataset = table_numeric,
-            cell.size = cell_minimum
-          )
-
-
-          protected_table <- expand_table(
-            table = protected_table,
-            table_type = "mean"
-          )
-
-          data_csv <- get_table_export(
-            table = protected_table,
-            variable = variable,
-            table_type = "mean"
-          )
-
-          json_create(
-            table = protected_table,
-            variable = variable,
-            table_type = "mean"
-          )
-
+        if (metadaten_variables$statistical_type[var] == "numeric") {
           print(
             paste(
               "The variable",
               variable,
               "is processed with grouping year,",
               paste(grouping_variables_list[[i]], collapse = ","),
-              "as numeric mean table"
+              "as numeric table"
             )
           )
-        }
-      
-        if (metadaten_variables$probtable[var] == "yes") {
-          data <- get_data(
-            variable = variable,
-            grouping_variables = grouping_variables,
-            value_label = TRUE
-          )
-
-          if ("" %in% grouping_variables) {
-            columns <- c("usedvariable", "year")
-          } else {
-            columns <- c("usedvariable", "year", grouping_variables)
-          }
-
-          prop.data <-
-            get_prop_values(
-              dataset = data,
-              groupvars = columns,
-              alpha = 0.05
-            )
-
-          protected_table <-
-            get_protected_values(dataset = prop.data, cell.size = cell_minimum)
-
-          protected_table <- expand_table(
-            table = protected_table,
-            table_type = "prop"
-          )
-
-          data_csv <- get_table_export(
-            table = protected_table,
-            variable = variable,
-            table_type = "prop"
-          )
-
-          json_create(
-            table = protected_table,
-            variable = variable,
-            table_type = "prop"
-          )
+          
+        get_numeric_statistics()
+        
+        # statistical type == categorical
+        if (metadaten_variables$statistical_type[var] == "categorical") {
 
           print(
             paste(
@@ -240,6 +166,8 @@ main <- function() {
               "as a categorical percentage table"
             )
           )
+          
+          get_categorical_statistics()
         }
       }
     }

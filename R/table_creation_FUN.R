@@ -10,15 +10,7 @@
 #' limited to certain variables (variable, year, weight, grouping_variables) and
 #' contain only valid values.
 #'
-#' @param datafile_without_labels data.frame with numeric variables
-#' (e.g. platform_data)
-#' @param datafile_with_labels data.frame with factor variables
-#' (e.g. platform_data)
 #' @param variable name analysis variable as string (e.g. "pglabnet" )
-#' @param year Name survey year variable as string (e.g. "syear" )
-#' @param weight Name weight variable as string (e.g. "phrf")
-#' @param grouping_count Number of desired differentiations (e.g. 2)
-#' (range 0-3)
 #' @param grouping_variables Vector with differentiation variables
 #' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
 #' @param value_label Valuelabel should be used (e.g.: value_label = TRUE)
@@ -30,17 +22,6 @@
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords get_data
 #'
-#' @examples
-#' get_data(
-#'   datafile_without_labels = datafile_without_labels,
-#'   datafile_with_labels = datafile_with_labels,
-#'   variable = "pglabnet",
-#'   year = "syear",
-#'   weight = "phrf",
-#'   grouping_count = grouping_count,
-#'   grouping_variables = c("alter_gr", "sex", "Bildungsniveau"),
-#'   value_label = TRUE
-#' )
 # TODO: Too many arguments. Arguments are badly named. Possibly too many if
 # statements.
 #'
@@ -107,39 +88,27 @@ get_data <-
 
 ################################################################################
 
-#' @title get_mean_values creates mean/median tables with mean, median, n,
+#' @title calculate_numeric_statistics creates mean/median tables with mean, median, n,
 #' percentiles, confidence interval
 #'
-#' @description get_mean_values creates weighted mean/median tables with
+#' @description calculate_numeric_statistics creates weighted mean/median tables with
 #'              n, percentiles, confidence interval
 #'
 #' @param dataset data.frame from get_data (e.g. platform_data)
-#' @param year year variable as string (e.g. "year")
-#' @param grouping_count number of desired differentiations (e.g. 2) (range 0-3)
-#' @param grouping_variable_one name differentiation variable 1 as string or ""
-#' @param grouping_variable_two name differentiation variable 2 as string or ""
-#' @param grouping_variable_three Number of differentiation variable 3 as string
+#' @param grouping_variables Vector with differentiation variables
+#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
 #' ("" possible)
 #'
 #' @return data = dataset with mean, median, n, percentiles, confidence interval
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords get_mean_values
+#' @keywords calculate_numeric_statistics
 #'
-#' @examples
-#' get_mean_values(
-#'   dataset = data,
-#'   year = "year",
-#'   grouping_count = 2,
-#'   grouping_variable_one = "sex",
-#'   grouping_variable_two = "alter_gr",
-#'   grouping_variable_three = ""
-#' )
 # TODO: Some arguments are badly named. grouping_variable_one-3 could be one
 # data structure.
 # TODO: Too many if statements
 #'
-get_mean_values <- function(dataset,
+calculate_numeric_statistics <- function(dataset,
                             grouping_variables) {
   columns <- c("year", grouping_variables)
   columns <- columns[columns != ""]
@@ -154,8 +123,8 @@ get_mean_values <- function(dataset,
       lower = mean - qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd,
       upper = mean + qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd
     ) %>%
-    dplyr::mutate(lowerconfidence_mean = round((lower), 2)) %>%
-    dplyr::mutate(upperconfidence_mean = round((upper), 2)) %>%
+    dplyr::mutate(lower_confidence_mean = round((lower), 2)) %>%
+    dplyr::mutate(upper_confidence_mean = round((upper), 2)) %>%
     dplyr::mutate(
       maximum = round(max(usedvariable, na.rm = T), 2),
       minimum = round(min(usedvariable, na.rm = T), 2)
@@ -232,20 +201,19 @@ get_mean_values <- function(dataset,
 
   medianci.value$data <- NULL
   colnames(medianci.value) <-
-    c(columns, "lowerconfidence_median", "upperconfidence_median")
+    c(columns, "lower_confidence_median", "upper_confidence_median")
 
   data <- merge(mean.values, percentile.values, by = columns)
-
   data <- dplyr::left_join(data, medianci.value, by = columns)
 
   selected.values <- c(
     columns,
     "mean",
-    "lowerconfidence_mean",
-    "upperconfidence_mean",
+    "lower_confidence_mean",
+    "upper_confidence_mean",
     "median",
-    "lowerconfidence_median",
-    "upperconfidence_median",
+    "lower_confidence_median",
+    "upper_confidence_median",
     "percentile_10",
     "percentile_25",
     "percentile_75",
@@ -264,10 +232,10 @@ get_mean_values <- function(dataset,
 }
 
 ################################################################################
-#' @title function get_prop_values shall create weighted proportion tables with
+#' @title function calculate_categorical_statistics shall create weighted proportion tables with
 #' confidence intervals
 #'
-#' @description get_mean_values shall create weighted proportion value tables
+#' @description calculate_categorical_statistics shall create weighted proportion value tables
 #' with confidence intervals
 #' create with the information n = size of the subgroup, percent = weighted
 #' proportion value, lower_confidence = lower confidence interval,
@@ -282,16 +250,16 @@ get_mean_values <- function(dataset,
 #' upper_confidence
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords get_prop_values
+#' @keywords calculate_categorical_statistics
 #'
 #' @examples
-#' get_prop_values(
+#' calculate_categorical_statistics(
 #'   dataset = data,
 #'   groupvars = c("usedvariable", "year", "sex"),
 #'   alpha = 0.05
 #' )
 #'
-get_prop_values <- function(dataset, groupvars, alpha) {
+calculate_categorical_statistics <- function(dataset, groupvars, alpha) {
   data_prop1 <- dataset[complete.cases(dataset), ] %>%
     dplyr::group_by_at(dplyr::vars(one_of(groupvars))) %>%
     dplyr::summarise(count_w = sum(weight), .groups = "drop_last")
@@ -338,8 +306,8 @@ get_prop_values <- function(dataset, groupvars, alpha) {
   upper_confidence1 <- p_hat + margin1
 
   data_prop_complete_ci <- cbind(data_prop_complete,
-    lowerconfidence_percent = lower_confidence1,
-    upperconfidence_percent = upper_confidence1
+    lower_confidence_percent = lower_confidence1,
+    upper_confidence_percent = upper_confidence1
   )
 
   data_prop_complete_ci <- subset(
@@ -348,8 +316,8 @@ get_prop_values <- function(dataset, groupvars, alpha) {
       groupvars,
       "n",
       "percent",
-      "lowerconfidence_percent",
-      "upperconfidence_percent"
+      "lower_confidence_percent",
+      "upper_confidence_percent"
     )
   )
 
@@ -363,19 +331,17 @@ get_prop_values <- function(dataset, groupvars, alpha) {
 #' proportion tables or mean value table
 #' delete if a minimum population is not reached.
 #'
-#' @param dataset data.frame from get_prop_values or get_mean_table
-#' @param cell.size maximum allowed cell size (e.g. 30)
+#' @param dataset data.frame from calculate_categorical_statistics or get_mean_table
+#' @param cell_size maximum allowed cell size (e.g. 30)
 #'
 #' @return protected.data (dataset with n, mean/percent, median, n, confidence
-#' intervals only with cells >= cell.size)
+#' intervals only with cells >= cell_size)
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords get_prop_values
+#' @keywords get_protected_values
 #'
-#' @examples
-#' get_prop_values(dataset = data, alpha = 0.05)
 #'
-get_protected_values <- function(dataset, cell.size) {
+get_protected_values <- function(dataset, cell_size) {
   if (("mean" %in% colnames(dataset)) == TRUE) {
     save.data <- as.data.frame(apply(
       dataset[c(
@@ -387,19 +353,19 @@ get_protected_values <- function(dataset, cell.size) {
         "percentile_75",
         "percentile_90",
         "percentile_99",
-        "lowerconfidence_mean",
-        "upperconfidence_mean",
+        "lower_confidence_mean",
+        "upper_confidence_mean",
         "minimum",
         "maximum",
-        "lowerconfidence_median",
-        "upperconfidence_median"
+        "lower_confidence_median",
+        "upper_confidence_median"
       )], 2,
       function(x) {
-        ifelse(dataset["n"] < cell.size, NA, x)
+        ifelse(dataset["n"] < cell_size, NA, x)
       }
     ))
     data <- dataset
-    dataset[c(
+    data[c(
       "mean",
       "median",
       "n",
@@ -408,12 +374,12 @@ get_protected_values <- function(dataset, cell.size) {
       "percentile_75",
       "percentile_90",
       "percentile_99",
-      "lowerconfidence_mean",
-      "upperconfidence_mean",
+      "lower_confidence_mean",
+      "upper_confidence_mean",
       "minimum",
       "maximum",
-      "lowerconfidence_median",
-      "upperconfidence_median"
+      "lower_confidence_median",
+      "upper_confidence_median"
     )] <- NULL
   }
 
@@ -421,19 +387,19 @@ get_protected_values <- function(dataset, cell.size) {
     save.data <- as.data.frame(apply(
       dataset[c(
         "percent",
-        "lowerconfidence_percent", "upperconfidence_percent"
+        "lower_confidence_percent", "upper_confidence_percent"
       )], 2,
       function(x) {
-        ifelse(dataset["n"] < cell.size, NA, x)
+        ifelse(dataset["n"] < cell_size, NA, x)
       }
     ))
     data <- dataset
-    dataset[c(
+    data[c(
       "percent",
-      "lowerconfidence_percent", "upperconfidence_percent"
+      "lower_confidence_percent", "upper_confidence_percent"
     )] <- NULL
   }
-  protected.data <- cbind(dataset, save.data)
+  protected.data <- cbind(data, save.data)
   return(protected.data)
 }
 
@@ -444,6 +410,9 @@ get_protected_values <- function(dataset, cell.size) {
 #' dataset with vauluelabel
 #'
 #' @param table data.frame from get_mean_data
+#' @param grouping_variables Vector with differentiation variables
+#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#' ("" possible)
 #'
 #' @return data_with_label = data set with value labels
 #'
@@ -474,17 +443,13 @@ create_table_lables <- function(table, grouping_variables) {
 }
 
 ################################################################################
-#' @title get_table_export Export of mean value or proportion value tables
+#' @title table_create Export of mean value or proportion value tables
 #'
-#' @description get_table_export export created mean or proportion tables as csv
+#' @description table_create export created mean or proportion tables as csv
 #'
 #' @param table produced data.frame from get_protected_values
 #' (e.g. platform_data)
 #' @param variable name analysis variable from raw data as string ("pglabnet")
-#' @param metadata_path Path to the metadata with variable name and table type
-#' in the dataset as string
-#' @param export_path export folder as string
-#' @param grouping_count number of differentiations as numeric (0-3 robbed)
 #' @param table_type Type of table to be processed ("mean" or "prop")
 #'
 #' @return data_csv = exportierte Tabelle als csv
@@ -492,23 +457,16 @@ create_table_lables <- function(table, grouping_variables) {
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords data_csv
 #'
-#' @examples
-#' get_table_export(
-#'   table = protected_table, variable = "usedvariable",
-#'   metadata_path = paste0(metadata_path, "varnames.csv"),
-#'   export_path = export_path, grouping_count = 2,
-#'   table_type = "mean"
-#' )
 #'
-get_table_export <-
+table_create <-
   function(table,
            variable,
            table_type) {
-    if (table_type == "mean") {
+    if (table_type == "numeric") {
       path <- file.path(export_path, "numerical", variable, "/")
     }
 
-    if (table_type == "prop") {
+    if (table_type == "categorical") {
       path <- file.path(export_path, "categorical", variable, "/")
     }
 
@@ -539,11 +497,11 @@ get_table_export <-
       }
     ))
 
-    if (table_type == "mean") {
+    if (table_type == "numeric") {
       export <- paste0(path, filename, ".csv")
     }
 
-    if (table_type == "prop") {
+    if (table_type == "categorical") {
       export <- paste0(path, filename, ".csv")
       colnames(data_csv)[1] <- variable
     }
@@ -555,6 +513,7 @@ get_table_export <-
       quote = TRUE,
       fileEncoding = "UTF-8"
     )
+    # return weglassen
     return(data_csv)
   }
 
@@ -566,21 +525,11 @@ get_table_export <-
 #'
 #' @description expand_table add empty rows if variable in year is empty.
 #'
-#' @table data.frame to be filled with empty cells
-#' @grouping_variable_one differentiation dimension as character
-#' @grouping_variable_two Differentiation dimension as character
-#' @grouping_variable_three differentiation dimension as character
-#' @grouping_count number of differentiations as numeric
-#' @table_type Table type ("prop" or "mean")
+#' @param table data.frame to be filled with empty cells
+#' @param table_type Table type ("prop" or "mean")
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #'
-#' @examples expand_table(
-#'   table = protected_table, grouping_variable_one = grouping_variable_one,
-#'   grouping_variable_two = grouping_variable_two,
-#'   grouping_variable_three = grouping_variable_three,
-#'   grouping_count = grouping_count, table_type = "prop"
-#' )
 #'
 expand_table <-
   function(table,
@@ -610,7 +559,7 @@ expand_table <-
       value_label_grouping2 <- ""
     }
     
-    if (table_type == "mean") {
+    if (table_type == "numeric") {
       expand.table <- expand.grid(
         year = seq(start_year, end_year),
         grouping_variable_one = value_label_grouping1,
@@ -619,7 +568,7 @@ expand_table <-
       columns <- c("year", grouping_variables)
     }
     
-    if (table_type == "prop") {
+    if (table_type == "categorical") {
       expand.table <- expand.grid(
         usedvariable = unique(dplyr::pull(table, usedvariable)),
         year = seq(start_year, end_year),
@@ -645,12 +594,12 @@ expand_table <-
 #'
 #' @description json_create creates json metadata
 #'
-#' @variable variable names as character
-#' @variable_label variable label as character
-#' @start_year start year of the information as numeric
-#' @end_year end of year information as numeric
-#' @table_type table type (e.g. "mean", "prop", "both")
-#' @export_path path where json file will be stored
+#' @param variable variable names as character
+#' @param variable_label variable label as character
+#' @param start_year start year of the information as numeric
+#' @param end_year end of year information as numeric
+#' @param table_type table type (e.g. "mean", "prop", "both")
+#' @param export_path path where json file will be stored
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords
@@ -667,11 +616,11 @@ json_create <-
         metadaten_variables$variable != "syear"
     ]
 
-    if (table_type == "mean") {
+    if (table_type == "numeric") {
       statistics <- c(
-        "mean", "lowerconfidence_mean", "upperconfidence_mean", 
+        "mean", "lower_confidence_mean", "upper_confidence_mean", 
         "minimum", "maximum",
-        "median", "lowerconfidence_median", "lowerconfidence_median",
+        "median", "lower_confidence_median", "lower_confidence_median",
         "percentile_10", "percentile_25", "percentile_75", 
         "percentile_90", "percentile_99"
       )
@@ -679,9 +628,9 @@ json_create <-
       exportfile <- paste0(export_path, "/numerical/", variable, "/meta.json")
     }
 
-    if (table_type == "prop") {
-      statistics <- c("percent", "lowerconfidence_percent", 
-                      "upperconfidence_percent")
+    if (table_type == "categorical") {
+      statistics <- c("percent", "lower_confidence_percent", 
+                      "upper_confidence_percent")
       level <- "categorical"
       exportfile <- paste0(export_path, "/categorical/", variable, "/meta.json")
     }
@@ -732,24 +681,24 @@ json_create <-
   }
 
 ################################################################################
-get_grouping_variables_list <- function(metadaten_variables_demo) {
+get_grouping_variables_list <- function(dimension_variables) {
   # TODO: Hard to read. Should be encapsulated by a function and the
   # function chaining
   # TODO: should be broken up into seperate statements:
-  # TODO: sort(names(metadaten_variables_demo)) is duplicated here.
+  # TODO: sort(names(dimension_variables)) is duplicated here.
 
-  metadaten_variables_demo_sorted <-
-    sort(names(metadaten_variables_demo))
+  dimension_variables_sorted <-
+    sort(names(dimension_variables))
 
   single_grouping_combinations <-
-    combn(metadaten_variables_demo_sorted,
+    combn(dimension_variables_sorted,
       1,
       simplify = FALSE,
       FUN = sort
     )
 
   double_grouping_combinations <-
-    combn(metadaten_variables_demo_sorted, 2,
+    combn(dimension_variables_sorted, 2,
       simplify = FALSE
     )
 
@@ -763,16 +712,16 @@ get_grouping_variables_list <- function(metadaten_variables_demo) {
 }
 
 ################################################################################
-get_grouping_count_list <- function(metadaten_variables_demo) {
-  # TODO: names(metadaten_variables_demo) seems to be used quite frequently.
+get_grouping_count_list <- function(dimension_variables) {
+  # TODO: names(dimension_variables) seems to be used quite frequently.
   # TODO: Could be better to store it in an extra variable.
   # TODO: This might belong to the 'function' above.
   # TODO: Purpose of renaming and changes are not clear.
 
   # number of single groupings
-  single_length <- length(metadaten_variables_demo)
+  single_length <- length(dimension_variables)
   # number of double groupings
-  double_length <- length(combn(names(metadaten_variables_demo), 2,
+  double_length <- length(combn(names(dimension_variables), 2,
     simplify = FALSE
   ))
   # empty list
@@ -800,4 +749,109 @@ get_grouping_count_list <- function(metadaten_variables_demo) {
   )
 
   return(grouping_count_list)
+}
+
+################################################################################
+#' @title get_numeric_statistics
+#'
+#' @description global function to create aggregated data tables for numeric 
+#' variables
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+
+get_numeric_statistics <- function() {
+  
+  data <- get_data(
+    variable = variable,
+    grouping_variables = grouping_variables,
+    value_label = FALSE
+  )
+  
+  table_numeric <- calculate_numeric_statistics(
+    dataset = data,
+    grouping_variables =
+      grouping_variables
+  )
+  
+  table_numeric <-
+    create_table_lables(
+      table = table_numeric,
+      grouping_variables = grouping_variables
+    )
+  
+  protected_table <- get_protected_values(
+    dataset = table_numeric,
+    cell_size = cell_minimum
+  )
+  
+  protected_table <- expand_table(
+    table = protected_table,
+    table_type = "numeric"
+  )
+  
+  table_create(
+    table = protected_table,
+    variable = variable,
+    table_type = "numeric"
+  )
+  
+  json_create(
+    table = protected_table,
+    variable = variable,
+    table_type = "numeric"
+  )
+}
+
+################################################################################
+#' @title get_categorical_statistics
+#'
+#' @description global function to create aggregated data tables for categorical 
+#' variables
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords
+#'
+#'     
+
+get_categorical_statistics <- function() {
+
+data <- get_data(
+  variable = variable,
+  grouping_variables = grouping_variables,
+  value_label = TRUE
+)
+
+if ("" %in% grouping_variables) {
+  columns <- c("usedvariable", "year")
+} else {
+  columns <- c("usedvariable", "year", grouping_variables)
+}
+
+prop.data <-
+  calculate_categorical_statistics(
+    dataset = data,
+    groupvars = columns,
+    alpha = 0.05
+  )
+
+protected_table <-
+  get_protected_values(dataset = prop.data, 
+                       cell_size = cell_minimum)
+
+protected_table <- expand_table(
+  table = protected_table,
+  table_type = "categorical"
+)
+
+data_csv <- table_create(
+  table = protected_table,
+  variable = variable,
+  table_type = "categorical"
+)
+
+json_create(
+  table = protected_table,
+  variable = variable,
+  table_type = "categorical"
+)
 }
