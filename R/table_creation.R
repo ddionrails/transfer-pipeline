@@ -65,13 +65,13 @@ export_path <- "H:/Clone/soep-transfer/"
     weight_variable > 0
   )
 
-  # Rename weighting variable to weight
-  # syear umbenennen year
-  names(datafile_without_labels)[names(
-    datafile_without_labels
-  ) == weight_variable] <- "weight"
+  # Rename weighting variable to weight and syear to year
+  lookup <- c(year = year, 
+              weight = weight_variable)
+  datafile_without_labels <- dplyr::rename(datafile_without_labels, 
+                                           all_of(lookup))
 
-  ## load data with labels
+    ## load data with labels
   datafile_with_labels <- readstata13::read.dta13(
     paste0(
       dataset_path,
@@ -88,12 +88,9 @@ export_path <- "H:/Clone/soep-transfer/"
     weight_variable > 0
   )
 
-  # Rename weighting variable to weight
-  # syear umbenennen year
-  names(datafile_with_labels)[names(
-    datafile_with_labels
-  ) == weight_variable] <- "weight"
-
+  # Rename weighting variable to weight and syear to year
+  datafile_with_labels <- dplyr::rename(datafile_with_labels, 
+                                           all_of(lookup))
 
   # keep valid value labels
   metadaten_variable_categories <- dplyr::filter(
@@ -151,8 +148,9 @@ export_path <- "H:/Clone/soep-transfer/"
               "as numeric table"
             )
           )
-          
-        get_numeric_statistics()
+        
+        
+        print_numeric_statistics()
         
         # statistical type == categorical
         if (metadaten_variables$statistical_type[var] == "categorical") {
@@ -167,7 +165,7 @@ export_path <- "H:/Clone/soep-transfer/"
             )
           )
           
-          get_categorical_statistics()
+        print_categorical_statistics()
         }
       }
     }

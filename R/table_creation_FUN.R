@@ -3,52 +3,49 @@
 ################################################################################
 
 `%>%` <- dplyr::`%>%`
-
-#' @title get_data creates subset of a data set
+#' @title subset_data creates subset of a data set
 #'
-#' @description get_data to get the output dataset in long format
+#' @description subset_data to get the output dataset in long format
 #' limited to certain variables (variable, year, weight, grouping_variables) and
 #' contain only valid values.
 #'
 #' @param variable name analysis variable as string (e.g. "pglabnet" )
 #' @param grouping_variables Vector with differentiation variables
 #' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
-#' @param value_label Valuelabel should be used (e.g.: value_label = TRUE)
+#' @param use_value_labels Valuelabel should be used (e.g.: use_value_labels = TRUE)
 #' (TRUE/FALSE)
 #'
 #' @return variable.values.valid is a data set with valid values of the
 #' variables (variable, year, weight, grouping_variables)
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords get_data
+#' @keywords subset_data
 #'
 # TODO: Too many arguments. Arguments are badly named. Possibly too many if
 # statements.
 #'
-get_data <-
+subset_data <-
   function(variable,
            grouping_variables,
-           value_label) {
-    columns <- c(
-      variable, "syear", "weight",
+           use_value_labels) {
+    
+    columns <- c(variable, "year", "weight",
       grouping_variables
     )
 
     columns <- columns[columns != ""]
     renamed_columns <- columns[columns != variable]
-    renamed_columns <- dplyr::recode(renamed_columns, syear = "year")
 
-    if (value_label == FALSE) {
+    if (use_value_labels == FALSE) {
       variable.values <- subset(datafile_without_labels,
         select = columns
       )
       names(variable.values) <-
-        c(
-          "usedvariablenum",
+        c("usedvariablenum",
           renamed_columns
         )
     }
-    if (value_label == TRUE) {
+    if (use_value_labels == TRUE) {
       variable.values <-
         subset(datafile_without_labels, select = variable)
       factorvar <-
@@ -57,157 +54,449 @@ get_data <-
         )
       variable.values <- cbind(variable.values, factorvar)
       names(variable.values) <-
-        c(
-          "usedvariablenum",
+        c("usedvariablenum",
           "usedvariable",
           renamed_columns
         )
     }
-
     if (any(variable.values$usedvariablenum >= 0)) {
-      if (value_label == FALSE) {
-        variable.values.valid <-
-          subset(variable.values, usedvariablenum >= 0)
-        variable.values.valid <-
-          variable.values.valid[order(variable.values.valid$usedvariablenum), ]
-        names(variable.values.valid)[names(variable.values.valid) ==
-          "usedvariablenum"] <- "usedvariable"
-      }
-      if (value_label == TRUE) {
-        variable.values.valid <-
-          subset(variable.values, usedvariablenum >= 0)
-        variable.values.valid <-
-          variable.values.valid[order(variable.values.valid$usedvariablenum), ]
-        variable.values.valid <-
-          variable.values.valid[2:length(variable.values.valid)]
-      }
+      variable.values.valid <- subset_rename_data(
+        variable.values = variable.values,
+        use_value_labels = use_value_labels)
     }
-
     return(variable.values.valid)
   }
 
 ################################################################################
+################################################################################
+# alpha global setzen um Konfidenzintervall anpassen zu k?nnen
+# selected_values Namen der Spalten zentral setzen.
+# Reihenfolge der columns  noch irgendwie wichtig???
 
-#' @title calculate_numeric_statistics creates mean/median tables with mean, median, n,
-#' percentiles, confidence interval
+#' @title calculate_numeric_statistics
 #'
-#' @description calculate_numeric_statistics creates weighted mean/median tables with
-#'              n, percentiles, confidence interval
+#' @description Main funtction calculate_numeric_statistics creates aggregated 
+#' tables for numeric variables with weighted median, weighted mean, n, 
+#' minimum, maximum, ercentiles, confidence intervals by groups
 #'
-#' @param dataset data.frame from get_data (e.g. platform_data)
-#' @param grouping_variables Vector with differentiation variables
+#' @param dataset data.frame from subset_data function
+#' @param grouping_variables Vector with dimension or grouping variables
 #' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
 #' ("" possible)
 #'
-#' @return data = dataset with mean, median, n, percentiles, confidence interval
+#' @return datatable_numeric = dataset with mean, median, n, percentiles, 
+#' confidence interval
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords calculate_numeric_statistics
 #'
-# TODO: Some arguments are badly named. grouping_variable_one-3 could be one
-# data structure.
-# TODO: Too many if statements
 #'
 calculate_numeric_statistics <- function(dataset,
-                            grouping_variables) {
+                                         grouping_variables) {
+  
   columns <- c("year", grouping_variables)
   columns <- columns[columns != ""]
+  
+  # Calculate weighted mean
+  dataset_mean <- calculate_weighted_mean(dataset = dataset,
+                                          grouping_variables = columns)
+  
+  # Calculate weighted median
+  dataset_median <- calculate_weighted_median(dataset = dataset, 
+                                              grouping_variables = columns)
+  # Calculate number of observations n
+  dataset_n <- calculate_n(dataset = dataset, 
+                           grouping_variables = columns)
+  
+  # Calculate sd of mean
+  dataset_sd <- calculate_sd(dataset = dataset_n, 
+                             grouping_variables = columns)
+  
+  # Calculate minimum and maximum
+  dataset_min_max <- calculate_min_max(dataset = dataset, 
+                                       grouping_variables = columns)
+  
+  # Calculate conficence interval mean with weighted mean n and sd
+  dataset_confidence_interval_mean <- calculate_confidence_interval_mean()
+  
+  # Calculate percentiles 
+  dataset_percentile_values <- 
+    calculate_percentiles(dataset = dataset, 
+                          grouping_variables = columns)
+  
+  # Calculate confidence interval median
+  dataset_confidence_interval_median <- calculate_confidence_interval_median(
+    dataset = dataset, 
+    grouping_variables = columns)
+  
+  datatable_numeric <- combine_numeric_statistics(dataset = dataset, 
+                                                  grouping_variables = columns)
+  return(datatable_numeric)
+}
 
-  mean.values <- dataset[complete.cases(dataset), ] %>%
-    dplyr::group_by_at(dplyr::vars(one_of(columns))) %>%
-    dplyr::mutate(mean = round(weighted.mean(usedvariable, weight), 2)) %>%
-    dplyr::mutate(median = round(spatstat.geom::weighted.median(usedvariable, weight), 2)) %>%
-    dplyr::add_count(year, wt = NULL) %>%
-    dplyr::mutate(sd = sd(usedvariable / sqrt(n))) %>%
-    dplyr::mutate(
-      lower = mean - qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd,
-      upper = mean + qt(1 - (0.05 / 2), as.numeric(n) - 1) * sd
-    ) %>%
-    dplyr::mutate(lower_confidence_mean = round((lower), 2)) %>%
-    dplyr::mutate(upper_confidence_mean = round((upper), 2)) %>%
-    dplyr::mutate(
-      maximum = round(max(usedvariable, na.rm = T), 2),
-      minimum = round(min(usedvariable, na.rm = T), 2)
-    ) %>%
-    dplyr::distinct(mean, .keep_all = TRUE)
+################################################################################
+################################################################################
+#' @title calculate_weighted_mean
+#'
+#' @description calculate_weighted_mean calculates weighted mean by groups
+#'
+#' @param dataset data.frame from subset_data function
+#' @param grouping_variables Vector with dimension or grouping variables
+#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#' ("" possible)
+#'
+#' @return dataset_mean = dataset with weighted mean by group
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_numeric_statistics
+#'
+#'
+calculate_weighted_mean <- function(dataset, grouping_variables) {
+  
+  dataset <- dataset[complete.cases(dataset), ]
+  dataset_grouped <- dplyr::group_by_at(dataset, 
+                                        dplyr::vars(one_of(grouping_variables)))
+  dataset_mean <- dplyr::mutate(dataset_grouped, 
+                                mean = round(stats::weighted.mean(usedvariable, 
+                                                                  weight), 2))
+  return(dataset_mean)
+}
 
+################################################################################
+################################################################################
+#' @title calculate_weighted_median
+#'
+#' @description calculate_weighted_median calculates weighted median by groups
+#'
+#' @param dataset data.frame from subset_data function
+#' @param grouping_variables Vector with dimension or grouping variables
+#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#' ("" possible)
+#'
+#' @return dataset_median = dataset with weighted median by group
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_numeric_statistics
+#'
+#'
+#'
+calculate_weighted_median <- function(dataset, grouping_variables) {
+  dataset <- dataset[complete.cases(dataset), ]
+  dataset_grouped <- dplyr::group_by_at(dataset, dplyr::vars(one_of(grouping_variables)))
+  dataset_median <- dplyr::mutate(dataset_grouped, 
+                                  median = DescTools::Median(usedvariable, 
+                                                             weights = weight))
+  return(dataset_median)
+}
 
-  percentile.values <- dataset[complete.cases(dataset), ] %>%
-    dplyr::group_by_at(dplyr::vars(one_of(columns))) %>%
-    dplyr::summarise(
-      percentile_10 = round(
-        Hmisc::wtd.quantile(
-          usedvariable,
-          weights = weight,
-          probs = .1,
-          na.rm = TRUE
-        ),
-        2
-      ),
-      percentile_25 = round(
-        Hmisc::wtd.quantile(
-          usedvariable,
-          weights = weight,
-          probs = .25,
-          na.rm = TRUE
-        ),
-        2
-      ),
-      percentile_75 = round(
-        Hmisc::wtd.quantile(
-          usedvariable,
-          weights = weight,
-          probs = .75,
-          na.rm = TRUE
-        ),
-        2
-      ),
-      percentile_90 = round(
-        Hmisc::wtd.quantile(
-          usedvariable,
-          weights = weight,
-          probs = .90,
-          na.rm = TRUE
-        ),
-        2
-      ),
-      percentile_99 = round(
-        Hmisc::wtd.quantile(
-          usedvariable,
-          weights = weight,
-          probs = .99,
-          na.rm = TRUE
-        ),
-        2
-      ),
-      .groups = "drop"
+################################################################################
+################################################################################
+#' @title calculate_n
+#'
+#' @description calculate_n calculates observations by groups
+#'
+#' @param dataset data.frame from subset_data function
+#' @param grouping_variables Vector with dimension or grouping variables
+#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#' ("" possible)
+#'
+#' @return dataset_n = dataset with observations by group
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_numeric_statistics
+#'
+#'
+#'
+calculate_n <- function(dataset, grouping_variables) {
+  dataset <- dataset[complete.cases(dataset), ]
+  dataset_grouped <- dplyr::group_by_at(dataset, 
+                                        dplyr::vars(one_of(grouping_variables)))
+  dataset_n <- dplyr::add_count(dataset_grouped, year, wt = NULL)
+  return(dataset_n)
+}
+
+################################################################################
+################################################################################
+#' @title calculate_sd
+#'
+#' @description calculate_sd calculates sd of mean by groups
+#'
+#' @param dataset data.frame from subset_data function
+#' @param grouping_variables Vector with dimension or grouping variables
+#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#' ("" possible)
+#'
+#' @return dataset_sd = dataset with sd of mean by group
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_numeric_statistics
+#'
+#'
+#'
+calculate_sd <- function(dataset, grouping_variables) {
+  dataset_grouped <- dplyr::group_by_at(dataset, 
+                                        dplyr::vars(one_of(grouping_variables)))
+  dataset_sd <- dplyr::mutate(dataset_grouped, sd = sd(usedvariable / sqrt(n)))
+  return(dataset_sd)
+}
+
+################################################################################
+################################################################################
+#' @title dataset_min_max
+#'
+#' @description dataset_min_max calculates minimum and maximum by groups
+#'
+#' @param dataset data.frame from subset_data function
+#' @param grouping_variables Vector with dimension or grouping variables
+#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#' ("" possible)
+#'
+#' @return dataset_min_max = dataset with minimum and maximum by group
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_numeric_statistics
+#'
+#'
+#'
+calculate_min_max <- function(dataset, grouping_variables) {
+  
+  dataset <- dataset[complete.cases(dataset), ]
+  dataset_grouped <- dplyr::group_by_at(dataset, 
+                                        dplyr::vars(one_of(grouping_variables)))
+  dataset_min_max <- dplyr::mutate(dataset_grouped, 
+                                   maximum = round(max(usedvariable, 
+                                                       na.rm = T), 2),
+                                   minimum = round(min(usedvariable, 
+                                                       na.rm = T), 2))
+  return(dataset_min_max)
+}
+
+################################################################################
+################################################################################
+#' @title calculate_confidence_interval_mean
+#'
+#' @description calculate_confidence_interval_mean calculates mean confidence 
+#' intervals by groups
+#'
+#' @return dataset_confidence_interval_mean = dataset mean confidence intervals 
+#' by group
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_numeric_statistics
+#'
+#'
+#'
+calculate_confidence_interval_mean <- function() {
+  
+  dataset_confidence_interval_mean <- cbind(dataset_n, 
+                                            dataset_sd["sd"], 
+                                            dataset_mean["mean"])
+  
+  dataset_confidence_interval_mean <- dplyr::mutate(dataset_confidence_interval_mean, 
+                                                    sd = sd(usedvariable / sqrt(n)))
+  dataset_confidence_interval_mean <- dplyr::mutate(dataset_confidence_interval_mean,
+                                                    lower = mean - qt(1 - (0.05 / 2), 
+                                                                      as.numeric(n) - 1) * sd,
+                                                    upper = mean + qt(1 - (0.05 / 2), 
+                                                                      as.numeric(n) - 1) * sd
+  )   
+  
+  dataset_confidence_interval_mean <- dplyr::mutate(dataset_confidence_interval_mean, 
+                                                    lower_confidence_mean = round((lower), 2))
+  dataset_confidence_interval_mean <- dplyr::mutate(dataset_confidence_interval_mean,
+                                                    upper_confidence_mean = round((upper), 2))
+  
+  return(dataset_confidence_interval_mean)
+}
+
+################################################################################
+################################################################################
+#' @title calculate_percentiles
+#'
+#' @description calculate_percentiles calculates percentiles by groups
+#'
+#' @param dataset data.frame from subset_data function
+#' @param grouping_variables Vector with dimension or grouping variables
+#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#' ("" possible)
+#'
+#' @return dataset_percentile_values = dataset with percentiles by group
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_numeric_statistics
+#'
+#'
+#'
+calculate_percentiles <- function(dataset, grouping_variables) {
+  dataset <- dataset[complete.cases(dataset), ]
+  dataset_grouped <- dplyr::group_by_at(dataset, 
+                                        dplyr::vars(one_of(grouping_variables)))
+  
+  dataset_percentile_values <- 
+    dplyr::summarise(dataset_grouped,
+                     percentile_10 = round(
+                       Hmisc::wtd.quantile(
+                         usedvariable,
+                         weights = weight,
+                         probs = .1,
+                         na.rm = TRUE
+                       ),
+                       2
+                     ),
+                     percentile_25 = round(
+                       Hmisc::wtd.quantile(
+                         usedvariable,
+                         weights = weight,
+                         probs = .25,
+                         na.rm = TRUE
+                       ),
+                       2
+                     ),
+                     percentile_75 = round(
+                       Hmisc::wtd.quantile(
+                         usedvariable,
+                         weights = weight,
+                         probs = .75,
+                         na.rm = TRUE
+                       ),
+                       2
+                     ),
+                     percentile_90 = round(
+                       Hmisc::wtd.quantile(
+                         usedvariable,
+                         weights = weight,
+                         probs = .90,
+                         na.rm = TRUE
+                       ),
+                       2
+                     ),
+                     percentile_99 = round(
+                       Hmisc::wtd.quantile(
+                         usedvariable,
+                         weights = weight,
+                         probs = .99,
+                         na.rm = TRUE
+                       ),
+                       2
+                     ),
+                     .groups = "drop"
     )
+  return(dataset_percentile_values)
+}
 
+################################################################################
+################################################################################
+#' @title calculate_confidence_interval_median
+#'
+#' @description calculate_confidence_interval_median calculates median confidence
+#' intervals by groups
+#'
+#' @param dataset data.frame from subset_data function
+#' @param grouping_variables Vector with dimension or grouping variables
+#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#' ("" possible)
+#'
+#' @return dataset_percentile_values = dataset with median confidence intervals
+#' by group
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_numeric_statistics
+#'
+#'
+#'
+calculate_confidence_interval_median <- function(dataset, grouping_variables) {
+  
+  # dataset <- dataset[complete.cases(dataset), ]
+  # dataset_grouped <- dplyr::group_by_at(dataset, dplyr::vars(one_of(columns)))
+  # 
+  # ci_median_boot <- function(x, weights, R = 1000, na_raus = TRUE){
+  #   weighted_median <- DescTools::Median(x, weights = weights, na.rm=na_raus)
+  #   
+  #   bootstrap <- function(iter){
+  #     index <- sample(1:length(x), length(x), replace = TRUE)
+  #     xx <- x[index]
+  #     ww <- weights[index]
+  #     boot_median <- DescTools::Median(xx, weights = ww, na.rm = na_raus)
+  #     return(boot_median)
+  #   }
+  #   
+  #   result <- sapply(1:R, bootstrap)
+  #   quant <- quantile(result, probs = c(0.025, 0.975), na.rm = na_raus)
+  #   ci_lower <- 2 * weighted_median - quant[2]
+  #   ci_upper <- 2 * weighted_median - quant[1]
+  #   out <-  c(weighted_median, ci_lower, ci_upper)
+  #   names(out) <- c("weighted_median", "CI_lower", "CI_upper")
+  #   return(out)
+  #   
+  # }
+  # 
+  # ci_median_boot(x = dataset_grouped$usedvariable, 
+  #                weights = dataset_grouped$weight,
+  #                R = 100,
+  #                na_raus = TRUE)
+  
   # Median confidence interval calculation
-  median_data <- dataset %>%
-    dplyr::group_by_at(dplyr::vars(one_of(columns))) %>%
+  dataset_confidence_interval_median <- dataset[complete.cases(dataset), ] %>%
+    dplyr::group_by_at(dplyr::vars(one_of(grouping_variables))) %>%
     dplyr::filter(dplyr::n() > 8)
-
-  medianci.value <- median_data[complete.cases(median_data), ] %>%
+  
+  dataset_confidence_interval_median <- dataset_confidence_interval_median %>%
     tidyr::nest(data = -columns) %>%
     dplyr::mutate(ci = purrr::map(
       data,
       ~
         DescTools::MedianCI(.x$usedvariable,
-          method = "exact"
+                            method = "exact"
         )[2:3]
     )) %>%
     tidyr::unnest_wider(ci)
-
-  medianci.value$data <- NULL
-  colnames(medianci.value) <-
+  
+  dataset_confidence_interval_median$data <- NULL
+  colnames(dataset_confidence_interval_median) <-
     c(columns, "lower_confidence_median", "upper_confidence_median")
+  
+  return(dataset_confidence_interval_median)
+}
 
-  data <- merge(mean.values, percentile.values, by = columns)
-  data <- dplyr::left_join(data, medianci.value, by = columns)
-
+################################################################################
+################################################################################
+#' @title combine_numeric_statistics
+#'
+#' @description combine_numeric_statistics combines different datasets with 
+#' statistical parameters by groups
+#'
+#' @param dataset data.frame from subset_data function
+#' @param grouping_variables Vector with dimension or grouping variables
+#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#' ("" possible)
+#'
+#' @return datatable_numeric = dataset all statistical parameters 
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_numeric_statistics
+#'
+#'
+#'
+combine_numeric_statistics <- function(dataset, grouping_variables) {
+  dataset_grouped <- dplyr::group_by_at(dataset, 
+                                        dplyr::vars(one_of(grouping_variables)))
+  
+  datatable_numeric <- cbind(dataset_confidence_interval_mean, 
+                             dataset_median["median"],
+                             dataset_min_max[c("minimum", "maximum")])
+  
+  datatable_numeric <- dplyr::distinct(datatable_numeric, 
+                                       mean, .keep_all = TRUE)
+  
+  datatable_numeric <- merge(datatable_numeric, dataset_percentile_values, 
+                             by = grouping_variables)
+  
+  datatable_numeric <- merge(datatable_numeric, 
+                             dataset_confidence_interval_median, 
+                             by = grouping_variables)
+  
   selected.values <- c(
-    columns,
+    grouping_variables,
     "mean",
     "lower_confidence_mean",
     "upper_confidence_mean",
@@ -223,25 +512,27 @@ calculate_numeric_statistics <- function(dataset,
     "minimum",
     "maximum"
   )
-
-  data <- data[, (names(data) %in% selected.values)]
-  data <- data %>%
-    dplyr::arrange(desc(year), .by_group = TRUE)
-
-  return(data)
-}
+  
+  datatable_numeric <- datatable_numeric[, (names(datatable_numeric) 
+                                            %in% selected.values)]
+  datatable_numeric <- dplyr::arrange(datatable_numeric, desc(year),
+                                      .by_group = TRUE)
+  
+  return(datatable_numeric)
+}  
 
 ################################################################################
-#' @title function calculate_categorical_statistics shall create weighted proportion tables with
-#' confidence intervals
+################################################################################
+#' @title function calculate_categorical_statistics shall create weighted 
+#' proportion tables with confidence intervals
 #'
-#' @description calculate_categorical_statistics shall create weighted proportion value tables
-#' with confidence intervals
+#' @description calculate_categorical_statistics shall create weighted 
+#' proportion value tables with confidence intervals
 #' create with the information n = size of the subgroup, percent = weighted
 #' proportion value, lower_confidence = lower confidence interval,
 #' upper_confidence = upper 95% confidence interval
 #'
-#' @param dataset data.frame from get_data (e.g. platform_data)
+#' @param dataset data.frame from subset_data (e.g. platform_data)
 #' @param groupvars vector with all variables in the dataset
 #' (e.g. c("usedvariable", "year", "sex"))
 #' @param alpha Alpha for setting the confidence interval (e.g. 0.05)
@@ -752,16 +1043,16 @@ get_grouping_count_list <- function(dimension_variables) {
 }
 
 ################################################################################
-#' @title get_numeric_statistics
+#' @title print_numeric_statistics
 #'
 #' @description global function to create aggregated data tables for numeric 
 #' variables
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 
-get_numeric_statistics <- function() {
+print_numeric_statistics <- function() {
   
-  data <- get_data(
+  data <- subset_data(
     variable = variable,
     grouping_variables = grouping_variables,
     value_label = FALSE
@@ -803,7 +1094,7 @@ get_numeric_statistics <- function() {
 }
 
 ################################################################################
-#' @title get_categorical_statistics
+#' @title print_categorical_statistics
 #'
 #' @description global function to create aggregated data tables for categorical 
 #' variables
@@ -813,9 +1104,9 @@ get_numeric_statistics <- function() {
 #'
 #'     
 
-get_categorical_statistics <- function() {
+print_categorical_statistics <- function() {
 
-data <- get_data(
+data <- subset_data(
   variable = variable,
   grouping_variables = grouping_variables,
   value_label = TRUE
