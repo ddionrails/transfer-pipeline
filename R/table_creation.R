@@ -27,12 +27,30 @@ version <- "v37"
 cell_minimum <- 30 # Maximum allowed cell size
 year <- "syear" # Survey year must be defined
 weight_variable <- "hhrf" # Weight must be defined
+alpha <- 0.05 # for confidence interval
 
 dataset_path <- "H:/data/"
 metadata_path <- paste0("https://git.soep.de/kwenzig/publicecoredoku/raw/master/datasets/",
                         dataset, "/", version, "/")
 export_path <- "H:/Clone/soep-transfer/"
-  #############################################################################
+
+numeric_statistics_column_names <-(
+  "mean",
+  "lower_confidence_mean",
+  "upper_confidence_mean",
+  "median",
+  "lower_confidence_median",
+  "upper_confidence_median",
+  "percentile_10",
+  "percentile_25",
+  "percentile_75",
+  "percentile_90",
+  "percentile_99",
+  "n",
+  "minimum",
+  "maximum"
+)
+################################################################################
 
   metadaten_variables <-
     read.csv(

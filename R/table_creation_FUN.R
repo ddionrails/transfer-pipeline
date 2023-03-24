@@ -69,8 +69,6 @@ subset_data <-
 
 ################################################################################
 ################################################################################
-# alpha global setzen um Konfidenzintervall anpassen zu k?nnen
-# selected_values Namen der Spalten zentral setzen.
 # Reihenfolge der columns  noch irgendwie wichtig???
 
 #' @title calculate_numeric_statistics
@@ -295,9 +293,9 @@ calculate_confidence_interval_mean <- function() {
   dataset_confidence_interval_mean <- dplyr::mutate(dataset_confidence_interval_mean, 
                                                     sd = sd(usedvariable / sqrt(n)))
   dataset_confidence_interval_mean <- dplyr::mutate(dataset_confidence_interval_mean,
-                                                    lower = mean - qt(1 - (0.05 / 2), 
+                                                    lower = mean - qt(1 - (alpha / 2), 
                                                                       as.numeric(n) - 1) * sd,
-                                                    upper = mean + qt(1 - (0.05 / 2), 
+                                                    upper = mean + qt(1 - (alpha / 2), 
                                                                       as.numeric(n) - 1) * sd
   )   
   
@@ -495,26 +493,13 @@ combine_numeric_statistics <- function(dataset, grouping_variables) {
                              dataset_confidence_interval_median, 
                              by = grouping_variables)
   
-  selected.values <- c(
+  numeric_statistics_column_names <- c(
     grouping_variables,
-    "mean",
-    "lower_confidence_mean",
-    "upper_confidence_mean",
-    "median",
-    "lower_confidence_median",
-    "upper_confidence_median",
-    "percentile_10",
-    "percentile_25",
-    "percentile_75",
-    "percentile_90",
-    "percentile_99",
-    "n",
-    "minimum",
-    "maximum"
+    numeric_statistics_column_names
   )
   
   datatable_numeric <- datatable_numeric[, (names(datatable_numeric) 
-                                            %in% selected.values)]
+                                            %in% numeric_statistics_column_names)]
   datatable_numeric <- dplyr::arrange(datatable_numeric, desc(year),
                                       .by_group = TRUE)
   
