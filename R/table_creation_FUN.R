@@ -699,7 +699,7 @@ get_protected_values <- function(dataset, cell_size) {
 #' create_table_lables(table = data)
 #'
 create_table_lables <- function(table, grouping_variables) {
-  if (all(nzchar(grouping_variables))) {
+  if ( ! "" %in% grouping_variables) {
     for (groupingvar in grouping_variables) {
       variable_categories_subset <-
         subset(metadaten_variable_categories, variable %in% groupingvar)
