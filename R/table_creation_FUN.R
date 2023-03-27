@@ -700,7 +700,13 @@ get_protected_values <- function(dataset, cell_size) {
 #'
 create_table_lables <- function(table, grouping_variables) {
   if (all(nzchar(grouping_variables))) {
+    # TODO: Inconsistent variable naming; should be grouping_variable
     for (groupingvar in grouping_variables) {
+      # TODO: variable is a global variable set in a different file, that is mutated
+      # TODO: frequently. This makes it hard to see what the value of variable in this
+      # TODO: context. The location where variable is declared is also
+      # TODO: relatively hard to find. There seem to be no reason why `variable`
+      # TODO: is global, it should be an argument of this function. 
       variable_categories_subset <-
         subset(metadaten_variable_categories, variable %in% groupingvar)
 
