@@ -744,6 +744,9 @@ table_create <-
   function(table,
            variable,
            table_type) {
+
+    # TODO: Where does `numeric` come from? `numerical` would be better and would
+    # TODO: allow us to eliminate these if statements.     
     if (table_type == "numeric") {
       path <- file.path(export_path, "numerical", variable, "/")
     }
@@ -785,6 +788,7 @@ table_create <-
 
     if (table_type == "categorical") {
       export <- paste0(path, filename, ".csv")
+      # TODO: Why is this done here and not already part of table?
       colnames(data_csv)[1] <- variable
     }
 
