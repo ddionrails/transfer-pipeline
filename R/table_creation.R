@@ -34,7 +34,7 @@ metadata_path <- paste0("https://git.soep.de/kwenzig/publicecoredoku/raw/master/
                         dataset, "/", version, "/")
 export_path <- "H:/Clone/soep-transfer/"
 
-numeric_statistics_column_names <-(
+numeric_statistics_column_names <- c(
   "mean",
   "lower_confidence_mean",
   "upper_confidence_mean",

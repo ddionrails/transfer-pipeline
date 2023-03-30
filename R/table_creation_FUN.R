@@ -45,6 +45,7 @@ subset_data <-
           renamed_columns
         )
     }
+    
     if (use_value_labels == TRUE) {
       variable.values <-
         subset(datafile_without_labels, select = variable)
@@ -59,10 +60,15 @@ subset_data <-
           renamed_columns
         )
     }
-    if (any(variable.values$usedvariablenum >= 0)) {
-      variable.values.valid <- subset_rename_data(
-        variable.values = variable.values,
-        use_value_labels = use_value_labels)
+    variable.values.valid <-
+      subset(variable.values, usedvariablenum >= 0)
+    
+    if (use_value_labels == TRUE) {  
+      variable.values.valid$usedvariablenum <- NULL
+    }
+    if (use_value_labels == FALSE) {  
+      variable.values.valid <- dplyr::rename(variable.values.valid, 
+                                             usedvariable = usedvariablenum)
     }
     return(variable.values.valid)
   }
@@ -71,11 +77,13 @@ subset_data <-
 ################################################################################
 # Reihenfolge der columns  noch irgendwie wichtig???
 
+# Gruppierung des Datensatzes am Anfang und nicht in jeder funktion einzeln
+
 #' @title calculate_numeric_statistics
 #'
 #' @description Main funtction calculate_numeric_statistics creates aggregated 
 #' tables for numeric variables with weighted median, weighted mean, n, 
-#' minimum, maximum, ercentiles, confidence intervals by groups
+#' minimum, maximum, percentiles, confidence intervals by groups
 #'
 #' @param dataset data.frame from subset_data function
 #' @param grouping_variables Vector with dimension or grouping variables
@@ -114,8 +122,9 @@ calculate_numeric_statistics <- function(dataset,
   dataset_min_max <- calculate_min_max(dataset = dataset, 
                                        grouping_variables = columns)
   
-  # Calculate conficence interval mean with weighted mean n and sd
-  dataset_confidence_interval_mean <- calculate_confidence_interval_mean()
+  # Calculate confideence interval mean with weighted mean n and sd
+  dataset_confidence_interval_mean <- calculate_confidence_interval_mean(
+    dataset_n = dataset_n, dataset_sd = dataset_sd, dataset_mean = dataset_mean)
   
   # Calculate percentiles 
   dataset_percentile_values <- 
@@ -127,8 +136,15 @@ calculate_numeric_statistics <- function(dataset,
     dataset = dataset, 
     grouping_variables = columns)
   
-  datatable_numeric <- combine_numeric_statistics(dataset = dataset, 
-                                                  grouping_variables = columns)
+  datatable_numeric <- 
+    combine_numeric_statistics(
+      grouping_variables = columns, 
+      dataset_confidence_interval_mean = dataset_confidence_interval_mean,
+      dataset_median = dataset_median, 
+      dataset_min_max = dataset_min_max, 
+      dataset_percentile_values = dataset_percentile_values, 
+      dataset_confidence_interval_median = dataset_confidence_interval_median)
+  
   return(datatable_numeric)
 }
 
@@ -180,7 +196,8 @@ calculate_weighted_mean <- function(dataset, grouping_variables) {
 #'
 calculate_weighted_median <- function(dataset, grouping_variables) {
   dataset <- dataset[complete.cases(dataset), ]
-  dataset_grouped <- dplyr::group_by_at(dataset, dplyr::vars(one_of(grouping_variables)))
+  dataset_grouped <- dplyr::group_by_at(dataset, 
+                                        dplyr::vars(one_of(grouping_variables)))
   dataset_median <- dplyr::mutate(dataset_grouped, 
                                   median = DescTools::Median(usedvariable, 
                                                              weights = weight))
@@ -209,12 +226,15 @@ calculate_n <- function(dataset, grouping_variables) {
   dataset <- dataset[complete.cases(dataset), ]
   dataset_grouped <- dplyr::group_by_at(dataset, 
                                         dplyr::vars(one_of(grouping_variables)))
-  dataset_n <- dplyr::add_count(dataset_grouped, year, wt = NULL)
+  dataset_n <- dplyr::add_count(dataset_grouped, year, 
+   wt = NULL)
   return(dataset_n)
 }
 
 ################################################################################
 ################################################################################
+# Weglassen weil sd nicht in der finalen Tabelle ist und später auch erzeugt wird
+
 #' @title calculate_sd
 #'
 #' @description calculate_sd calculates sd of mean by groups
@@ -275,6 +295,10 @@ calculate_min_max <- function(dataset, grouping_variables) {
 #'
 #' @description calculate_confidence_interval_mean calculates mean confidence 
 #' intervals by groups
+#' 
+#' @param dataset_n dataframe with n
+#' @param dataset_sd dataframe dataset_sd
+#' @param dataset_mean dataframe dataset_mean
 #'
 #' @return dataset_confidence_interval_mean = dataset mean confidence intervals 
 #' by group
@@ -284,31 +308,37 @@ calculate_min_max <- function(dataset, grouping_variables) {
 #'
 #'
 #'
-calculate_confidence_interval_mean <- function() {
+calculate_confidence_interval_mean <- function(dataset_n, dataset_sd, dataset_mean) {
   
   dataset_confidence_interval_mean <- cbind(dataset_n, 
                                             dataset_sd["sd"], 
                                             dataset_mean["mean"])
   
-  dataset_confidence_interval_mean <- dplyr::mutate(dataset_confidence_interval_mean, 
-                                                    sd = sd(usedvariable / sqrt(n)))
-  dataset_confidence_interval_mean <- dplyr::mutate(dataset_confidence_interval_mean,
-                                                    lower = mean - qt(1 - (alpha / 2), 
-                                                                      as.numeric(n) - 1) * sd,
-                                                    upper = mean + qt(1 - (alpha / 2), 
-                                                                      as.numeric(n) - 1) * sd
+  dataset_confidence_interval_mean <- dplyr::mutate(
+    dataset_confidence_interval_mean, 
+    sd = sd(usedvariable / sqrt(n)))
+  dataset_confidence_interval_mean <- dplyr::mutate(
+    dataset_confidence_interval_mean,
+    lower = mean - qt(1 - (alpha / 2), 
+    as.numeric(n) - 1) * sd,
+    upper = mean + qt(1 - (alpha / 2), 
+    as.numeric(n) - 1) * sd
   )   
   
-  dataset_confidence_interval_mean <- dplyr::mutate(dataset_confidence_interval_mean, 
-                                                    lower_confidence_mean = round((lower), 2))
-  dataset_confidence_interval_mean <- dplyr::mutate(dataset_confidence_interval_mean,
-                                                    upper_confidence_mean = round((upper), 2))
+  dataset_confidence_interval_mean <- dplyr::mutate(
+    dataset_confidence_interval_mean, 
+    lower_confidence_mean = round((lower), 2))
+  dataset_confidence_interval_mean <- dplyr::mutate(
+    dataset_confidence_interval_mean,
+    upper_confidence_mean = round((upper), 2))
   
   return(dataset_confidence_interval_mean)
 }
 
 ################################################################################
 ################################################################################
+# Percentile Berechnung als Einzelfunktion
+
 #' @title calculate_percentiles
 #'
 #' @description calculate_percentiles calculates percentiles by groups
@@ -403,7 +433,9 @@ calculate_percentiles <- function(dataset, grouping_variables) {
 #'
 #'
 calculate_confidence_interval_median <- function(dataset, grouping_variables) {
-  
+# bootstrap anpassen dass dataframe und nicht vector benötigt wird
+# Übergeben von Gruppenvektor  
+    
   # dataset <- dataset[complete.cases(dataset), ]
   # dataset_grouped <- dplyr::group_by_at(dataset, dplyr::vars(one_of(columns)))
   # 
@@ -462,12 +494,17 @@ calculate_confidence_interval_median <- function(dataset, grouping_variables) {
 #'
 #' @description combine_numeric_statistics combines different datasets with 
 #' statistical parameters by groups
-#'
-#' @param dataset data.frame from subset_data function
+#' 
 #' @param grouping_variables Vector with dimension or grouping variables
 #' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
 #' ("" possible)
-#'
+#' @param dataset_confidence_interval_mean 
+#' @param dataset_median 
+#' @param dataset_min_max 
+#' @param dataset_percentile_values 
+#' @param dataset_median 
+#' @param dataset_confidence_interval_median 
+#' 
 #' @return datatable_numeric = dataset all statistical parameters 
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
@@ -475,10 +512,12 @@ calculate_confidence_interval_median <- function(dataset, grouping_variables) {
 #'
 #'
 #'
-combine_numeric_statistics <- function(dataset, grouping_variables) {
-  dataset_grouped <- dplyr::group_by_at(dataset, 
-                                        dplyr::vars(one_of(grouping_variables)))
-  
+combine_numeric_statistics <- function(grouping_variables, 
+                                       dataset_confidence_interval_mean,
+                                       dataset_median, dataset_min_max, 
+                                       dataset_percentile_values, 
+                                       dataset_confidence_interval_median) {
+
   datatable_numeric <- cbind(dataset_confidence_interval_mean, 
                              dataset_median["median"],
                              dataset_min_max[c("minimum", "maximum")])
