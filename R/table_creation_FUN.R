@@ -699,7 +699,7 @@ get_protected_values <- function(dataset, cell_size) {
 #' create_table_lables(table = data)
 #'
 create_table_lables <- function(table, grouping_variables) {
-  if (all(nzchar(grouping_variables))) {
+  if ( ! "" %in% grouping_variables) {
     # TODO: Inconsistent variable naming; should be grouping_variable
     for (groupingvar in grouping_variables) {
       # TODO: variable is a global variable set in a different file, that is mutated
