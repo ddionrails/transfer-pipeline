@@ -700,7 +700,13 @@ get_protected_values <- function(dataset, cell_size) {
 #'
 create_table_lables <- function(table, grouping_variables) {
   if ( ! "" %in% grouping_variables) {
+    # TODO: Inconsistent variable naming; should be grouping_variable
     for (groupingvar in grouping_variables) {
+      # TODO: variable is a global variable set in a different file, that is mutated
+      # TODO: frequently. This makes it hard to see what the value of variable in this
+      # TODO: context. The location where variable is declared is also
+      # TODO: relatively hard to find. There seem to be no reason why `variable`
+      # TODO: is global, it should be an argument of this function. 
       variable_categories_subset <-
         subset(metadaten_variable_categories, variable %in% groupingvar)
 
@@ -738,6 +744,9 @@ table_create <-
   function(table,
            variable,
            table_type) {
+
+    # TODO: Where does `numeric` come from? `numerical` would be better and would
+    # TODO: allow us to eliminate these if statements.     
     if (table_type == "numeric") {
       path <- file.path(export_path, "numerical", variable, "/")
     }
@@ -779,6 +788,7 @@ table_create <-
 
     if (table_type == "categorical") {
       export <- paste0(path, filename, ".csv")
+      # TODO: Why is this done here and not already part of table?
       colnames(data_csv)[1] <- variable
     }
 
