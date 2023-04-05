@@ -233,7 +233,7 @@ calculate_n <- function(dataset, grouping_variables) {
 
 ################################################################################
 ################################################################################
-# Weglassen weil sd nicht in der finalen Tabelle ist und später auch erzeugt wird
+# Weglassen weil sd nicht in der finalen Tabelle ist und sp?ter auch erzeugt wird
 
 #' @title calculate_sd
 #'
@@ -413,6 +413,43 @@ calculate_percentiles <- function(dataset, grouping_variables) {
 }
 
 ################################################################################
+# subset_data_groups
+subset_data_groups <- function(dataset, grouping_variables, groupindex){
+  complete_cases_dataset <- dataset[complete.cases(dataset), ]
+  data_grouped <- dplyr::group_by_at(complete_cases_dataset, 
+                                     dplyr::vars(one_of(grouping_variables)))
+  data_grouped <- dplyr::mutate(data_grouped, group_id = 
+                                  dplyr::cur_group_id())
+  data_grouped <- dplyr::filter(data_grouped, group_id == 
+                                  groupindex)
+  
+  return(data_grouped)
+}
+
+################################################################################
+# bootstrap_median
+bootstrap_median <- function(x, weights, R = 1000, na_raus = TRUE){
+  median <- DescTools::Median(x, weights = weights, na.rm=na_raus)
+  
+  bootstrap <- function(iter){
+    index <- sample(1:length(x), length(x), replace = TRUE)
+    xx <- x[index]
+    ww <- weights[index]
+    boot_median <- DescTools::Median(xx, weights = ww, na.rm = na_raus)
+    return(boot_median)
+  }
+  
+  result <- sapply(1:R, bootstrap)
+  quant <- quantile(result, probs = c(0.025, 0.975), na.rm = na_raus)
+  lower_confidence_median <- 2 * median - quant[2]
+  upper_confidence_median <- 2 * median - quant[1]
+  out <-  c(median, lower_confidence_median, upper_confidence_median)
+  names(out) <- c("median", "lower_confidence_median", 
+                  "upper_confidence_median")
+  return(out)
+  
+}
+
 ################################################################################
 #' @title calculate_confidence_interval_median
 #'
@@ -431,62 +468,53 @@ calculate_percentiles <- function(dataset, grouping_variables) {
 #' @keywords calculate_numeric_statistics
 #'
 #'
-#'
-calculate_confidence_interval_median <- function(dataset, grouping_variables) {
-# bootstrap anpassen dass dataframe und nicht vector benötigt wird
-# Übergeben von Gruppenvektor  
+calculate_confidence_interval_median <- function(dataset, grouping_variables){
+  
+  dataset <- get_group_index(dataset = dataset,
+                             grouping_variables = grouping_variables)
+  
+  confidence_interval_median <- list()
+  dataset <- tibble::as_tibble(dataset)
+  
+  for (index in 1:max(dataset$group_id)) {
     
-  # dataset <- dataset[complete.cases(dataset), ]
-  # dataset_grouped <- dplyr::group_by_at(dataset, dplyr::vars(one_of(columns)))
-  # 
-  # ci_median_boot <- function(x, weights, R = 1000, na_raus = TRUE){
-  #   weighted_median <- DescTools::Median(x, weights = weights, na.rm=na_raus)
-  #   
-  #   bootstrap <- function(iter){
-  #     index <- sample(1:length(x), length(x), replace = TRUE)
-  #     xx <- x[index]
-  #     ww <- weights[index]
-  #     boot_median <- DescTools::Median(xx, weights = ww, na.rm = na_raus)
-  #     return(boot_median)
-  #   }
-  #   
-  #   result <- sapply(1:R, bootstrap)
-  #   quant <- quantile(result, probs = c(0.025, 0.975), na.rm = na_raus)
-  #   ci_lower <- 2 * weighted_median - quant[2]
-  #   ci_upper <- 2 * weighted_median - quant[1]
-  #   out <-  c(weighted_median, ci_lower, ci_upper)
-  #   names(out) <- c("weighted_median", "CI_lower", "CI_upper")
-  #   return(out)
-  #   
-  # }
-  # 
-  # ci_median_boot(x = dataset_grouped$usedvariable, 
-  #                weights = dataset_grouped$weight,
-  #                R = 100,
-  #                na_raus = TRUE)
+    data_grouped <- subset_data_groups(dataset = dataset,
+                                       grouping_variables = grouping_variables,
+                                       groupindex = index)
+    
+    confidence_interval_median[[index]] <- 
+      bootstrap_median(x = data_grouped$usedvariable,
+                       weights = data_grouped$weight,
+                       R = 1000,
+                       na_raus = TRUE)
+    
+  }
   
-  # Median confidence interval calculation
-  dataset_confidence_interval_median <- dataset[complete.cases(dataset), ] %>%
-    dplyr::group_by_at(dplyr::vars(one_of(grouping_variables))) %>%
-    dplyr::filter(dplyr::n() > 8)
+  dataset_confidence_interval_median <- as.data.frame(
+    do.call(rbind, confidence_interval_median))
   
-  dataset_confidence_interval_median <- dataset_confidence_interval_median %>%
-    tidyr::nest(data = -columns) %>%
-    dplyr::mutate(ci = purrr::map(
-      data,
-      ~
-        DescTools::MedianCI(.x$usedvariable,
-                            method = "exact"
-        )[2:3]
-    )) %>%
-    tidyr::unnest_wider(ci)
+  dataset_confidence_interval_median <- dplyr::mutate(
+    dataset_confidence_interval_median, 
+    group_id = dplyr::row_number())
   
-  dataset_confidence_interval_median$data <- NULL
-  colnames(dataset_confidence_interval_median) <-
-    c(columns, "lower_confidence_median", "upper_confidence_median")
+  dataset_confidence_interval_median <- 
+    merge(dataset, dataset_confidence_interval_median, 
+          by = "group_id")
+  
+  dataset_confidence_interval_median <- 
+    dataset_confidence_interval_median[c(grouping_variables, "median", 
+                                         "lower_confidence_median", 
+                                         "upper_confidence_median")]
+  
+  dataset_confidence_interval_median <- 
+    dplyr::group_by_at(dataset_confidence_interval_median, grouping_variables)
+  dataset_confidence_interval_median <- 
+    dplyr::distinct(dataset_confidence_interval_median, .keep_all = TRUE)
+  dataset_confidence_interval_median <- 
+    as.data.frame(dataset_confidence_interval_median)
   
   return(dataset_confidence_interval_median)
-}
+}  
 
 ################################################################################
 ################################################################################
