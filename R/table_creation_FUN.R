@@ -70,6 +70,9 @@ subset_data <-
       variable.values.valid <- dplyr::rename(variable.values.valid, 
                                              usedvariable = usedvariablenum)
     }
+    
+    variable.values.valid <- variable.values.valid[
+      complete.cases(variable.values.valid), ]
     return(variable.values.valid)
   }
 
@@ -415,8 +418,8 @@ calculate_percentiles <- function(dataset, grouping_variables) {
 ################################################################################
 # subset_data_groups
 subset_data_groups <- function(dataset, grouping_variables, groupindex){
-  complete_cases_dataset <- dataset[complete.cases(dataset), ]
-  data_grouped <- dplyr::group_by_at(complete_cases_dataset, 
+
+  data_grouped <- dplyr::group_by_at(dataset, 
                                      dplyr::vars(one_of(grouping_variables)))
   data_grouped <- dplyr::mutate(data_grouped, group_id = 
                                   dplyr::cur_group_id())
@@ -424,6 +427,18 @@ subset_data_groups <- function(dataset, grouping_variables, groupindex){
                                   groupindex)
   
   return(data_grouped)
+}
+
+################################################################################
+# get_group_index
+get_group_index <- function(dataset, grouping_variables){
+
+  dataset <- dplyr::group_by_at(dataset, 
+                                dplyr::vars(one_of(grouping_variables)))
+  
+  dataset <- dplyr::mutate(dataset, group_id = dplyr::cur_group_id())
+  
+  return(dataset)
 }
 
 ################################################################################
@@ -468,6 +483,8 @@ bootstrap_median <- function(x, weights, R = 1000, na_raus = TRUE){
 #' @keywords calculate_numeric_statistics
 #'
 #'
+#' Sortiert übergeben und morgen am DIW Zeiten testen
+
 calculate_confidence_interval_median <- function(dataset, grouping_variables){
   
   dataset <- get_group_index(dataset = dataset,
