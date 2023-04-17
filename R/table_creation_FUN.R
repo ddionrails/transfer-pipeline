@@ -447,9 +447,19 @@ bootstrap_median <- function(x, weights, R = 1000, na_raus = TRUE){
   median <- DescTools::Median(x, weights = weights, na.rm=na_raus)
   
   bootstrap <- function(iter){
+    x <- sort(x)
     index <- sample(1:length(x), length(x), replace = TRUE)
+    index <- sort(index)
     xx <- x[index]
     ww <- weights[index]
+    
+    sort_data <- data.frame("usedvariable" = xx, 
+                            "weight" = ww)
+    sort_data[order(sort_data$usedvariable),]
+    
+    xx <- sort_data$usedvariable
+    ww <- sort_data$weight
+    
     boot_median <- DescTools::Median(xx, weights = ww, na.rm = na_raus)
     return(boot_median)
   }
@@ -483,7 +493,7 @@ bootstrap_median <- function(x, weights, R = 1000, na_raus = TRUE){
 #' @keywords calculate_numeric_statistics
 #'
 #'
-#' Sortiert übergeben und morgen am DIW Zeiten testen
+#' Sortiert ?bergeben und morgen am DIW Zeiten testen
 
 calculate_confidence_interval_median <- function(dataset, grouping_variables){
   
@@ -612,75 +622,137 @@ combine_numeric_statistics <- function(grouping_variables,
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords calculate_categorical_statistics
 #'
-#' @examples
-#' calculate_categorical_statistics(
-#'   dataset = data,
-#'   groupvars = c("usedvariable", "year", "sex"),
-#'   alpha = 0.05
-#' )
-#'
-calculate_categorical_statistics <- function(dataset, groupvars, alpha) {
-  data_prop1 <- dataset[complete.cases(dataset), ] %>%
-    dplyr::group_by_at(dplyr::vars(one_of(groupvars))) %>%
-    dplyr::summarise(count_w = sum(weight), .groups = "drop_last")
 
-  data_prop2 <- data_prop1[complete.cases(data_prop1), ] %>%
-    dplyr::group_by(
-      eval(parse(text = groupvars[2])),
-      eval(parse(text = groupvars[3])),
-      eval(parse(text = groupvars[4]))
-    ) %>%
-    dplyr::mutate(sum_count_w = sum(count_w))
-
-  data_prop3 <- dataset[complete.cases(dataset), ] %>%
-    dplyr::group_by_at(dplyr::vars(one_of(groupvars))) %>%
-    dplyr::summarise(n = dplyr::n(), .groups = "drop_last")
-
-  data_prop4 <- data_prop3[complete.cases(data_prop3), ] %>%
-    dplyr::group_by(
-      eval(parse(text = groupvars[2])),
-      eval(parse(text = groupvars[3])),
-      eval(parse(text = groupvars[4]))
-    ) %>%
-    dplyr::mutate(n_total = sum(n))
-
-  data_prop <- cbind(
-    data_prop1, data_prop2["sum_count_w"],
-    data_prop3["n"],
-    data_prop4["n_total"]
-  )
+calculate_categorical_statistics <- function(dataset, 
+                                             grouping_variables, alpha) {
+  
+  
+  dataset_weighted_n <- calculate_categorical_Weighted_n(
+    dataset = dataset, 
+    grouping_variables = grouping_variables)
+  
+  dataset_total_Weight <- calculate_categorical_total_Weight(
+    dataset = dataset_weighted_n, 
+    grouping_variables = grouping_variables)
+  
+  dataset_unweighted_n <- calculate_categorical_unweighted_n(
+    dataset = dataset, 
+    grouping_variables = grouping_variables)
+  
+  dataset_total_n <- calculate_categorical_total_n(
+    dataset = dataset_unweighted_n, 
+    grouping_variables = grouping_variables)
+  
+  data_prop <- cbind(dataset_total_Weight, 
+                     dataset_total_n[c("n", "n_total")])
   data_prop <- data_prop[order(data_prop$year), ]
+  
+  data_prop_complete_ci <- calculate_confidence_interval_percent(
+    dataset = data_prop, 
+    grouping_variables = grouping_variables,
+    alpha = alpha)
+  
+  return(data_prop_complete_ci)
+}
 
-  data_prop_complete <- data_prop[complete.cases(data_prop1), ] %>%
-    dplyr::mutate(percent = count_w / sum_count_w, )
+################################################################################
 
+calculate_categorical_Weighted_n <-  function(dataset, grouping_variables) {
+  
+  dataset_n <- dataset[complete.cases(dataset), ]
+  dataset_n <- dplyr::group_by_at(dataset_n, 
+                                  dplyr::vars(one_of(grouping_variables)))
+  dataset_n <- dplyr::summarise(dataset_n, count_w = sum(weight), 
+                                .groups = "drop_last")
+  
+  return(dataset_n)
+}
+
+################################################################################
+calculate_categorical_total_Weight <-  function(dataset, 
+                                                grouping_variables) {
+  
+  dataset_total_Weight <- dplyr::group_by(dataset,
+                                          eval(parse(text = grouping_variables[2])),
+                                          eval(parse(text = grouping_variables[3])),
+                                          eval(parse(text = grouping_variables[4])))
+  
+  dataset_total_Weight <- dplyr::mutate(dataset_total_Weight, 
+                                        sum_count_w = sum(count_w))
+  
+  dataset_total_Weight <- dataset_total_Weight[
+    , (names(dataset_total_Weight) 
+       %in% c("usedvariable", grouping_variables, "count_w", "sum_count_w"))]
+  
+  return(dataset_total_Weight)
+}
+
+################################################################################
+calculate_categorical_unweighted_n <-  function(dataset, grouping_variables) {
+  
+  dataset_n <- dataset[complete.cases(dataset), ]
+  dataset_n <- dplyr::group_by_at(dataset_n, 
+                                  dplyr::vars(one_of(grouping_variables)))
+  dataset_n <- dplyr::summarise(dataset_n, 
+                                n = dplyr::n(), .groups = "drop_last")
+  
+  return(dataset_n)
+}
+
+################################################################################
+calculate_categorical_total_n <-  function(dataset, 
+                                           grouping_variables) {
+  
+  dataset_total_n <- dplyr::group_by(dataset,
+                                     eval(parse(text = grouping_variables[2])),
+                                     eval(parse(text = grouping_variables[3])),
+                                     eval(parse(text = grouping_variables[4])))
+  
+  dataset_total_n <- dplyr::mutate(dataset_total_n, 
+                                   n_total = sum(n))
+  
+  dataset_total_n <- dataset_total_n[
+    , (names(dataset_total_n) 
+       %in% c("usedvariable", grouping_variables, "n", "n_total"))]
+  
+  return(dataset_total_n)
+}
+
+################################################################################
+
+calculate_confidence_interval_percent <-  function(dataset, grouping_variables,
+                                                   alpha) {
+  
+  data_prop_complete <- dplyr::mutate(dataset, 
+                                      percent = count_w / sum_count_w, )
+  
   n_total <- data_prop_complete$n_total
   p_hat <- data_prop_complete$percent
   alpha <- alpha
-
+  
   margin1 <-
     qnorm(1 - alpha / 2) * sqrt(p_hat * (1 - p_hat) / n_total)
-
+  
   # Compute the CI
   lower_confidence1 <- p_hat - margin1
   upper_confidence1 <- p_hat + margin1
-
+  
   data_prop_complete_ci <- cbind(data_prop_complete,
-    lower_confidence_percent = lower_confidence1,
-    upper_confidence_percent = upper_confidence1
+                                 lower_confidence_percent = lower_confidence1,
+                                 upper_confidence_percent = upper_confidence1
   )
-
+  
   data_prop_complete_ci <- subset(
     data_prop_complete_ci,
     select = c(
-      groupvars,
+      grouping_variables,
       "n",
       "percent",
       "lower_confidence_percent",
       "upper_confidence_percent"
     )
   )
-
+  
   return(data_prop_complete_ci)
 }
 
