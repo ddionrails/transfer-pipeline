@@ -612,7 +612,7 @@ combine_numeric_statistics <- function(grouping_variables,
 #' upper_confidence = upper 95% confidence interval
 #'
 #' @param dataset data.frame from subset_data (e.g. platform_data)
-#' @param groupvars vector with all variables in the dataset
+#' @param grouping_variables vector with all variables in the dataset
 #' (e.g. c("usedvariable", "year", "sex"))
 #' @param alpha Alpha for setting the confidence interval (e.g. 0.05)
 #'
@@ -656,6 +656,21 @@ calculate_categorical_statistics <- function(dataset,
 }
 
 ################################################################################
+################################################################################
+#' @title calculate_categorical_Weighted_n 
+#'
+#' @description calculate_categorical_statistics sums all weights for the
+#' grouping variables ("count_w")
+#' 
+#' @param dataset data.frame from subset_data (e.g. platform_data)
+#' @param grouping_variables vector with all variables in the dataset
+#' (e.g. c("usedvariable", "year", "sex"))
+#'
+#' @return dataset_n = data frame with count_w
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_categorical_statistics
+#'
 
 calculate_categorical_Weighted_n <-  function(dataset, grouping_variables) {
   
@@ -669,6 +684,22 @@ calculate_categorical_Weighted_n <-  function(dataset, grouping_variables) {
 }
 
 ################################################################################
+################################################################################
+#' @title calculate_categorical_total_Weight 
+#'
+#' @description calculate_categorical_total_Weight sums total weights for the
+#' grouping variables ("sum_count_w")
+#' 
+#' @param dataset data.frame from subset_data (e.g. platform_data)
+#' @param grouping_variables vector with all variables in the dataset
+#' (e.g. c("usedvariable", "year", "sex"))
+#'
+#' @return dataset_n = data frame with sum_count_w
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_categorical_statistics
+#'
+
 calculate_categorical_total_Weight <-  function(dataset, 
                                                 grouping_variables) {
   
@@ -688,6 +719,22 @@ calculate_categorical_total_Weight <-  function(dataset,
 }
 
 ################################################################################
+################################################################################
+#' @title calculate_categorical_unweighted_n 
+#'
+#' @description calculate_categorical_total_Weight sums unweighted observations 
+#' for the grouping variables ("n")
+#' 
+#' @param dataset data.frame from subset_data (e.g. platform_data)
+#' @param grouping_variables vector with all variables in the dataset
+#' (e.g. c("usedvariable", "year", "sex"))
+#'
+#' @return dataset_n = data frame with n
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_categorical_statistics
+#'
+
 calculate_categorical_unweighted_n <-  function(dataset, grouping_variables) {
   
   dataset_n <- dataset[complete.cases(dataset), ]
@@ -700,6 +747,22 @@ calculate_categorical_unweighted_n <-  function(dataset, grouping_variables) {
 }
 
 ################################################################################
+################################################################################
+#' @title calculate_categorical_total_n 
+#'
+#' @description calculate_categorical_total_n sums total unweighted observations 
+#' for the grouping variables ("n_total")
+#' 
+#' @param dataset data.frame from subset_data (e.g. platform_data)
+#' @param grouping_variables vector with all variables in the dataset
+#' (e.g. c("usedvariable", "year", "sex"))
+#'
+#' @return dataset_n = data frame with n_total
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_categorical_statistics
+#'
+
 calculate_categorical_total_n <-  function(dataset, 
                                            grouping_variables) {
   
@@ -719,6 +782,22 @@ calculate_categorical_total_n <-  function(dataset,
 }
 
 ################################################################################
+#' @title calculate_confidence_interval_percent
+#'
+#' @description function calculate_confidence_interval_percent calculates confidence 
+#' interval for group percent values
+#'
+#' @param dataset data.frame from subset_data (e.g. platform_data)
+#' @param grouping_variables vector with all variables in the dataset
+#' (e.g. c("usedvariable", "year", "sex"))
+#' @param alpha Alpha for setting the confidence interval (e.g. 0.05)
+#'
+#' @return data_prop_complete_ci = data set with n, percent, lower_confidence,
+#' upper_confidence
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#' @keywords calculate_categorical_statistics
+#'
 
 calculate_confidence_interval_percent <-  function(dataset, grouping_variables,
                                                    alpha) {
