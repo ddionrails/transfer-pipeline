@@ -130,9 +130,37 @@ calculate_numeric_statistics <- function(dataset,
     dataset_n = dataset_n, dataset_sd = dataset_sd, dataset_mean = dataset_mean)
   
   # Calculate percentiles 
+  dataset_percentile_10 <- 
+    calculate_percentile(dataset = dataset, 
+                          grouping_variables = columns, 
+                          percentile = 10)
+  
+  dataset_percentile_25 <- 
+    calculate_percentile(dataset = dataset, 
+                          grouping_variables = columns, 
+                          percentile = 25)
+  
+  dataset_percentile_75 <- 
+    calculate_percentile(dataset = dataset, 
+                          grouping_variables = columns, 
+                          percentile = 75)
+  
+  dataset_percentile_90 <- 
+    calculate_percentile(dataset = dataset, 
+                          grouping_variables = columns, 
+                          percentile = 90)
+  
+  dataset_percentile_99 <- 
+    calculate_percentile(dataset = dataset, 
+                          grouping_variables = columns, 
+                          percentile = 99)
+  
+  percentile_list <- list(percentiles_10, percentiles_25, percentiles_75,
+                          percentiles_90, percentiles_99)
+  
   dataset_percentile_values <- 
-    calculate_percentiles(dataset = dataset, 
-                          grouping_variables = columns)
+    Reduce(function(x, y) merge(x, y, by = columns, all=TRUE), 
+           percentile_list)
   
   # Calculate confidence interval median
   dataset_confidence_interval_median <- calculate_confidence_interval_median(
@@ -342,14 +370,15 @@ calculate_confidence_interval_mean <- function(dataset_n, dataset_sd, dataset_me
 ################################################################################
 # Percentile Berechnung als Einzelfunktion
 
-#' @title calculate_percentiles
+#' @title calculate_percentile
 #'
-#' @description calculate_percentiles calculates percentiles by groups
+#' @description calculate_percentile calculates percentiles by groups
 #'
 #' @param dataset data.frame from subset_data function
 #' @param grouping_variables Vector with dimension or grouping variables
 #' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
 #' ("" possible)
+#' @param percentile numeric what percetile is calculated (10,25,75,90,99)
 #'
 #' @return dataset_percentile_values = dataset with percentiles by group
 #'
@@ -358,67 +387,39 @@ calculate_confidence_interval_mean <- function(dataset_n, dataset_sd, dataset_me
 #'
 #'
 #'
-calculate_percentiles <- function(dataset, grouping_variables) {
+calculate_percentile <- function(dataset, 
+                                 grouping_variables,
+                                 percentile) {
+  
   dataset <- dataset[complete.cases(dataset), ]
   dataset_grouped <- dplyr::group_by_at(dataset, 
                                         dplyr::vars(one_of(grouping_variables)))
   
+  percentile_decimal = percentile/100
+  
   dataset_percentile_values <- 
     dplyr::summarise(dataset_grouped,
-                     percentile_10 = round(
+                     percentile = round(
                        Hmisc::wtd.quantile(
                          usedvariable,
                          weights = weight,
-                         probs = .1,
+                         probs = percentile_decimal,
                          na.rm = TRUE
                        ),
                        2
-                     ),
-                     percentile_25 = round(
-                       Hmisc::wtd.quantile(
-                         usedvariable,
-                         weights = weight,
-                         probs = .25,
-                         na.rm = TRUE
-                       ),
-                       2
-                     ),
-                     percentile_75 = round(
-                       Hmisc::wtd.quantile(
-                         usedvariable,
-                         weights = weight,
-                         probs = .75,
-                         na.rm = TRUE
-                       ),
-                       2
-                     ),
-                     percentile_90 = round(
-                       Hmisc::wtd.quantile(
-                         usedvariable,
-                         weights = weight,
-                         probs = .90,
-                         na.rm = TRUE
-                       ),
-                       2
-                     ),
-                     percentile_99 = round(
-                       Hmisc::wtd.quantile(
-                         usedvariable,
-                         weights = weight,
-                         probs = .99,
-                         na.rm = TRUE
-                       ),
-                       2
-                     ),
-                     .groups = "drop"
+                     ),.groups = "drop"
     )
+  
+  colnames(dataset_percentile_values)[colnames(dataset_percentile_values) 
+                                      == "percentile"] = paste0("percentile_", 
+                                                                percentile)
   return(dataset_percentile_values)
 }
 
 ################################################################################
 # subset_data_groups
 subset_data_groups <- function(dataset, grouping_variables, groupindex){
-
+  
   data_grouped <- dplyr::group_by_at(dataset, 
                                      dplyr::vars(one_of(grouping_variables)))
   data_grouped <- dplyr::mutate(data_grouped, group_id = 
@@ -432,7 +433,7 @@ subset_data_groups <- function(dataset, grouping_variables, groupindex){
 ################################################################################
 # get_group_index
 get_group_index <- function(dataset, grouping_variables){
-
+  
   dataset <- dplyr::group_by_at(dataset, 
                                 dplyr::vars(one_of(grouping_variables)))
   
@@ -441,36 +442,31 @@ get_group_index <- function(dataset, grouping_variables){
   return(dataset)
 }
 
+
+
 ################################################################################
 # bootstrap_median
 bootstrap_median <- function(x, weights, R = 1000, na_raus = TRUE){
   median <- DescTools::Median(x, weights = weights, na.rm=na_raus)
   
-  bootstrap <- function(iter){
-    x <- sort(x)
-    index <- sample(1:length(x), length(x), replace = TRUE)
-    index <- sort(index)
-    xx <- x[index]
-    ww <- weights[index]
+  bootstrap <- function(){
+    index <- sample(length(x), length(x), replace=TRUE)
     
-    sort_data <- data.frame("usedvariable" = xx, 
-                            "weight" = ww)
-    sort_data[order(sort_data$usedvariable),]
-    
-    xx <- sort_data$usedvariable
-    ww <- sort_data$weight
-    
-    boot_median <- DescTools::Median(xx, weights = ww, na.rm = na_raus)
-    return(boot_median)
+    return(DescTools::Median(x[index], weights = weights[index], na.rm = na_raus))
   }
   
-  result <- sapply(1:R, bootstrap)
+  result <- foreach::foreach(1:1000, .combine=c ) %dopar% {
+    return(bootstrap())
+  }
+  
   quant <- quantile(result, probs = c(0.025, 0.975), na.rm = na_raus)
   lower_confidence_median <- 2 * median - quant[2]
   upper_confidence_median <- 2 * median - quant[1]
   out <-  c(median, lower_confidence_median, upper_confidence_median)
   names(out) <- c("median", "lower_confidence_median", 
                   "upper_confidence_median")
+  
+  
   return(out)
   
 }
@@ -1285,7 +1281,7 @@ print_numeric_statistics <- function() {
   data <- subset_data(
     variable = variable,
     grouping_variables = grouping_variables,
-    value_label = FALSE
+    use_value_labels = FALSE
   )
   
   table_numeric <- calculate_numeric_statistics(
