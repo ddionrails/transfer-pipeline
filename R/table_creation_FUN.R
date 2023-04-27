@@ -130,6 +130,7 @@ calculate_numeric_statistics <- function(dataset,
     dataset_n = dataset_n, dataset_sd = dataset_sd, dataset_mean = dataset_mean)
   
   # Calculate percentiles 
+  # Als Vector die percentile übergeben
   dataset_percentile_10 <- 
     calculate_percentile(dataset = dataset, 
                           grouping_variables = columns, 
@@ -387,6 +388,10 @@ calculate_confidence_interval_mean <- function(dataset_n, dataset_sd, dataset_me
 #'
 #'
 #'
+#'
+## probs als vector übergeben 
+## percentile Vector c(10,25,75,90,99)
+
 calculate_percentile <- function(dataset, 
                                  grouping_variables,
                                  percentile) {
@@ -619,6 +624,7 @@ combine_numeric_statistics <- function(grouping_variables,
 #' @keywords calculate_categorical_statistics
 #'
 
+# Am Ende muss erste Spalte den Variablennamen haben, warum ist das nicht so?
 calculate_categorical_statistics <- function(dataset, 
                                              grouping_variables, alpha) {
   
@@ -971,6 +977,8 @@ create_table_lables <- function(table, grouping_variables) {
 #' @keywords data_csv
 #'
 #'
+
+# if Bedingung auflösen indem table_type korrigiert wird
 table_create <-
   function(table,
            variable,
@@ -1002,16 +1010,16 @@ table_create <-
     data_csv <- as.data.frame(apply(
       data_csv, 2,
       function(x) {
-        gsub("^\\[[0-9]*]", "", x)
+        gsub("^\\[[0-9]*]\\s*", "", x)
       }
     ))
-
-    data_csv <- as.data.frame(apply(
-      data_csv, 2,
-      function(x) {
-        gsub("^\\s+", "", x)
-      }
-    ))
+# Prüfen ob das nicht mehr nötig ist
+    # data_csv <- as.data.frame(apply(
+    #   data_csv, 2,
+    #   function(x) {
+    #     gsub("^\\s+", "", x)
+    #   }
+    # ))
 
     if (table_type == "numeric") {
       export <- paste0(path, filename, ".csv")

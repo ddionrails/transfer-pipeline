@@ -50,6 +50,12 @@ numeric_statistics_column_names <- c(
   "minimum",
   "maximum"
 )
+
+# Wo sollte man das starten und sollte man das beenden?
+# Ausspielen wie viele Cores
+# Cores wieder freilassen
+# Für alle Variablen mal ausprobieren
+doParallel::registerDoParallel(8)
 ################################################################################
 
   metadaten_variables <-
@@ -144,7 +150,9 @@ numeric_statistics_column_names <- c(
 
   ##############################################################################
   # Create aggregated data tables
+  # 
   # in Vergleich setzen wenn statistical_type != numeric, categorical, ordinal
+  # Metadaten anpassen zu numerical
   
   for (var in 1:length(metadaten_variables$variable)) {
     # create tables for variables on numeric, categorical or ordinal level
