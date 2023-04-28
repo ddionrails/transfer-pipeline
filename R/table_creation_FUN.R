@@ -130,38 +130,11 @@ calculate_numeric_statistics <- function(dataset,
     dataset_n = dataset_n, dataset_sd = dataset_sd, dataset_mean = dataset_mean)
   
   # Calculate percentiles 
-  # Als Vector die percentile übergeben
-  dataset_percentile_10 <- 
-    calculate_percentile(dataset = dataset, 
-                          grouping_variables = columns, 
-                          percentile = 10)
+  percentile <- c(10,25,75,90,99)
   
-  dataset_percentile_25 <- 
-    calculate_percentile(dataset = dataset, 
-                          grouping_variables = columns, 
-                          percentile = 25)
-  
-  dataset_percentile_75 <- 
-    calculate_percentile(dataset = dataset, 
-                          grouping_variables = columns, 
-                          percentile = 75)
-  
-  dataset_percentile_90 <- 
-    calculate_percentile(dataset = dataset, 
-                          grouping_variables = columns, 
-                          percentile = 90)
-  
-  dataset_percentile_99 <- 
-    calculate_percentile(dataset = dataset, 
-                          grouping_variables = columns, 
-                          percentile = 99)
-  
-  percentile_list <- list(percentiles_10, percentiles_25, percentiles_75,
-                          percentiles_90, percentiles_99)
-  
-  dataset_percentile_values <- 
-    Reduce(function(x, y) merge(x, y, by = columns, all=TRUE), 
-           percentile_list)
+  calculate_percentile(dataset = dataset,
+                       grouping_variables = grouping_variables,
+                       percentile = percentile)
   
   # Calculate confidence interval median
   dataset_confidence_interval_median <- calculate_confidence_interval_median(
@@ -389,8 +362,6 @@ calculate_confidence_interval_mean <- function(dataset_n, dataset_sd, dataset_me
 #'
 #'
 #'
-## probs als vector übergeben 
-## percentile Vector c(10,25,75,90,99)
 
 calculate_percentile <- function(dataset, 
                                  grouping_variables,
@@ -400,26 +371,31 @@ calculate_percentile <- function(dataset,
   dataset_grouped <- dplyr::group_by_at(dataset, 
                                         dplyr::vars(one_of(grouping_variables)))
   
+  calculate_single_percentile = function(percentile_number) {
+    dplyr::summarize(dataset_grouped, 
+                     value = 
+                       Hmisc::wtd.quantile(
+                         usedvariable, 
+                         weights = weight, 
+                         probs = percentile_number, 
+                         na.rm = TRUE)) %>%
+      mutate(percentile = percentile_number)
+  }
+  
   percentile_decimal = percentile/100
   
   dataset_percentile_values <- 
-    dplyr::summarise(dataset_grouped,
-                     percentile = round(
-                       Hmisc::wtd.quantile(
-                         usedvariable,
-                         weights = weight,
-                         probs = percentile_decimal,
-                         na.rm = TRUE
-                       ),
-                       2
-                     ),.groups = "drop"
-    )
+    purrr::map_df(percentile_decimal, calculate_single_percentile) 
   
-  colnames(dataset_percentile_values)[colnames(dataset_percentile_values) 
-                                      == "percentile"] = paste0("percentile_", 
-                                                                percentile)
+  dataset_percentile_values <- 
+    dplyr::mutate(dataset_percentile_values, percentile = percentile*100)
+  
+  dataset_percentile_values <- 
+    tidyr::spread(dataset_percentile_values, percentile, value, sep = "_")
+  
   return(dataset_percentile_values)
 }
+
 
 ################################################################################
 # subset_data_groups
