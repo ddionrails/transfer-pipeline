@@ -110,9 +110,6 @@ calculate_numeric_statistics <- function(dataset,
   dataset_mean <- calculate_weighted_mean(dataset = dataset,
                                           grouping_variables = columns)
   
-  # Calculate weighted median
-  dataset_median <- calculate_weighted_median(dataset = dataset, 
-                                              grouping_variables = columns)
   # Calculate number of observations n
   dataset_n <- calculate_n(dataset = dataset, 
                            grouping_variables = columns)
@@ -132,22 +129,22 @@ calculate_numeric_statistics <- function(dataset,
   # Calculate percentiles 
   percentile <- c(10,25,75,90,99)
   
-  calculate_percentile(dataset = dataset,
-                       grouping_variables = grouping_variables,
-                       percentile = percentile)
+  dataset_percentile_values <- calculate_percentile(
+    dataset = dataset,
+    grouping_variables = columns,
+    percentile = percentile)
   
   # Calculate confidence interval median
   dataset_confidence_interval_median <- calculate_confidence_interval_median(
     dataset = dataset, 
     grouping_variables = columns)
-  
-  datatable_numeric <- 
+
+  datatable_numeric <-
     combine_numeric_statistics(
-      grouping_variables = columns, 
+      grouping_variables = columns,
       dataset_confidence_interval_mean = dataset_confidence_interval_mean,
-      dataset_median = dataset_median, 
-      dataset_min_max = dataset_min_max, 
-      dataset_percentile_values = dataset_percentile_values, 
+      dataset_min_max = dataset_min_max,
+      dataset_percentile_values = dataset_percentile_values,
       dataset_confidence_interval_median = dataset_confidence_interval_median)
   
   return(datatable_numeric)
@@ -470,7 +467,6 @@ bootstrap_median <- function(x, weights, R = 1000, na_raus = TRUE){
 #' @keywords calculate_numeric_statistics
 #'
 #'
-#' Sortiert ?bergeben und morgen am DIW Zeiten testen
 
 calculate_confidence_interval_median <- function(dataset, grouping_variables){
   
@@ -531,7 +527,6 @@ calculate_confidence_interval_median <- function(dataset, grouping_variables){
 #' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
 #' ("" possible)
 #' @param dataset_confidence_interval_mean 
-#' @param dataset_median 
 #' @param dataset_min_max 
 #' @param dataset_percentile_values 
 #' @param dataset_median 
@@ -546,12 +541,11 @@ calculate_confidence_interval_median <- function(dataset, grouping_variables){
 #'
 combine_numeric_statistics <- function(grouping_variables, 
                                        dataset_confidence_interval_mean,
-                                       dataset_median, dataset_min_max, 
+                                       dataset_min_max, 
                                        dataset_percentile_values, 
                                        dataset_confidence_interval_median) {
 
-  datatable_numeric <- cbind(dataset_confidence_interval_mean, 
-                             dataset_median["median"],
+  datatable_numeric <- cbind(dataset_confidence_interval_mean,
                              dataset_min_max[c("minimum", "maximum")])
   
   datatable_numeric <- dplyr::distinct(datatable_numeric, 
@@ -830,63 +824,30 @@ calculate_confidence_interval_percent <-  function(dataset, grouping_variables,
 #' @keywords get_protected_values
 #'
 #'
-get_protected_values <- function(dataset, cell_size) {
-  if (("mean" %in% colnames(dataset)) == TRUE) {
+get_protected_values <- function(dataset, 
+                                 cell_size,
+                                 table_type) {
+  
+  if (table_type == "numeric") {
     save.data <- as.data.frame(apply(
-      dataset[c(
-        "mean",
-        "median",
-        "n",
-        "percentile_10",
-        "percentile_25",
-        "percentile_75",
-        "percentile_90",
-        "percentile_99",
-        "lower_confidence_mean",
-        "upper_confidence_mean",
-        "minimum",
-        "maximum",
-        "lower_confidence_median",
-        "upper_confidence_median"
-      )], 2,
+      dataset[numeric_statistics_column_names], 2,
       function(x) {
         ifelse(dataset["n"] < cell_size, NA, x)
       }
     ))
     data <- dataset
-    data[c(
-      "mean",
-      "median",
-      "n",
-      "percentile_10",
-      "percentile_25",
-      "percentile_75",
-      "percentile_90",
-      "percentile_99",
-      "lower_confidence_mean",
-      "upper_confidence_mean",
-      "minimum",
-      "maximum",
-      "lower_confidence_median",
-      "upper_confidence_median"
-    )] <- NULL
+    data[numeric_statistics_column_names] <- NULL
   }
-
-  if (("percent" %in% colnames(dataset)) == TRUE) {
+  
+  if (table_type == "categorical")  {
     save.data <- as.data.frame(apply(
-      dataset[c(
-        "percent",
-        "lower_confidence_percent", "upper_confidence_percent"
-      )], 2,
+      dataset[categorical_statistics_column_names], 2,
       function(x) {
         ifelse(dataset["n"] < cell_size, NA, x)
       }
     ))
     data <- dataset
-    data[c(
-      "percent",
-      "lower_confidence_percent", "upper_confidence_percent"
-    )] <- NULL
+    data[categorical_statistics_column_names] <- NULL
   }
   protected.data <- cbind(data, save.data)
   return(protected.data)
@@ -1282,7 +1243,8 @@ print_numeric_statistics <- function() {
   
   protected_table <- get_protected_values(
     dataset = table_numeric,
-    cell_size = cell_minimum
+    cell_size = cell_minimum, 
+    table_type = "numeric"
   )
   
   protected_table <- expand_table(
@@ -1337,7 +1299,8 @@ prop.data <-
 
 protected_table <-
   get_protected_values(dataset = prop.data, 
-                       cell_size = cell_minimum)
+                       cell_size = cell_minimum, 
+                       table_type = "categorical")
 
 protected_table <- expand_table(
   table = protected_table,

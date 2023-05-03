@@ -51,6 +51,12 @@ numeric_statistics_column_names <- c(
   "maximum"
 )
 
+categorical_statistics_column_names <- c(
+  "percent",
+  "lower_confidence_percent", 
+  "upper_confidence_percent"
+)
+
 # Wo sollte man das starten und sollte man das beenden?
 # Ausspielen wie viele Cores
 # Cores wieder freilassen
