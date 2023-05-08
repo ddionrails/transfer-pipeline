@@ -369,14 +369,17 @@ calculate_percentile <- function(dataset,
                                         dplyr::vars(one_of(grouping_variables)))
   
   calculate_single_percentile = function(percentile_number) {
-    dplyr::summarize(dataset_grouped, 
-                     value = 
-                       Hmisc::wtd.quantile(
-                         usedvariable, 
-                         weights = weight, 
-                         probs = percentile_number, 
-                         na.rm = TRUE)) %>%
-      mutate(percentile = percentile_number)
+    dataset_with_percentiles <- dplyr::summarize(dataset_grouped, 
+                                                 value = Hmisc::wtd.quantile(
+                                                 usedvariable, 
+                                                 weights = weight, 
+                                                 probs = percentile_number, 
+                                                 na.rm = TRUE)) 
+    
+    dataset_with_percentiles <-dplyr::mutate(dataset_with_percentiles, 
+                                             percentile = percentile_number)
+    
+    return(dataset_with_percentiles)
   }
   
   percentile_decimal = percentile/100
@@ -828,7 +831,7 @@ get_protected_values <- function(dataset,
                                  cell_size,
                                  table_type) {
   
-  if (table_type == "numeric") {
+  if (table_type == "numerical") {
     save.data <- as.data.frame(apply(
       dataset[numeric_statistics_column_names], 2,
       function(x) {
@@ -874,28 +877,23 @@ get_protected_values <- function(dataset,
 #'
 create_table_lables <- function(table, grouping_variables) {
   if ( ! "" %in% grouping_variables) {
-    # TODO: Inconsistent variable naming; should be grouping_variable
-    for (groupingvar in grouping_variables) {
-      # TODO: variable is a global variable set in a different file, that is mutated
-      # TODO: frequently. This makes it hard to see what the value of variable in this
-      # TODO: context. The location where variable is declared is also
-      # TODO: relatively hard to find. There seem to be no reason why `variable`
-      # TODO: is global, it should be an argument of this function. 
+    for (grouping_variable in grouping_variables) {
       variable_categories_subset <-
-        subset(metadaten_variable_categories, variable %in% groupingvar)
-
+        subset(metadaten_variable_categories, variable == grouping_variable)
+      
       valuelabel_list <- split(
         variable_categories_subset$label_de,
         variable_categories_subset$value
       )
-
-      table[, groupingvar] <- gsubfn::gsubfn(
+      
+      table[, grouping_variable] <- gsubfn::gsubfn(
         ".", valuelabel_list,
-        as.character(table[, groupingvar])
+        as.character(table[, grouping_variable])
       )
     }
   }
   return(table)
+}
 }
 
 ################################################################################
@@ -906,7 +904,7 @@ create_table_lables <- function(table, grouping_variables) {
 #' @param table produced data.frame from get_protected_values
 #' (e.g. platform_data)
 #' @param variable name analysis variable from raw data as string ("pglabnet")
-#' @param table_type Type of table to be processed ("mean" or "prop")
+#' @param table_type Type of table to be processed ("numerical" or "categorical")
 #'
 #' @return data_csv = exportierte Tabelle als csv
 #'
@@ -915,59 +913,36 @@ create_table_lables <- function(table, grouping_variables) {
 #'
 #'
 
-# if Bedingung auflösen indem table_type korrigiert wird
 table_create <-
   function(table,
            variable,
            table_type) {
-
-    # TODO: Where does `numeric` come from? `numerical` would be better and would
-    # TODO: allow us to eliminate these if statements.     
-    if (table_type == "numeric") {
-      path <- file.path(export_path, "numerical", variable, "/")
-    }
-
-    if (table_type == "categorical") {
-      path <- file.path(export_path, "categorical", variable, "/")
-    }
-
+    
+    
+    path <- file.path(export_path, table_type, variable, "/")
+    
     filename_elements <- c(variable, "year", grouping_variables)
     filename_elements <- filename_elements[filename_elements != ""]
-
+    
     filename <- paste0(
       filename_elements,
       collapse = "_"
     )
-
+    
     dir.create(path, showWarnings = FALSE)
     data_csv <- sapply(table, as.character)
     data_csv[is.na(data_csv)] <- ""
     data_csv <- as.data.frame(data_csv)
-
+    
     data_csv <- as.data.frame(apply(
       data_csv, 2,
       function(x) {
         gsub("^\\[[0-9]*]\\s*", "", x)
       }
     ))
-# Prüfen ob das nicht mehr nötig ist
-    # data_csv <- as.data.frame(apply(
-    #   data_csv, 2,
-    #   function(x) {
-    #     gsub("^\\s+", "", x)
-    #   }
-    # ))
-
-    if (table_type == "numeric") {
-      export <- paste0(path, filename, ".csv")
-    }
-
-    if (table_type == "categorical") {
-      export <- paste0(path, filename, ".csv")
-      # TODO: Why is this done here and not already part of table?
-      colnames(data_csv)[1] <- variable
-    }
-
+    
+    export <- paste0(path, filename, ".csv")
+    
     write.csv(
       data_csv,
       export,
@@ -975,8 +950,6 @@ table_create <-
       quote = TRUE,
       fileEncoding = "UTF-8"
     )
-    # return weglassen
-    return(data_csv)
   }
 
 ################################################################################
@@ -1021,7 +994,7 @@ expand_table <-
       value_label_grouping2 <- ""
     }
     
-    if (table_type == "numeric") {
+    if (table_type == "numerical") {
       expand.table <- expand.grid(
         year = seq(start_year, end_year),
         grouping_variable_one = value_label_grouping1,
@@ -1078,7 +1051,7 @@ json_create <-
         metadaten_variables$variable != "syear"
     ]
 
-    if (table_type == "numeric") {
+    if (table_type == "numerical") {
       statistics <- c(
         "mean", "lower_confidence_mean", "upper_confidence_mean", 
         "minimum", "maximum",
@@ -1244,24 +1217,24 @@ print_numeric_statistics <- function() {
   protected_table <- get_protected_values(
     dataset = table_numeric,
     cell_size = cell_minimum, 
-    table_type = "numeric"
+    table_type = "numerical"
   )
   
   protected_table <- expand_table(
     table = protected_table,
-    table_type = "numeric"
+    table_type = "numerical"
   )
   
   table_create(
     table = protected_table,
     variable = variable,
-    table_type = "numeric"
+    table_type = "numerical"
   )
   
   json_create(
     table = protected_table,
     variable = variable,
-    table_type = "numeric"
+    table_type = "numerical"
   )
 }
 
@@ -1307,7 +1280,12 @@ protected_table <- expand_table(
   table_type = "categorical"
 )
 
-data_csv <- table_create(
+# war vorher bei table_create
+# nochmal checken
+# usedvariable muss umbenannt werden zu Variablennamen WO am besten?
+colnames(protected_table)[1] <- variable
+
+table_create(
   table = protected_table,
   variable = variable,
   table_type = "categorical"

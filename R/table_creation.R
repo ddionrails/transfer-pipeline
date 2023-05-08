@@ -157,12 +157,12 @@ doParallel::registerDoParallel(8)
   ##############################################################################
   # Create aggregated data tables
   # 
-  # in Vergleich setzen wenn statistical_type != numeric, categorical, ordinal
+  # in Vergleich setzen wenn statistical_type != numerical, categorical, ordinal
   # Metadaten anpassen zu numerical
   
   for (var in 1:length(metadaten_variables$variable)) {
     # create tables for variables on numeric, categorical or ordinal level
-    if (any(is.element(c('numeric', 'categorical', 'ordinal'), 
+    if (any(is.element(c('numerical', 'categorical', 'ordinal'), 
                    metadaten_variables$statistical_type[var]))) {
       variable <- metadaten_variables$variable[var]
 
@@ -170,14 +170,14 @@ doParallel::registerDoParallel(8)
       for (i in seq_along(grouping_variables_list)) {
         grouping_variables <- grouping_variables_list[[i]]
 
-        if (metadaten_variables$statistical_type[var] == "numeric") {
+        if (metadaten_variables$statistical_type[var] == "numerical") {
           print(
             paste(
               "The variable",
               variable,
               "is processed with grouping year,",
               paste(grouping_variables_list[[i]], collapse = ","),
-              "as numeric table"
+              "as numerical table"
             )
           )
         
