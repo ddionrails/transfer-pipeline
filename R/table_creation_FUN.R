@@ -867,34 +867,33 @@ get_protected_values <- function(dataset,
 #' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
 #' ("" possible)
 #'
-#' @return data_with_label = data set with value labels
+#' @return table = data set with value labels
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords data_with_label
-#'
-#' @examples
-#' create_table_lables(table = data)
 #'
 create_table_lables <- function(table, grouping_variables) {
   if ( ! "" %in% grouping_variables) {
     for (grouping_variable in grouping_variables) {
       variable_categories_subset <-
-        subset(metadaten_variable_categories, variable == grouping_variable)
+        subset(metadaten_variable_categories, 
+               variable == grouping_variable,
+               select = c(variable, value, label_de))
       
-      valuelabel_list <- split(
-        variable_categories_subset$label_de,
-        variable_categories_subset$value
-      )
+      names(variable_categories_subset)[
+        names(variable_categories_subset) == "value"] <- grouping_variable
       
-      table[, grouping_variable] <- gsubfn::gsubfn(
-        ".", valuelabel_list,
-        as.character(table[, grouping_variable])
-      )
+      table <- merge(table, 
+                     variable_categories_subset[c(grouping_variable,"label_de")], 
+                     by = grouping_variable)
+      
+      table[grouping_variable] <- table["label_de"]
+      table["label_de"] <- NULL
+      
     }
   }
   return(table)
 }
-}
+
 
 ################################################################################
 #' @title table_create Export of mean value or proportion value tables
@@ -909,8 +908,6 @@ create_table_lables <- function(table, grouping_variables) {
 #' @return data_csv = exportierte Tabelle als csv
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords data_csv
-#'
 #'
 
 table_create <-
@@ -968,55 +965,47 @@ table_create <-
 #'
 expand_table <-
   function(table,
-           table_type) {
-
+           grouping_variables) {
+    
     start_year <- max(table$year)
     end_year <- min(table$year)
     
-    columns <- c("year", grouping_variables)
-    columns <- c(columns, rep("", 5))
+    grouping_variables <- c(grouping_variables, rep("", 2))
+    columns <-c("usedvariable", "year", grouping_variables)
     
-    variable_categories_subset <-
-      subset(metadaten_variable_categories, variable %in% grouping_variables)
+    value_label_usedvariable <- 
+      unique(table[["usedvariable"]])
     
-    value_label_grouping1 <- variable_categories_subset$label_de[which(
-      variable_categories_subset$variable == columns[[2]]
-    )]
+    value_label_grouping1 <- 
+      unique(table[[grouping_variables[[1]]]])
     
-    value_label_grouping2 <- variable_categories_subset$label_de[which(
-      variable_categories_subset$variable == columns[[3]]
-    )]
+    value_label_grouping2 <- 
+      unique(table[[grouping_variables[[2]]]])
     
-    if (identical(value_label_grouping1, character(0))) {
+    if (is.null(value_label_grouping1)) {
       value_label_grouping1 <- ""
     }
-    if (identical(value_label_grouping2, character(0))) {
+    
+    if (is.null(value_label_grouping2)) {
       value_label_grouping2 <- ""
     }
     
-    if (table_type == "numerical") {
-      expand.table <- expand.grid(
-        year = seq(start_year, end_year),
-        grouping_variable_one = value_label_grouping1,
-        grouping_variable_two = value_label_grouping2
-      )
-      columns <- c("year", grouping_variables)
+    if (is.null(value_label_usedvariable)) {
+      value_label_usedvariable <- ""
     }
     
-    if (table_type == "categorical") {
-      expand.table <- expand.grid(
-        usedvariable = unique(dplyr::pull(table, usedvariable)),
-        year = seq(start_year, end_year),
-        grouping_variable_one = value_label_grouping1,
-        grouping_variable_two = value_label_grouping2
-      )
-      columns <-c("usedvariable", "year", grouping_variables)
-    } 
+    expand_table_parameters <- 
+      list(usedvariable = value_label_usedvariable,
+           year = seq(start_year, end_year),
+           grouping_variable_one = value_label_grouping1,
+           grouping_variable_two = value_label_grouping2)
+    
+    expand.table <- expand.grid(expand_table_parameters)
     
     columns <- columns[columns != ""]
     names(expand.table) <- columns
-    expand.table <- expand.table %>% 
-      purrr::discard(~all(is.na(.) | . ==""))
+    expand.table <- purrr::discard(expand.table, 
+                                   ~all(is.na(.) | . ==""))
     final <- merge(table, expand.table, all.y = TRUE)
     final <- final[with(final, order(year)), ] 
     return(final)
@@ -1046,35 +1035,19 @@ json_create <-
   function(table,
            variable,
            table_type) {
+    
     all_grouping_variables <- metadaten_variables$variable[
-      metadaten_variables$meantable == "demo" &
-        metadaten_variables$variable != "syear"
+      metadaten_variables$statistical_type == "dimension" &
+        metadaten_variables$variable  != "syear"
     ]
-
-    if (table_type == "numerical") {
-      statistics <- c(
-        "mean", "lower_confidence_mean", "upper_confidence_mean", 
-        "minimum", "maximum",
-        "median", "lower_confidence_median", "lower_confidence_median",
-        "percentile_10", "percentile_25", "percentile_75", 
-        "percentile_90", "percentile_99"
-      )
-      level <- "numerical"
-      exportfile <- paste0(export_path, "/numerical/", variable, "/meta.json")
-    }
-
-    if (table_type == "categorical") {
-      statistics <- c("percent", "lower_confidence_percent", 
-                      "upper_confidence_percent")
-      level <- "categorical"
-      exportfile <- paste0(export_path, "/categorical/", variable, "/meta.json")
-    }
-
+    
+    exportfile <- paste0(export_path, table_type, "/",
+                         variable, "/meta.json")
+    
     grouping_information <- list(NULL)
-    i <- 0
+    
     for (groupingvar in all_grouping_variables) {
-      i <- i + 1
-      grouping_information[[i]] <-
+      grouping_information[[groupingvar]] <-
         list(
           "variable" = metadaten_variables$variable[
             metadaten_variables$variable == groupingvar
@@ -1089,6 +1062,15 @@ json_create <-
           )))
         )
     }
+    
+    if (table_type == "numerical") {
+      statistics <- numeric_statistics_column_names
+    }
+    
+    if (table_type == "categorical") {
+      statistics <- categorical_statistics_column_names
+    }
+    
     json_output <- jsonlite::toJSON(
       x = list(
         "title" = metadaten_variables$label_de[
@@ -1104,7 +1086,7 @@ json_create <-
         ],
         "start_year" = min(table$year),
         "end_year" = max(table$year),
-        "types" = level
+        "types" = table_type
       ),
       encoding = "UTF-8",
       pretty = TRUE,
@@ -1222,7 +1204,7 @@ print_numeric_statistics <- function() {
   
   protected_table <- expand_table(
     table = protected_table,
-    table_type = "numerical"
+    grouping_variables = grouping_variables
   )
   
   table_create(
@@ -1277,7 +1259,7 @@ protected_table <-
 
 protected_table <- expand_table(
   table = protected_table,
-  table_type = "categorical"
+  grouping_variables = grouping_variables
 )
 
 # war vorher bei table_create
