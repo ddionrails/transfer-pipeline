@@ -60,8 +60,9 @@ categorical_statistics_column_names <- c(
 # Wo sollte man das starten und sollte man das beenden?
 # Ausspielen wie viele Cores
 # Cores wieder freilassen
-# Für alle Variablen mal ausprobieren
+# F?r alle Variablen mal ausprobieren
 doParallel::registerDoParallel(8)
+options(dplyr.summarise.inform = FALSE)
 ################################################################################
 
   metadaten_variables <-
@@ -159,7 +160,7 @@ doParallel::registerDoParallel(8)
   # 
   # in Vergleich setzen wenn statistical_type != numerical, categorical, ordinal
   # Metadaten anpassen zu numerical
-  
+ start <- Sys.time()
   for (var in 1:length(metadaten_variables$variable)) {
     # create tables for variables on numeric, categorical or ordinal level
     if (any(is.element(c('numerical', 'categorical', 'ordinal'), 
@@ -168,8 +169,9 @@ doParallel::registerDoParallel(8)
 
     # create aggregated tables for all possible dimension combinations  
       for (i in seq_along(grouping_variables_list)) {
+        
         grouping_variables <- grouping_variables_list[[i]]
-
+        start <- Sys.time()
         if (metadaten_variables$statistical_type[var] == "numerical") {
           print(
             paste(
@@ -180,9 +182,8 @@ doParallel::registerDoParallel(8)
               "as numerical table"
             )
           )
-        
-        
         print_numeric_statistics()
+        }
         
         # statistical type == categorical
         if (metadaten_variables$statistical_type[var] == "categorical") {
@@ -196,10 +197,10 @@ doParallel::registerDoParallel(8)
               "as a categorical percentage table"
             )
           )
-          
         print_categorical_statistics()
         }
-      }
     }
   }
-
+}
+end <- Sys.time()
+time <- end - start

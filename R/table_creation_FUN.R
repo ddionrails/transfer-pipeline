@@ -19,10 +19,6 @@
 #' variables (variable, year, weight, grouping_variables)
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords subset_data
-#'
-# TODO: Too many arguments. Arguments are badly named. Possibly too many if
-# statements.
 #'
 subset_data <-
   function(variable,
@@ -97,8 +93,6 @@ subset_data <-
 #' confidence interval
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_numeric_statistics
-#'
 #'
 calculate_numeric_statistics <- function(dataset,
                                          grouping_variables) {
@@ -164,7 +158,6 @@ calculate_numeric_statistics <- function(dataset,
 #' @return dataset_mean = dataset with weighted mean by group
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_numeric_statistics
 #'
 #'
 calculate_weighted_mean <- function(dataset, grouping_variables) {
@@ -192,7 +185,6 @@ calculate_weighted_mean <- function(dataset, grouping_variables) {
 #' @return dataset_median = dataset with weighted median by group
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_numeric_statistics
 #'
 #'
 #'
@@ -220,7 +212,6 @@ calculate_weighted_median <- function(dataset, grouping_variables) {
 #' @return dataset_n = dataset with observations by group
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_numeric_statistics
 #'
 #'
 #'
@@ -249,7 +240,6 @@ calculate_n <- function(dataset, grouping_variables) {
 #' @return dataset_sd = dataset with sd of mean by group
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_numeric_statistics
 #'
 #'
 #'
@@ -274,7 +264,6 @@ calculate_sd <- function(dataset, grouping_variables) {
 #' @return dataset_min_max = dataset with minimum and maximum by group
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_numeric_statistics
 #'
 #'
 #'
@@ -306,7 +295,6 @@ calculate_min_max <- function(dataset, grouping_variables) {
 #' by group
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_numeric_statistics
 #'
 #'
 #'
@@ -354,9 +342,6 @@ calculate_confidence_interval_mean <- function(dataset_n, dataset_sd, dataset_me
 #' @return dataset_percentile_values = dataset with percentiles by group
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_numeric_statistics
-#'
-#'
 #'
 #'
 
@@ -423,11 +408,9 @@ get_group_index <- function(dataset, grouping_variables){
   return(dataset)
 }
 
-
-
 ################################################################################
 # bootstrap_median
-bootstrap_median <- function(x, weights, R = 1000, na_raus = TRUE){
+bootstrap_median <- function(x, weights, R = 200, na_raus = TRUE){
   median <- DescTools::Median(x, weights = weights, na.rm=na_raus)
   
   bootstrap <- function(){
@@ -446,8 +429,6 @@ bootstrap_median <- function(x, weights, R = 1000, na_raus = TRUE){
   out <-  c(median, lower_confidence_median, upper_confidence_median)
   names(out) <- c("median", "lower_confidence_median", 
                   "upper_confidence_median")
-  
-  
   return(out)
   
 }
@@ -467,8 +448,6 @@ bootstrap_median <- function(x, weights, R = 1000, na_raus = TRUE){
 #' by group
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_numeric_statistics
-#'
 #'
 
 calculate_confidence_interval_median <- function(dataset, grouping_variables){
@@ -538,7 +517,6 @@ calculate_confidence_interval_median <- function(dataset, grouping_variables){
 #' @return datatable_numeric = dataset all statistical parameters 
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_numeric_statistics
 #'
 #'
 #'
@@ -594,7 +572,6 @@ combine_numeric_statistics <- function(grouping_variables,
 #' upper_confidence
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_categorical_statistics
 #'
 
 # Am Ende muss erste Spalte den Variablennamen haben, warum ist das nicht so?
@@ -644,8 +621,6 @@ calculate_categorical_statistics <- function(dataset,
 #' @return dataset_n = data frame with count_w
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_categorical_statistics
-#'
 
 calculate_categorical_Weighted_n <-  function(dataset, grouping_variables) {
   
@@ -672,8 +647,6 @@ calculate_categorical_Weighted_n <-  function(dataset, grouping_variables) {
 #' @return dataset_n = data frame with sum_count_w
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_categorical_statistics
-#'
 
 calculate_categorical_total_Weight <-  function(dataset, 
                                                 grouping_variables) {
@@ -707,8 +680,6 @@ calculate_categorical_total_Weight <-  function(dataset,
 #' @return dataset_n = data frame with n
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_categorical_statistics
-#'
 
 calculate_categorical_unweighted_n <-  function(dataset, grouping_variables) {
   
@@ -735,8 +706,6 @@ calculate_categorical_unweighted_n <-  function(dataset, grouping_variables) {
 #' @return dataset_n = data frame with n_total
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_categorical_statistics
-#'
 
 calculate_categorical_total_n <-  function(dataset, 
                                            grouping_variables) {
@@ -771,8 +740,6 @@ calculate_categorical_total_n <-  function(dataset,
 #' upper_confidence
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords calculate_categorical_statistics
-#'
 
 calculate_confidence_interval_percent <-  function(dataset, grouping_variables,
                                                    alpha) {
@@ -824,9 +791,7 @@ calculate_confidence_interval_percent <-  function(dataset, grouping_variables,
 #' intervals only with cells >= cell_size)
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#' @keywords get_protected_values
-#'
-#'
+
 get_protected_values <- function(dataset, 
                                  cell_size,
                                  table_type) {
@@ -958,11 +923,12 @@ table_create <-
 #' @description expand_table add empty rows if variable in year is empty.
 #'
 #' @param table data.frame to be filled with empty cells
-#' @param table_type Table type ("prop" or "mean")
+#' @param table_type table type (e.g. "numerical", "categorical")
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #'
 #'
+# table to data_table
 expand_table <-
   function(table,
            grouping_variables) {
@@ -973,32 +939,26 @@ expand_table <-
     grouping_variables <- c(grouping_variables, rep("", 2))
     columns <-c("usedvariable", "year", grouping_variables)
     
-    value_label_usedvariable <- 
-      unique(table[["usedvariable"]])
-    
-    value_label_grouping1 <- 
-      unique(table[[grouping_variables[[1]]]])
-    
-    value_label_grouping2 <- 
-      unique(table[[grouping_variables[[2]]]])
-    
-    if (is.null(value_label_grouping1)) {
-      value_label_grouping1 <- ""
-    }
-    
-    if (is.null(value_label_grouping2)) {
-      value_label_grouping2 <- ""
-    }
-    
-    if (is.null(value_label_usedvariable)) {
-      value_label_usedvariable <- ""
-    }
-    
     expand_table_parameters <- 
-      list(usedvariable = value_label_usedvariable,
+      list(usedvariable = "",
            year = seq(start_year, end_year),
-           grouping_variable_one = value_label_grouping1,
-           grouping_variable_two = value_label_grouping2)
+           grouping_variable_one = "",
+           grouping_variable_two = "")
+    
+    if (grouping_variables[[1]] %in% names(table)) {
+      expand_table_parameters[["grouping_variable_one"]] <-
+        unique(table[[grouping_variables[[1]]]])
+    }
+    
+    if (grouping_variables[[2]] %in% names(table)) {
+      expand_table_parameters[["grouping_variable_two"]] <-
+        unique(table[[grouping_variables[[2]]]])
+    }
+    
+    if ("usedvariable" %in% names(table)) {
+      expand_table_parameters[["usedvariable"]] <-
+         unique(table[["usedvariable"]])
+    }
     
     expand.table <- expand.grid(expand_table_parameters)
     
@@ -1017,13 +977,10 @@ expand_table <-
 #' @title json_create
 #'
 #' @description json_create creates json metadata
-#'
-#' @param variable variable names as character
-#' @param variable_label variable label as character
-#' @param start_year start year of the information as numeric
-#' @param end_year end of year information as numeric
-#' @param table_type table type (e.g. "mean", "prop", "both")
-#' @param export_path path where json file will be stored
+#' 
+#' @param table data.frame from which json metadata should be created
+#' @param variable variable name as character
+#' @param table_type table type (e.g. "numerical", "categorical")
 #'
 #' @author Stefan Zimmermann, \email{szimmermann@diw.de}
 #' @keywords
@@ -1063,14 +1020,12 @@ json_create <-
         )
     }
     
-    if (table_type == "numerical") {
-      statistics <- numeric_statistics_column_names
-    }
-    
-    if (table_type == "categorical") {
-      statistics <- categorical_statistics_column_names
-    }
-    
+    statistics <- list(NULL)
+    statistics[["numerical"]] <- 
+      numeric_statistics_column_names
+    statistics[["categorical"]] <- 
+      categorical_statistics_column_names
+
     json_output <- jsonlite::toJSON(
       x = list(
         "title" = metadaten_variables$label_de[
@@ -1079,7 +1034,7 @@ json_create <-
         "variable" = metadaten_variables$variable[
           metadaten_variables$variable == variable
         ],
-        "statistics" = statistics,
+        "statistics" = statistics[[table_type]],
         "dimensions" = grouping_information,
         "description_de" = metadaten_variables$description_de[
           metadaten_variables$variable == variable
@@ -1236,7 +1191,7 @@ print_categorical_statistics <- function() {
 data <- subset_data(
   variable = variable,
   grouping_variables = grouping_variables,
-  value_label = TRUE
+  use_value_labels = TRUE
 )
 
 if ("" %in% grouping_variables) {
@@ -1248,7 +1203,7 @@ if ("" %in% grouping_variables) {
 prop.data <-
   calculate_categorical_statistics(
     dataset = data,
-    groupvars = columns,
+    grouping_variables = columns,
     alpha = 0.05
   )
 
