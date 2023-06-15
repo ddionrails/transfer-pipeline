@@ -157,9 +157,6 @@ options(dplyr.summarise.inform = FALSE)
 
   ##############################################################################
   # Create aggregated data tables
-  # 
-  # in Vergleich setzen wenn statistical_type != numerical, categorical, ordinal
-  # Metadaten anpassen zu numerical
  start <- Sys.time()
   for (var in 1:length(metadaten_variables$variable)) {
     # create tables for variables on numeric, categorical or ordinal level

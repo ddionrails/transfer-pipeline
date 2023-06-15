@@ -419,7 +419,7 @@ bootstrap_median <- function(x, weights, R = 200, na_raus = TRUE){
     return(DescTools::Median(x[index], weights = weights[index], na.rm = na_raus))
   }
   
-  result <- foreach::foreach(1:1000, .combine=c ) %dopar% {
+  result <- foreach::foreach(1:R, .combine=c ) %dopar% {
     return(bootstrap())
   }
   
@@ -467,7 +467,7 @@ calculate_confidence_interval_median <- function(dataset, grouping_variables){
     confidence_interval_median[[index]] <- 
       bootstrap_median(x = data_grouped$usedvariable,
                        weights = data_grouped$weight,
-                       R = 1000,
+                       R = 200,
                        na_raus = TRUE)
     
   }
@@ -494,6 +494,14 @@ calculate_confidence_interval_median <- function(dataset, grouping_variables){
     dplyr::distinct(dataset_confidence_interval_median, .keep_all = TRUE)
   dataset_confidence_interval_median <- 
     as.data.frame(dataset_confidence_interval_median)
+  
+  dataset_confidence_interval_median$lower_confidence_median <-
+  round(dataset_confidence_interval_median$lower_confidence_median, 
+        digits = 2)
+  
+  dataset_confidence_interval_median$upper_confidence_median <-
+    round(dataset_confidence_interval_median$upper_confidence_median, 
+          digits = 2)
   
   return(dataset_confidence_interval_median)
 }  
@@ -1054,11 +1062,7 @@ json_create <-
 
 ################################################################################
 get_grouping_variables_list <- function(dimension_variables) {
-  # TODO: Hard to read. Should be encapsulated by a function and the
-  # function chaining
-  # TODO: should be broken up into seperate statements:
-  # TODO: sort(names(dimension_variables)) is duplicated here.
-
+  
   dimension_variables_sorted <-
     sort(names(dimension_variables))
 
@@ -1151,6 +1155,9 @@ print_numeric_statistics <- function() {
       grouping_variables = grouping_variables
     )
   
+  table_numeric <- 
+    round_data_frame(table_numeric, digits=2)
+  
   protected_table <- get_protected_values(
     dataset = table_numeric,
     cell_size = cell_minimum, 
@@ -1207,6 +1214,9 @@ prop.data <-
     alpha = 0.05
   )
 
+prop.data <- 
+  round_data_frame(prop.data, digits=2)
+
 protected_table <-
   get_protected_values(dataset = prop.data, 
                        cell_size = cell_minimum, 
@@ -1234,3 +1244,14 @@ json_create(
   table_type = "categorical"
 )
 }
+
+################################################################################
+
+round_data_frame <- function(dataset, digits) {
+  nums <- vapply(dataset, is.numeric, FUN.VALUE = logical(1))
+  
+  dataset[,nums] <- round(dataset[,nums], digits = digits)
+  
+  (dataset)
+}
+
