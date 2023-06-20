@@ -1,38 +1,7 @@
 #############################################################################
 # Create aggregated data tables for SOEP transfer project
 #############################################################################
-#' @include cli.R
-
-### Path definition
-# main <- function() {
-# Problem:
-# if (Sys.info()[["user"]] == "szimmermann") {
-#  dataset_path <- "H:/data/"
-# }
-#
-# Clutters the code, is highly dependent on a static environment.
-# Publishes information about the private path structure and usernames.
-# Instead use command line arguments and/or a config file
-# arguments <- parse_arguments()
-
-# Definition of objects
-# dataset <- arguments$input # From which data set should values be taken
-# cell_minimum <- arguments$minimal_group_size # Maximum allowed cell size
-# year <- "syear" # Survey year must be defined
-# weight_variable <- arguments$weight_column # Weight must be defined
-# version <- "v37"
-
-dataset <- "h_statistics"
-version <- "v37"
-cell_minimum <- 30 # Maximum allowed cell size
-year <- "syear" # Survey year must be defined
-weight_variable <- "hhrf" # Weight must be defined
-alpha <- 0.05 # for confidence interval
-
-dataset_path <- "H:/data/"
-metadata_path <- paste0("https://git.soep.de/kwenzig/publicecoredoku/raw/master/datasets/",
-                        dataset, "/", version, "/")
-export_path <- "H:/Clone/soep-transfer/"
+# Set global variables
 
 numeric_statistics_column_names <- c(
   "mean",
@@ -57,13 +26,14 @@ categorical_statistics_column_names <- c(
   "upper_confidence_percent"
 )
 
-# Wo sollte man das starten und sollte man das beenden?
-# Ausspielen wie viele Cores
-# Cores wieder freilassen
-# F?r alle Variablen mal ausprobieren
+alpha <- 0.05
+metadata_path <- paste0(arguments$metadata, arguments$dataset_name, "/", 
+                        arguments$version, "/")
+
 doParallel::registerDoParallel(8)
 options(dplyr.summarise.inform = FALSE)
 ################################################################################
+# load data 
 
   metadaten_variables <-
     read.csv(
@@ -83,8 +53,8 @@ options(dplyr.summarise.inform = FALSE)
   ## load data without labels
   datafile_without_labels <- readstata13::read.dta13(
     paste0(
-      dataset_path,
-      dataset, ".dta"
+      arguments$input,
+      arguments$dataset_name, ".dta"
     ),
     convert.factors = FALSE,
     encoding = "UTF-8"
@@ -93,20 +63,20 @@ options(dplyr.summarise.inform = FALSE)
   # Delete cases with no weighting
   datafile_without_labels <- dplyr::filter(
     datafile_without_labels,
-    weight_variable > 0
+    arguments$weight_column > 0
   )
 
   # Rename weighting variable to weight and syear to year
-  lookup <- c(year = year, 
-              weight = weight_variable)
+  lookup <- c(year = arguments$survey_year_column, 
+              weight = arguments$weight_column)
   datafile_without_labels <- dplyr::rename(datafile_without_labels, 
                                            all_of(lookup))
 
     ## load data with labels
   datafile_with_labels <- readstata13::read.dta13(
     paste0(
-      dataset_path,
-      dataset, ".dta"
+      arguments$input,
+      arguments$dataset_name, ".dta"
     ),
     convert.factors = TRUE,
     nonint.factors = TRUE,
@@ -116,7 +86,7 @@ options(dplyr.summarise.inform = FALSE)
   # Weights with 0 cause problems
   datafile_with_labels <- dplyr::filter(
     datafile_with_labels,
-    weight_variable > 0
+    arguments$weight_column > 0
   )
 
   # Rename weighting variable to weight and syear to year
@@ -129,11 +99,9 @@ options(dplyr.summarise.inform = FALSE)
     value >= 0
   )
 
-  ##############################################################################
-  ##############################################################################
   ### Code to create the aggregated tables in variables.csv
   metadaten_variables <-
-    metadaten_variables[metadaten_variables$dataset == dataset, ]
+    metadaten_variables[metadaten_variables$dataset == arguments$dataset_name, ]
 
   dimension_variables <- dplyr::filter(
     metadaten_variables,
@@ -149,15 +117,8 @@ options(dplyr.summarise.inform = FALSE)
     dimension_variables = dimension_variables
   )
 
-  # Generate a list that represents ne number of differentiations for each
-  # possibility
-  grouping_count_list <- get_grouping_count_list(
-    dimension_variables = dimension_variables
-  )
-
   ##############################################################################
   # Create aggregated data tables
- start <- Sys.time()
   for (var in 1:length(metadaten_variables$variable)) {
     # create tables for variables on numeric, categorical or ordinal level
     if (any(is.element(c('numerical', 'categorical', 'ordinal'), 
@@ -199,5 +160,4 @@ options(dplyr.summarise.inform = FALSE)
     }
   }
 }
-end <- Sys.time()
-time <- end - start
+

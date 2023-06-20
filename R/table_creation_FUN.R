@@ -72,6 +72,26 @@ subset_data <-
     return(variable.values.valid)
   }
 
+#' @title group_data 
+#' 
+#' @description group_data groups dataframe by grouping variables
+#'
+#' @param dataset data.frame from subset_data function
+#' @param grouping_variables Vector with differentiation variables
+#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
+#'
+#' @return dataset_grouped is a grouped dataframe by grouping variables
+#'
+#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
+#'
+
+group_data	<- function(dataset, grouping_variables) {	
+  
+  dataset_grouped <- dplyr::group_by_at(dataset, 
+                                        dplyr::vars(one_of(grouping_variables)))
+  return(dataset_grouped)	
+}	
+
 ################################################################################
 ################################################################################
 # Reihenfolge der columns  noch irgendwie wichtig???
@@ -121,12 +141,9 @@ calculate_numeric_statistics <- function(dataset,
     dataset_n = dataset_n, dataset_sd = dataset_sd, dataset_mean = dataset_mean)
   
   # Calculate percentiles 
-  percentile <- c(10,25,75,90,99)
-  
   dataset_percentile_values <- calculate_percentile(
     dataset = dataset,
-    grouping_variables = columns,
-    percentile = percentile)
+    grouping_variables = columns)
   
   # Calculate confidence interval median
   dataset_confidence_interval_median <- calculate_confidence_interval_median(
@@ -162,40 +179,12 @@ calculate_numeric_statistics <- function(dataset,
 #'
 calculate_weighted_mean <- function(dataset, grouping_variables) {
   
-  dataset <- dataset[complete.cases(dataset), ]
-  dataset_grouped <- dplyr::group_by_at(dataset, 
-                                        dplyr::vars(one_of(grouping_variables)))
+  dataset_grouped <- group_data(dataset = dataset,
+                                grouping_variables = grouping_variables)		
   dataset_mean <- dplyr::mutate(dataset_grouped, 
                                 mean = round(stats::weighted.mean(usedvariable, 
                                                                   weight), 2))
   return(dataset_mean)
-}
-
-################################################################################
-################################################################################
-#' @title calculate_weighted_median
-#'
-#' @description calculate_weighted_median calculates weighted median by groups
-#'
-#' @param dataset data.frame from subset_data function
-#' @param grouping_variables Vector with dimension or grouping variables
-#' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
-#' ("" possible)
-#'
-#' @return dataset_median = dataset with weighted median by group
-#'
-#' @author Stefan Zimmermann, \email{szimmermann@diw.de}
-#'
-#'
-#'
-calculate_weighted_median <- function(dataset, grouping_variables) {
-  dataset <- dataset[complete.cases(dataset), ]
-  dataset_grouped <- dplyr::group_by_at(dataset, 
-                                        dplyr::vars(one_of(grouping_variables)))
-  dataset_median <- dplyr::mutate(dataset_grouped, 
-                                  median = DescTools::Median(usedvariable, 
-                                                             weights = weight))
-  return(dataset_median)
 }
 
 ################################################################################
@@ -216,9 +205,10 @@ calculate_weighted_median <- function(dataset, grouping_variables) {
 #'
 #'
 calculate_n <- function(dataset, grouping_variables) {
-  dataset <- dataset[complete.cases(dataset), ]
-  dataset_grouped <- dplyr::group_by_at(dataset, 
-                                        dplyr::vars(one_of(grouping_variables)))
+  
+  dataset_grouped <-group_data(dataset = dataset,
+                               grouping_variables = grouping_variables)	
+  
   dataset_n <- dplyr::add_count(dataset_grouped, year, 
    wt = NULL)
   return(dataset_n)
@@ -244,8 +234,10 @@ calculate_n <- function(dataset, grouping_variables) {
 #'
 #'
 calculate_sd <- function(dataset, grouping_variables) {
-  dataset_grouped <- dplyr::group_by_at(dataset, 
-                                        dplyr::vars(one_of(grouping_variables)))
+  
+  dataset_grouped <- group_data(dataset = dataset,
+                                grouping_variables = grouping_variables)	
+  
   dataset_sd <- dplyr::mutate(dataset_grouped, sd = sd(usedvariable / sqrt(n)))
   return(dataset_sd)
 }
@@ -269,9 +261,9 @@ calculate_sd <- function(dataset, grouping_variables) {
 #'
 calculate_min_max <- function(dataset, grouping_variables) {
   
-  dataset <- dataset[complete.cases(dataset), ]
-  dataset_grouped <- dplyr::group_by_at(dataset, 
-                                        dplyr::vars(one_of(grouping_variables)))
+  dataset_grouped <- group_data(dataset = dataset,
+                                grouping_variables = grouping_variables)	
+  
   dataset_min_max <- dplyr::mutate(dataset_grouped, 
                                    maximum = round(max(usedvariable, 
                                                        na.rm = T), 2),
@@ -337,7 +329,6 @@ calculate_confidence_interval_mean <- function(dataset_n, dataset_sd, dataset_me
 #' @param grouping_variables Vector with dimension or grouping variables
 #' (e.g. c("age_gr", "sex", "education level")) (maximum 3 variables)
 #' ("" possible)
-#' @param percentile numeric what percetile is calculated (10,25,75,90,99)
 #'
 #' @return dataset_percentile_values = dataset with percentiles by group
 #'
@@ -345,63 +336,71 @@ calculate_confidence_interval_mean <- function(dataset_n, dataset_sd, dataset_me
 #'
 #'
 
+
 calculate_percentile <- function(dataset, 
-                                 grouping_variables,
-                                 percentile) {
+                                 grouping_variables) {
   
-  dataset <- dataset[complete.cases(dataset), ]
-  dataset_grouped <- dplyr::group_by_at(dataset, 
-                                        dplyr::vars(one_of(grouping_variables)))
+  percentile <- c(.10,.25,.75,.90,.99)
+  column_names <- sapply(grouping_variables, FUN=as.name)
+  dataset_variable_name <- as.name("dataset")
+  dataset_grouped <- do.call(dplyr::group_by, 
+                             c(dataset_variable_name, column_names))
   
-  calculate_single_percentile = function(percentile_number) {
-    dataset_with_percentiles <- dplyr::summarize(dataset_grouped, 
-                                                 value = Hmisc::wtd.quantile(
-                                                 usedvariable, 
-                                                 weights = weight, 
-                                                 probs = percentile_number, 
-                                                 na.rm = TRUE)) 
-    
-    dataset_with_percentiles <-dplyr::mutate(dataset_with_percentiles, 
-                                             percentile = percentile_number)
-    
-    return(dataset_with_percentiles)
-  }
+  percentile_column_names <- c(
+    "percentile_10",
+    "percentile_25",
+    "percentile_75",
+    "percentile_90",
+    "percentile_99"
+  )
   
-  percentile_decimal = percentile/100
+  all_group_percentiles_list <- dplyr::group_map(
+    dataset_grouped,
+    ~ t(as.data.frame(
+      Hmisc::wtd.quantile(
+        .x$usedvariable,
+        weights = .x$weight,
+        probs = percentile,
+        na.rm = TRUE
+      )
+    )
+    ), na.rm = TRUE)
   
-  dataset_percentile_values <- 
-    purrr::map_df(percentile_decimal, calculate_single_percentile) 
+  all_group_percentiles_dataframe <- Reduce(function(x, y) rbind(x, y), 
+                                            all_group_percentiles_list)
   
-  dataset_percentile_values <- 
-    dplyr::mutate(dataset_percentile_values, percentile = percentile*100)
+  all_group_percentiles_dataframe <- as.data.frame(all_group_percentiles_dataframe)
   
-  dataset_percentile_values <- 
-    tidyr::spread(dataset_percentile_values, percentile, value, sep = "_")
+  
+  names(all_group_percentiles_dataframe) <- percentile_column_names
+  rownames(all_group_percentiles_dataframe) <- NULL
+  
+  dataset_percentile_values <- cbind(dplyr::summarise(dataset_grouped), 
+                                     all_group_percentiles_dataframe)
   
   return(dataset_percentile_values)
 }
-
 
 ################################################################################
 # subset_data_groups
 subset_data_groups <- function(dataset, grouping_variables, groupindex){
   
-  data_grouped <- dplyr::group_by_at(dataset, 
-                                     dplyr::vars(one_of(grouping_variables)))
-  data_grouped <- dplyr::mutate(data_grouped, group_id = 
+  dataset_grouped <- group_data(dataset = dataset,
+                                grouping_variables = grouping_variables)	
+  dataset_grouped <- dplyr::mutate(dataset_grouped, group_id = 
                                   dplyr::cur_group_id())
-  data_grouped <- dplyr::filter(data_grouped, group_id == 
+  dataset_grouped <- dplyr::filter(dataset_grouped, group_id == 
                                   groupindex)
   
-  return(data_grouped)
+  return(dataset_grouped)
 }
 
 ################################################################################
 # get_group_index
 get_group_index <- function(dataset, grouping_variables){
   
-  dataset <- dplyr::group_by_at(dataset, 
-                                dplyr::vars(one_of(grouping_variables)))
+  dataset <- group_data(dataset = dataset,
+                        grouping_variables = grouping_variables)	
   
   dataset <- dplyr::mutate(dataset, group_id = dplyr::cur_group_id())
   
@@ -889,7 +888,7 @@ table_create <-
            table_type) {
     
     
-    path <- file.path(export_path, table_type, variable, "/")
+    path <- file.path(arguments$output, table_type, variable, "/")
     
     filename_elements <- c(variable, "year", grouping_variables)
     filename_elements <- filename_elements[filename_elements != ""]
@@ -1006,7 +1005,7 @@ json_create <-
         metadaten_variables$variable  != "syear"
     ]
     
-    exportfile <- paste0(export_path, table_type, "/",
+    exportfile <- paste0(arguments$output, table_type, "/",
                          variable, "/meta.json")
     
     grouping_information <- list(NULL)
@@ -1087,45 +1086,6 @@ get_grouping_variables_list <- function(dimension_variables) {
   return(grouping_variables_list)
 }
 
-################################################################################
-get_grouping_count_list <- function(dimension_variables) {
-  # TODO: names(dimension_variables) seems to be used quite frequently.
-  # TODO: Could be better to store it in an extra variable.
-  # TODO: This might belong to the 'function' above.
-  # TODO: Purpose of renaming and changes are not clear.
-
-  # number of single groupings
-  single_length <- length(dimension_variables)
-  # number of double groupings
-  double_length <- length(combn(names(dimension_variables), 2,
-    simplify = FALSE
-  ))
-  # empty list
-  grouping_count_list <- list()
-
-  # First list element is 0
-  grouping_count_list[[1]] <- 0
-
-  # Single grouping combinatons always count = 1
-  single_grouping_combinations <- rep(list(1), single_length)
-
-  # Double grouping combinatons always count = 2
-  double_grouping_combinations <- rep(list(2), double_length)
-
-  # Append single_grouping_combinations
-  grouping_count_list <- append(grouping_count_list,
-    single_grouping_combinations,
-    after = 1
-  )
-
-  # Append double grouping combinations
-  grouping_count_list <- append(grouping_count_list,
-    double_grouping_combinations,
-    after = length(grouping_count_list)
-  )
-
-  return(grouping_count_list)
-}
 
 ################################################################################
 #' @title print_numeric_statistics
@@ -1160,7 +1120,7 @@ print_numeric_statistics <- function() {
   
   protected_table <- get_protected_values(
     dataset = table_numeric,
-    cell_size = cell_minimum, 
+    cell_size = arguments$minimal_group_size, 
     table_type = "numerical"
   )
   
@@ -1219,7 +1179,7 @@ prop.data <-
 
 protected_table <-
   get_protected_values(dataset = prop.data, 
-                       cell_size = cell_minimum, 
+                       cell_size = arguments$minimal_group_size, 
                        table_type = "categorical")
 
 protected_table <- expand_table(
